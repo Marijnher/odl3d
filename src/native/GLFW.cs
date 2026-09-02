@@ -17,17 +17,44 @@ internal static class GLFW
     public const int GLFW_OPENGL_FORWARD_COMPAT = 0x00022006;
     public const int GLFW_OPENGL_PROFILE = 0x00022008;
     public const int GLFW_OPENGL_CORE_PROFILE = 0x00032001;
+    public const int GLFW_RELEASE = 0;
     public const int GLFW_PRESS = 1;
     public const int GLFW_CURSOR = 0x00033001;
     public const int GLFW_CURSOR_NORMAL = 0x00034001;
     public const int GLFW_CURSOR_DISABLED = 0x00034003;
     public const int GLFW_KEY_SPACE = 32;
     public const int GLFW_KEY_A = 65;
+    public const int GLFW_KEY_B = 66;
+    public const int GLFW_KEY_C = 67;
     public const int GLFW_KEY_D = 68;
+    public const int GLFW_KEY_E = 69;
+    public const int GLFW_KEY_F = 70;
+    public const int GLFW_KEY_G = 71;
+    public const int GLFW_KEY_H = 72;
+    public const int GLFW_KEY_I = 73;
+    public const int GLFW_KEY_J = 74;
+    public const int GLFW_KEY_K = 75;
+    public const int GLFW_KEY_L = 76;
+    public const int GLFW_KEY_M = 77;
+    public const int GLFW_KEY_N = 78;
+    public const int GLFW_KEY_O = 79;
+    public const int GLFW_KEY_P = 80;
+    public const int GLFW_KEY_Q = 81;
+    public const int GLFW_KEY_R = 82;
     public const int GLFW_KEY_S = 83;
+    public const int GLFW_KEY_T = 84;
+    public const int GLFW_KEY_U = 85;
+    public const int GLFW_KEY_V = 86;
     public const int GLFW_KEY_W = 87;
+    public const int GLFW_KEY_X = 88;
+    public const int GLFW_KEY_Y = 89;
+    public const int GLFW_KEY_Z = 90;
     public const int GLFW_KEY_ESCAPE = 256;
     public const int GLFW_KEY_LEFT_SHIFT = 340;
+    public const int GLFW_KEY_LEFT_CONTROL = 341;
+    public const int GLFW_KEY_RIGHT_SHIFT = 344;
+    public const int GLFW_KEY_RIGHT_CONTROL = 345;
+    public const int GLFW_KEY_LAST = 348;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_glfwInit();
@@ -61,6 +88,9 @@ internal static class GLFW
     public delegate void d_glfwSetInputMode(IntPtr window, int mode, int value);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate double d_glfwGetTime();
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwSetKeyCallback(IntPtr window, GLFWkeyCallback? callback);
+    public delegate void GLFWkeyCallback(IntPtr window, int key, int scancode, int action, int mods);
 
 #pragma warning disable CS8618
     public static d_glfwInit glfwInit;
@@ -79,6 +109,7 @@ internal static class GLFW
     public static d_glfwGetCursorPos glfwGetCursorPos;
     public static d_glfwSetInputMode glfwSetInputMode;
     public static d_glfwGetTime glfwGetTime;
+    public static d_glfwSetKeyCallback glfwSetKeyCallback;
 #pragma warning restore CS8618
 
     private static IntPtr _library;
@@ -118,6 +149,7 @@ internal static class GLFW
         glfwWindowShouldClose = GetFunction<d_glfwWindowShouldClose>("glfwWindowShouldClose");
         glfwSetWindowShouldClose = GetFunction<d_glfwSetWindowShouldClose>("glfwSetWindowShouldClose");
         glfwGetProcAddress = GetFunction<d_glfwGetProcAddress>("glfwGetProcAddress");
+        glfwSetKeyCallback = GetFunction<d_glfwSetKeyCallback>("glfwSetKeyCallback");
 
         Loaded = true;
     }

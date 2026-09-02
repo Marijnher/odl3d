@@ -19,5 +19,12 @@ class UIScene : Scene2D
 
         var bottomRight = new Sprite2D(this, Texture.FromColor(32, 32, Color.Yellow));
         bottomRight.Position = new Vector3(window.Width - 36, window.Height - 36, 0);
+
+        // InputManager.RegisterKey(GLFW.GLFW_KEY_G, null, null, () =>
+        // {
+        //     topLeft.Position.X += 1;
+        //     Console.WriteLine("Moving...");
+        // });
+        // window.InputManager.RegisterKey(GLFW.GLFW_KEY_H, () => Dispose());
     }
 }

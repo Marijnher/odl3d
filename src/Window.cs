@@ -55,6 +55,11 @@ public class Window : IDisposable
     public bool ShouldClose => GLFW.glfwWindowShouldClose(Handle) != GLFW.GLFW_FALSE;
 
     /// <summary>
+    /// The InputManager instance that handles input events for this window. It provides methods to query the state of keys, mouse buttons, and cursor position, and can be used to implement movement controls, camera look, and other interactive features.
+    /// </summary>
+    public WindowInputManager InputManager { get; private set; }
+
+    /// <summary>
     /// Creates a new window with the specified width, height, and title. The window is centered on the primary monitor and its OpenGL context is made current. The cursor is hidden and locked to the window so mouse movement can drive camera look.
     /// <param name="width">Window width in pixels.</param>
     /// <param name="height">Window height in pixels.</param>
@@ -93,6 +98,7 @@ public class Window : IDisposable
         GLFW.glfwSetInputMode(Handle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 
         Camera = new Camera(width, height);
+        InputManager = new WindowInputManager(this);
     }
 
     ~Window()
@@ -103,7 +109,11 @@ public class Window : IDisposable
     /// <summary>
     /// Polls for window events, such as input and window close requests. This should be called once per frame before rendering.
     /// </summary>
-    public void PollEvents() => GLFW.glfwPollEvents();
+    public void PollEvents()
+    {
+        GLFW.glfwPollEvents();
+        InputManager.Update();
+    }
 
     /// <summary>
     /// Swaps the front and back buffers, displaying the rendered scene to the window. This should be called after Render().
@@ -201,6 +211,7 @@ public class Window : IDisposable
             Scenes2D[0].Dispose();
             Scenes2D.RemoveAt(0);
         }
+        InputManager.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;

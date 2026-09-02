@@ -13,7 +13,7 @@ public abstract class Scene<T> : IDisposable where T : Object
     /// <summary>
     /// The window associated with the scene, used to determine the rendering context and other properties. This property is set in the constructor and is read-only for subclasses. The window provides access to the OpenGL context, input handling, and other features necessary for rendering the scene's objects.
     /// </summary>
-    protected Window Window { get; }
+    public Window Window { get; }
 
     /// <summary>
     /// The camera used to render the scene. The camera's view and projection matrices are combined to create the view-projection matrix used for rendering the objects in the scene. The camera can be configured with position, orientation, field of view, aspect ratio, and other properties to control how the scene is viewed. This property is read-only for subclasses and is derived from the associated window.
@@ -25,6 +25,16 @@ public abstract class Scene<T> : IDisposable where T : Object
     /// This is intended for Scene3D. For Scene2D, you should prefer to the Viewport property instead.
     /// </summary>
     public Vector3 SceneOffset = Vector3.Zero;
+
+    /// <summary>
+    /// Indicates whether the scene has been disposed and its resources released. After disposing, the scene should not be used again.
+    /// </summary>
+    public bool Disposed { get; private set; } = false;
+
+    /// <summary>
+    /// The ProxyInputManager for the scene, which handles input events specific to the scene. This property is null if input handling is disabled for the scene. When enabled, the ProxyInputManager allows the scene to register and respond to key events while maintaining its own state and event subscriptions. The ProxyInputManager is disposed when input handling is disabled or when the scene is disposed.
+    /// </summary>
+    public ProxyInputManager? InputManager { get; private set; }
 
     /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
@@ -41,14 +51,40 @@ public abstract class Scene<T> : IDisposable where T : Object
     }
 
     /// <summary>
-    /// Indicates whether the scene has been disposed and its resources released. After disposing, the scene should not be used again.
-    /// </summary>
-    public bool Disposed { get; private set; } = false;
-
-    /// <summary>
     /// The list of objects contained in the scene. This list can be modified by adding or removing objects, and the Draw method will render all objects in this list.
     /// </summary>
     public List<T> Objects { get; } = new List<T>();
+
+    /// <summary>
+    /// Enables or disables input handling for the scene. When enabled, the scene will create a ProxyInputManager to handle input events. When disabled, the ProxyInputManager will be disposed and input events will no longer be processed for this scene. This method allows the user to control whether the scene should respond to user input.
+    /// </summary>
+    /// <param name="enable">True to enable input handling; false to disable it.</param>
+    public void SetEnableInput(bool enable)
+    {
+        if (enable && InputManager == null)
+        {
+            InputManager = new ProxyInputManager(Window);
+        }
+        else if (!enable && InputManager != null)
+        {
+            InputManager.Dispose();
+            InputManager = null;
+        }
+    }
+
+    /// <summary>
+    /// Registers a key event handler for the specified key. The onPress, onRelease, and onRepeat actions will be invoked when the corresponding key events occur. If input handling is not enabled for the scene, an InputException will be thrown. This method allows the user to define custom behavior for specific keys while the scene is active.
+    /// </summary>
+    /// <param name="key">The key code for which to register the event handler.</param>
+    /// <param name="onPress">The action to invoke when the key is pressed.</param>
+    /// <param name="onRelease">The action to invoke when the key is released.</param>
+    /// <param name="onRepeat">The action to invoke when the key is repeated.</param>
+    /// <exception cref="InputException"></exception>
+    public void RegisterKey(int key, Action? onPress = null, Action? onRelease = null, Action? onRepeat = null)
+    {
+        if (InputManager == null) throw new InputException("Input handling is not enabled for this scene. Call SetEnableInput(true) first.");
+        InputManager.RegisterKey(key, onPress, onRelease, onRepeat);
+    }
 
     /// <summary>
     /// Adds an object of type T to the scene's collection of objects. The object will be included in the scene's rendering when the Draw method is called.
@@ -79,6 +115,7 @@ public abstract class Scene<T> : IDisposable where T : Object
             Objects[0].Dispose();
             Objects.RemoveAt(0);
         }
+        InputManager?.Dispose();
         Disposed = true;
     }
 }

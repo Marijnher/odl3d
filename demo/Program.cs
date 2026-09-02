@@ -35,11 +35,28 @@ void main()
         int height = 600;
         Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
+        window.InputManager.RegisterKey(GLFW.GLFW_KEY_ESCAPE, () => window.Close());
 
         Shader shader = new Shader(VertexSource, FragmentSource);
 
         DemoScene demoScene1 = new DemoScene(window);
         UIScene uiScene = new UIScene(window);
+
+        demoScene1.SetEnableInput(true);
+        demoScene1.RegisterKey(GLFW.GLFW_KEY_C, null, null, () =>
+        {
+            Console.WriteLine("Moving...");
+            demoScene1.SceneOffset.X += 0.01f;
+        });
+        demoScene1.RegisterKey(GLFW.GLFW_KEY_V, () =>
+        {
+            Console.WriteLine("Disposing...");
+            demoScene1.Dispose();
+        });
+        demoScene1.InputManager!.OnKeyDown += (key) =>
+        {
+            Console.WriteLine("Key down in scene: " + key);
+        };
 
         double lastTime = Window.GetTime();
         var (lastMouseX, lastMouseY) = window.GetCursorPosition();
@@ -49,8 +66,6 @@ void main()
         while (!window.ShouldClose)
         {
             window.PollEvents();
-
-            if (window.IsKeyPressed(GLFW.GLFW_KEY_ESCAPE)) window.Close();
 
             double time = Window.GetTime();
             float deltaTime = (float) (time - lastTime);
