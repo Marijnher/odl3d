@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace odl3d;
+namespace odl3d.Demo;
 
 class DemoScene : Scene3D
 {
@@ -27,6 +27,17 @@ class DemoScene : Scene3D
             Position = new Vector3(0, 1.5f, -3),
             Color = Color.Yellow, // Not used because the sprite has a texture.
             TextureColor = Color.Aqua // Applied to the texture, tinting it with an aqua color.
+        };
+
+        Plane plane = new Plane(this, 0.5f, 0.5f, 0.1f)
+        {
+            Position = new Vector3(-1.5f, 1.5f, -3),
+            Color = Color.Magenta
+        };
+
+        Plane ground = new Plane(this, 10f, 0.2f, 10f)
+        {
+            Position = new Vector3(0f, -1.5f, -5f)
         };
     }
 }

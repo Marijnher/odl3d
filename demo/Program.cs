@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Numerics;
 
-namespace odl3d;
+namespace odl3d.Demo;
 
 public static class Program
 {

@@ -76,7 +76,7 @@ public class Mesh : IDisposable
     /// Creates a new Mesh instance representing a unit quad centered at the origin, with vertices at (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), and (-0.5, 0.5), and texture coordinates (0, 1), (1, 1), (1, 0), and (0, 0). The mesh is created with the appropriate vertex and index data for rendering a quad using GL_TRIANGLES.
     /// </summary>
     /// <returns>A new Mesh instance representing the unit quad.</returns>
-    private static Mesh CreateQuad()
+    public static Mesh CreateQuad()
     {
         float[] vertices =
         {
@@ -87,6 +87,39 @@ public class Mesh : IDisposable
             -0.5f,  0.5f, 0f,   0f, 0f,
         };
         uint[] indices = { 0, 1, 2, 2, 3, 0 };
+        return new Mesh(vertices, indices);
+    }
+
+    /// <summary>
+    /// Creates a new Mesh instance representing a plane with the given width, height, and length, centered at the origin. The plane is constructed with vertices at the corners of the rectangle defined by the width and height, and extends along the z-axis for the specified length. The mesh is created with appropriate vertex and index data for rendering a plane using GL_TRIANGLES.
+    /// </summary>
+    /// <param name="width">The width of the plane.</param>
+    /// <param name="height">The height of the plane.</param>
+    /// <param name="length">The length of the plane along the z-axis.</param>
+    /// <returns>A new Mesh instance representing the plane.</returns>
+    public static Mesh CreatePlane(float width, float height, float length)
+    {
+        float[] vertices =
+        {
+            // x,     y,    z,    u,    v
+            -width / 2f, 0f, -length / 2f, 0f, 1f,
+             width / 2f, 0f, -length / 2f, 1f, 1f,
+             width / 2f, height, -length / 2f, 1f, 0f,
+            -width / 2f, height, -length / 2f, 0f, 0f,
+
+            -width / 2f, 0f, length / 2f, 0f, 1f,
+             width / 2f, 0f, length / 2f, 1f, 1f,
+             width / 2f, height, length / 2f, 1f, 0f,
+            -width / 2f, height, length / 2f, 0f, 0f,
+        };
+        uint[] indices = {
+            0, 1, 2, 2, 3, 0, // front face
+            4, 5, 6, 6, 7, 4, // back face
+            0, 1, 5, 5, 4, 0, // bottom face
+            3, 2, 6, 6, 7, 3, // top face
+            1, 2, 6, 6, 5, 1, // right face
+            0, 3, 7, 7, 4, 0 // left face
+        };
         return new Mesh(vertices, indices);
     }
 
