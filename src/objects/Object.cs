@@ -19,6 +19,16 @@ public class Object : IDisposable
     public Texture? Texture;
 
     /// <summary>
+    /// The color multiplier applied to the texture when drawing this object. Defaults to white, which means the texture is drawn with its original colors. Changing this color can tint the texture.
+    /// </summary>
+    public Color TextureColor = Color.White;
+
+    /// <summary>
+    /// The solid color used when this object has no texture. Defaults to gray.
+    /// </summary>
+    public Color Color = Color.Gray;
+
+    /// <summary>
     /// The mesh to use when drawing this object.
     /// </summary>
     public Mesh Mesh;
@@ -87,6 +97,9 @@ public class Object : IDisposable
         shader.Use();
         shader.SetMatrix4("uMVP", mvp);
         shader.SetInt("uTexture", 0);
+        shader.SetInt("uUseTexture", Texture != null ? 1 : 0);
+        shader.SetColor("uColor", Color);
+        shader.SetColor("texColor", TextureColor);
         if (Texture != null)
         {
             Texture.Bind(0);

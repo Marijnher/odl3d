@@ -10,5 +10,5 @@ public class Sprite3D : Object
     /// </summary>
     /// <param name="scene">The scene to which this sprite belongs.</param>
     /// <param name="texture">The texture to use for the sprite.</param>
-    public Sprite3D(Scene<Object> scene, Texture texture) : base(scene, Mesh.Quad, texture) { }
+    public Sprite3D(Scene<Object> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture) { }
 }

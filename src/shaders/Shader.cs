@@ -110,6 +110,18 @@ public class Shader : IDisposable
     }
 
     /// <summary>
+    /// Sets an RGBA color uniform variable in the shader program.
+    /// </summary>
+    /// <param name="name">The name of the uniform variable.</param>
+    /// <param name="color">The color value to set.</param>
+    public void SetColor(string name, Color color)
+    {
+        int location = GL.glGetUniformLocation(Handle, name);
+        const float byteToFloat = 1f / 255f;
+        GL.glUniform4f(location, color.R * byteToFloat, color.G * byteToFloat, color.B * byteToFloat, color.A * byteToFloat);
+    }
+
+    /// <summary>
     /// Disposes of the shader, releasing its OpenGL resources. After calling this method, the shader should not be used again. If the shader has already been disposed, this method does nothing. This method should be called when the shader is no longer needed to free GPU resources.
     /// </summary>
     public void Dispose()

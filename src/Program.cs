@@ -21,9 +21,12 @@ void main()
 in vec2 vTexCoord;
 out vec4 FragColor;
 uniform sampler2D uTexture;
+uniform bool uUseTexture;
+uniform vec4 uColor;
+uniform vec4 texColor;
 void main()
 {
-    FragColor = texture(uTexture, vTexCoord);
+    FragColor = uUseTexture ? texture(uTexture, vTexCoord) * texColor : uColor;
 }";
 
     public static void Main()

@@ -18,7 +18,15 @@ class DemoScene : Scene3D
         Object cube = new Object(this, cubeFilename, texture)
         {
             Position = new Vector3(1.5f, 0, -3),
-            Scale = new Vector3(1.5f, 1.5f, 1.5f)
+            Scale = new Vector3(1.5f, 1.5f, 1.5f),
+            Color = Color.Red
+        };
+
+        Sprite3D canvas = new Sprite3D(this, Texture.FromColor(64, 64, Color.White))
+        {
+            Position = new Vector3(0, 1.5f, -3),
+            Color = Color.Yellow, // Not used because the sprite has a texture.
+            TextureColor = Color.Aqua // Applied to the texture, tinting it with an aqua color.
         };
     }
 }

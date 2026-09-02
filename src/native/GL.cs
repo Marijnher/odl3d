@@ -53,6 +53,7 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_glGetUniformLocation(uint program, [MarshalAs(UnmanagedType.LPStr)] string name);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glUniformMatrix4fv(int location, int count, byte transpose, float[] value);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glUniform1i(int location, int v0);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glUniform4f(int location, float v0, float v1, float v2, float v3);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenVertexArrays(int n, out uint arrays);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBindVertexArray(uint array);
@@ -95,6 +96,7 @@ internal static class GL
     public static d_glGetUniformLocation glGetUniformLocation;
     public static d_glUniformMatrix4fv glUniformMatrix4fv;
     public static d_glUniform1i glUniform1i;
+    public static d_glUniform4f glUniform4f;
 
     public static d_glGenVertexArrays glGenVertexArrays;
     public static d_glBindVertexArray glBindVertexArray;
@@ -143,6 +145,7 @@ internal static class GL
         glGetUniformLocation = Get<d_glGetUniformLocation>("glGetUniformLocation");
         glUniformMatrix4fv = Get<d_glUniformMatrix4fv>("glUniformMatrix4fv");
         glUniform1i = Get<d_glUniform1i>("glUniform1i");
+        glUniform4f = Get<d_glUniform4f>("glUniform4f");
 
         glGenVertexArrays = Get<d_glGenVertexArrays>("glGenVertexArrays");
         glBindVertexArray = Get<d_glBindVertexArray>("glBindVertexArray");
