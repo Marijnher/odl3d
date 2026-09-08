@@ -75,14 +75,14 @@ public abstract class Scene<T> : IDisposable where T : Object
     /// <summary>
     /// Registers a key event handler for the specified key. The onPress, onRelease, and onRepeat actions will be invoked when the corresponding key events occur. If input handling is not enabled for the scene, an InputException will be thrown. This method allows the user to define custom behavior for specific keys while the scene is active.
     /// </summary>
-    /// <param name="key">The key code for which to register the event handler.</param>
+    /// <param name="key">The key for which to register the event handler.</param>
     /// <param name="onPress">The action to invoke when the key is pressed.</param>
     /// <param name="onRelease">The action to invoke when the key is released.</param>
     /// <param name="onRepeat">The action to invoke when the key is repeated.</param>
     /// <exception cref="InputException"></exception>
-    public void RegisterKey(int key, Action? onPress = null, Action? onRelease = null, Action? onRepeat = null)
+    public void RegisterKey(Key key, Action? onPress = null, Action? onRelease = null, Action? onRepeat = null)
     {
-        if (InputManager == null) throw new InputException("Input handling is not enabled for this scene. Call SetEnableInput(true) first.");
+        if (InputManager == null) throw new InputException("Input handling is not enabled for this scene. Call `SetEnableInput(true)` first.");
         InputManager.RegisterKey(key, onPress, onRelease, onRepeat);
     }
 

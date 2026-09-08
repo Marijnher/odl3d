@@ -35,9 +35,9 @@ public class WindowInputManager : AbstractInputManager
         {
             keys[key] = action != GLFW.GLFW_RELEASE;
             if (action == GLFW.GLFW_PRESS)
-                InvokeKeyPressed(key);
+                InvokeKeyPressed((Key) key);
             else if (action == GLFW.GLFW_RELEASE)
-                InvokeKeyReleased(key);
+                InvokeKeyReleased((Key) key);
         }
     }
 
@@ -48,9 +48,8 @@ public class WindowInputManager : AbstractInputManager
     /// <param name="onPress">The action to perform when the key is pressed.</param>
     /// <param name="onRelease">The action to perform when the key is released.</param>
     /// <param name="onDown">The action to perform when the key is held down.</param>
-    public override void RegisterKey(int key, Action? onPress = null, Action? onRelease = null, Action? onDown = null)
+    public override void RegisterKey(Key key, Action? onPress = null, Action? onRelease = null, Action? onDown = null)
     {
-        Console.WriteLine("Registering window key: " + key);
         OnKeyPressed += (pressedKey) =>
         {
             if (pressedKey == key)
@@ -75,7 +74,7 @@ public class WindowInputManager : AbstractInputManager
     /// </summary>
     /// <param name="key">The key to check.</param>
     /// <returns>True if the key is currently pressed, false otherwise.</returns>
-    public override bool IsKeyDown(int key) => key >= 0 && key <= GLFW.GLFW_KEY_LAST && keys[key];
+    public override bool IsKeyDown(Key key) => key >= 0 && (int) key <= GLFW.GLFW_KEY_LAST && keys[(int) key];
 
     /// <summary>
     /// Updates the input state by checking the keys array for any keys that are currently pressed. If a key is pressed, it invokes the OnKeyDown event for that key, allowing subscribers to respond to continuous key presses. This method should be called once per frame to ensure that input events are processed and handled appropriately.
@@ -85,7 +84,7 @@ public class WindowInputManager : AbstractInputManager
         for (int i = 0; i < keys.Length; i++)
         {
             if (keys[i])
-                InvokeKeyDown(i);
+                InvokeKeyDown((Key) i);
         }
     }
 

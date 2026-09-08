@@ -35,7 +35,7 @@ void main()
         int height = 600;
         Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
-        window.InputManager.RegisterKey(GLFW.GLFW_KEY_ESCAPE, () => window.Close());
+        window.InputManager.RegisterKey(Key.Escape, () => window.Close());
 
         Shader shader = new Shader(VertexSource, FragmentSource);
 
@@ -43,20 +43,6 @@ void main()
         UIScene uiScene = new UIScene(window);
 
         demoScene1.SetEnableInput(true);
-        demoScene1.RegisterKey(GLFW.GLFW_KEY_C, null, null, () =>
-        {
-            Console.WriteLine("Moving...");
-            demoScene1.SceneOffset.X += 0.01f;
-        });
-        demoScene1.RegisterKey(GLFW.GLFW_KEY_V, () =>
-        {
-            Console.WriteLine("Disposing...");
-            demoScene1.Dispose();
-        });
-        demoScene1.InputManager!.OnKeyDown += (key) =>
-        {
-            Console.WriteLine("Key down in scene: " + key);
-        };
 
         double lastTime = Window.GetTime();
         var (lastMouseX, lastMouseY) = window.GetCursorPosition();
@@ -74,12 +60,12 @@ void main()
             Camera camera = window.Camera;
 
             Vector3 movement = Vector3.Zero;
-            if (window.IsKeyPressed(GLFW.GLFW_KEY_W)) movement += camera.Front;
-            if (window.IsKeyPressed(GLFW.GLFW_KEY_S)) movement += camera.Back;
-            if (window.IsKeyPressed(GLFW.GLFW_KEY_A)) movement += camera.Left;
-            if (window.IsKeyPressed(GLFW.GLFW_KEY_D)) movement += camera.Right;
-            if (window.IsKeyPressed(GLFW.GLFW_KEY_SPACE)) movement += camera.Up;
-            if (window.IsKeyPressed(GLFW.GLFW_KEY_LEFT_SHIFT)) movement += camera.Down;
+            if (window.InputManager.IsKeyDown(Key.W)) movement += camera.Front;
+            if (window.InputManager.IsKeyDown(Key.S)) movement += camera.Back;
+            if (window.InputManager.IsKeyDown(Key.A)) movement += camera.Left;
+            if (window.InputManager.IsKeyDown(Key.D)) movement += camera.Right;
+            if (window.InputManager.IsKeyDown(Key.Space)) movement += camera.Up;
+            if (window.InputManager.IsKeyDown(Key.LeftShift)) movement += camera.Down;
             if (movement != Vector3.Zero)
                 camera.Position += Vector3.Normalize(movement) * moveSpeed * deltaTime;
 

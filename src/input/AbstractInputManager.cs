@@ -19,17 +19,17 @@ public abstract class AbstractInputManager : IDisposable
     /// <summary>
     /// An event that is triggered when a key is pressed. Subscribers can register a callback to be notified when a key press occurs, allowing for custom input handling in the application.
     /// </summary>
-    public event Action<int>? OnKeyPressed;
+    public event Action<Key>? OnKeyPressed;
     
     /// <summary>
     /// An event that is triggered when a key is held down. Subscribers can register a callback to be notified when a key is continuously pressed, allowing for custom input handling in the application.
     /// </summary>
-    public event Action<int>? OnKeyDown;
+    public event Action<Key>? OnKeyDown;
     
     /// <summary>
     /// An event that is triggered when a key is released. Subscribers can register a callback to be notified when a key release occurs, allowing for custom input handling in the application.
     /// </summary>
-    public event Action<int>? OnKeyReleased;
+    public event Action<Key>? OnKeyReleased;
 
     /// <summary>
     /// Creates a new InputManager for the specified window. It sets up the key callback to handle key press and release events, and initializes the keys array to track the state of each key. The InputManager will listen for input events from the window and invoke the appropriate events when keys or mouse buttons are pressed or released.
@@ -47,32 +47,32 @@ public abstract class AbstractInputManager : IDisposable
     /// <param name="onPress">The action to perform when the key is pressed.</param>
     /// <param name="onRelease">The action to perform when the key is released.</param>
     /// <param name="onDown">The action to perform when the key is held down.</param>
-    public abstract void RegisterKey(int key, Action? onPress = null, Action? onRelease = null, Action? onDown = null);
+    public abstract void RegisterKey(Key key, Action? onPress = null, Action? onRelease = null, Action? onDown = null);
 
     /// <summary>
     /// Invokes the OnKeyPressed event for the specified key, notifying subscribers that the key has been pressed. This method is typically called by the input manager when a key press event is detected, allowing registered callbacks to respond to the key press.
     /// </summary>
     /// <param name="key">The key that was pressed.</param>
-    public void InvokeKeyPressed(int key) => OnKeyPressed?.Invoke(key);
+    public void InvokeKeyPressed(Key key) => OnKeyPressed?.Invoke(key);
 
     /// <summary>
     /// Invokes the OnKeyDown event for the specified key, notifying subscribers that the key is currently being held down. This method is typically called by the input manager during the update cycle to allow registered callbacks to respond to continuous key presses.
     /// </summary>
     /// <param name="key">The key that is currently being held down.</param>
-    public void InvokeKeyDown(int key) => OnKeyDown?.Invoke(key);
+    public void InvokeKeyDown(Key key) => OnKeyDown?.Invoke(key);
 
     /// <summary>
     /// Invokes the OnKeyReleased event for the specified key, notifying subscribers that the key has been released. This method is typically called by the input manager when a key release event is detected, allowing registered callbacks to respond to the key release.
     /// </summary>
     /// <param name="key">The key that was released.</param>
-    public void InvokeKeyReleased(int key) => OnKeyReleased?.Invoke(key);
+    public void InvokeKeyReleased(Key key) => OnKeyReleased?.Invoke(key);
 
     /// <summary>
     /// Checks if the specified key is currently pressed. It returns true if the key is down, or false if it is up. This method can be used to query the state of keys in the Update() method or in response to input events.
     /// </summary>
     /// <param name="key">The key to check.</param>
     /// <returns>True if the key is currently pressed, false otherwise.</returns>
-    public abstract bool IsKeyDown(int key);
+    public abstract bool IsKeyDown(Key key);
 
     /// <summary>
     /// Updates the input state by checking the keys array for any keys that are currently pressed. If a key is pressed, it invokes the OnKeyDown event for that key, allowing subscribers to respond to continuous key presses. This method should be called once per frame to ensure that input events are processed and handled appropriately.

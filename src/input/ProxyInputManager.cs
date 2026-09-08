@@ -8,9 +8,9 @@ namespace odl3d;
 /// </summary>
 public class ProxyInputManager : AbstractInputManager
 {
-    private List<Action<int>> keyPressedEvents = new List<Action<int>>();
-    private List<Action<int>> keyDownEvents = new List<Action<int>>();
-    private List<Action<int>> keyReleasedEvents = new List<Action<int>>();
+    private List<Action<Key>> keyPressedEvents = new List<Action<Key>>();
+    private List<Action<Key>> keyDownEvents = new List<Action<Key>>();
+    private List<Action<Key>> keyReleasedEvents = new List<Action<Key>>();
 
     /// <summary>
     /// Initializes a new instance of the ProxyInputManager class for the specified window. This constructor sets up the input manager to handle key events for the owner, allowing the owner to respond to user input. It also initializes lists to keep track of registered key events for proper disposal later.
@@ -28,7 +28,7 @@ public class ProxyInputManager : AbstractInputManager
     /// </summary>
     /// <param name="key">The key code of the key to check.</param>
     /// <returns>True if the key is currently being held down; otherwise, false.</returns>
-    public override bool IsKeyDown(int key)
+    public override bool IsKeyDown(Key key)
     {
         return Window.InputManager.IsKeyDown(key);
     }
@@ -40,9 +40,9 @@ public class ProxyInputManager : AbstractInputManager
     /// <param name="onPress">The action to perform when the key is pressed.</param>
     /// <param name="onRelease">The action to perform when the key is released.</param>
     /// <param name="onDown">The action to perform when the key is held down.</param>
-    public override void RegisterKey(int key, Action? onPress = null, Action? onRelease = null, Action? onDown = null)
+    public override void RegisterKey(Key key, Action? onPress = null, Action? onRelease = null, Action? onDown = null)
     {
-        Action<int> keyPressedEvent = (pressedKey) =>
+        Action<Key> keyPressedEvent = (pressedKey) =>
         {
             if (pressedKey == key)
                 onPress?.Invoke();
@@ -50,7 +50,7 @@ public class ProxyInputManager : AbstractInputManager
         Window.InputManager.OnKeyPressed += keyPressedEvent;
         keyPressedEvents.Add(keyPressedEvent);
 
-        Action<int> keyReleasedEvent = (releasedKey) =>
+        Action<Key> keyReleasedEvent = (releasedKey) =>
         {
             if (releasedKey == key)
                 onRelease?.Invoke();
@@ -58,7 +58,7 @@ public class ProxyInputManager : AbstractInputManager
         Window.InputManager.OnKeyReleased += keyReleasedEvent;
         keyReleasedEvents.Add(keyReleasedEvent);
 
-        Action<int> keyDownEvent = (downKey) =>
+        Action<Key> keyDownEvent = (downKey) =>
         {
             if (downKey == key)
                 onDown?.Invoke();

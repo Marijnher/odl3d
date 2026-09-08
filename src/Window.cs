@@ -121,13 +121,6 @@ public class Window : IDisposable
     public void SwapBuffers() => GLFW.glfwSwapBuffers(Handle);
 
     /// <summary>
-    /// Returns true if the specified key is currently pressed. This can be used to implement movement controls, for example.
-    /// </summary>
-    /// <param name="key">The key to check, e.g., GLFW.GLFW_KEY_W.</param>
-    /// <returns>True if the key is currently pressed, false otherwise.</returns>
-    public bool IsKeyPressed(int key) => GLFW.glfwGetKey(Handle, key) == GLFW.GLFW_PRESS;
-
-    /// <summary>
     /// Marks the window to close, which will cause ShouldClose to return true. The window is not immediately destroyed; it is up to the application to check ShouldClose and call Dispose() when appropriate.
     /// </summary>
     public void Close() => GLFW.glfwSetWindowShouldClose(Handle, GLFW.GLFW_TRUE);
