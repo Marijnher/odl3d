@@ -6,7 +6,7 @@ namespace odl3d;
 /// <summary>
 /// A drawable 3D object consisting of a Mesh and an optional Texture, positioned and scaled in world space. The object can be drawn using a Shader and a view-projection matrix. Implements IDisposable to release GPU resources when no longer needed.
 /// </summary>
-public class Object : IDisposable
+public class Object : InputHost, IDisposable
 {
     /// <summary>
     /// The Scene3D instance to which this object belongs. The scene provides context for the object's position and scale in world space, as well as access to the camera and other scene properties.
@@ -83,13 +83,34 @@ public class Object : IDisposable
     }
 
     /// <summary>
+    /// Enables or disables input handling for this object. When enabled, the object will create a ProxyInputManager to handle input events. When disabled, the ProxyInputManager will be disposed and input events will no longer be processed for this object. This method allows the user to control whether the object should respond to user input.
+    /// </summary>
+    /// <param name="enable">True to enable input handling; false to disable it.</param>
+    public override void SetEnableInput(bool enable)
+    {
+        if (enable && InputManager == null)
+        {
+            InputManager = new ProxyInputManager(Scene.Window);
+        }
+        else if (!enable && InputManager != null)
+        {
+            InputManager.Dispose();
+            InputManager = null;
+        }
+    }
+
+    /// <summary>
     /// Returns the model matrix for this object, which transforms from local space to world space.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The model matrix that transforms this object's local coordinates to world coordinates.</returns>
     public virtual Matrix4x4 GetModelMatrix() =>
         Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateTranslation(Position + Scene.SceneOffset);
 
-    /// <summary>Draws this object using a precomputed view*projection matrix.</summary>
+    /// <summary>
+    /// Draws this object using the specified shader and the given view-projection matrix. The view-projection matrix is typically obtained from the camera and represents the combined view and projection transformations. This method sets up the necessary shader uniforms, binds the texture if available, and then draws the mesh associated with this object.
+    /// </summary>
+    /// <param name="shader">The shader program to use for rendering this object.</param>
+    /// <param name="viewProjection">The combined view and projection matrix, typically obtained from the camera.</param>
     public virtual void Draw(Shader shader, Matrix4x4 viewProjection)
     {
         Matrix4x4 mvp = GetModelMatrix() * viewProjection;
@@ -111,7 +132,18 @@ public class Object : IDisposable
         Mesh.Draw();
     }
 
-    public void Dispose()
+    /// <summary>
+    /// Updates the state of this object. This method should be called once per frame to ensure that the object's state is updated correctly.
+    /// </summary>
+    public override void Update()
+    {
+        base.Update();
+    }
+
+    /// <summary>
+    /// Disposes of the resources used by this object, including its mesh and optionally its texture. After calling this method, the object should not be used again.
+    /// </summary>
+    public override void Dispose()
     {
         if (Disposed) return;
         Mesh.Dispose();

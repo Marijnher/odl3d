@@ -8,7 +8,7 @@ namespace odl3d;
 /// A generic scene containing a collection of objects of type T, where T is constrained to be a subclass of Object. The scene provides methods to add and remove objects, and an abstract Draw method that must be implemented by subclasses to render the scene using a given shader.
 /// </summary>
 /// <typeparam name="T">The type of objects contained in the scene, constrained to be a subclass of Object.</typeparam>
-public abstract class Scene<T> : IDisposable where T : Object
+public abstract class Scene<T> : InputHost, IDisposable where T : Object
 {
     /// <summary>
     /// The window associated with the scene, used to determine the rendering context and other properties. This property is set in the constructor and is read-only for subclasses. The window provides access to the OpenGL context, input handling, and other features necessary for rendering the scene's objects.
@@ -30,11 +30,6 @@ public abstract class Scene<T> : IDisposable where T : Object
     /// Indicates whether the scene has been disposed and its resources released. After disposing, the scene should not be used again.
     /// </summary>
     public bool Disposed { get; private set; } = false;
-
-    /// <summary>
-    /// The ProxyInputManager for the scene, which handles input events specific to the scene. This property is null if input handling is disabled for the scene. When enabled, the ProxyInputManager allows the scene to register and respond to key events while maintaining its own state and event subscriptions. The ProxyInputManager is disposed when input handling is disabled or when the scene is disposed.
-    /// </summary>
-    public ProxyInputManager? InputManager { get; private set; }
 
     /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
@@ -59,7 +54,7 @@ public abstract class Scene<T> : IDisposable where T : Object
     /// Enables or disables input handling for the scene. When enabled, the scene will create a ProxyInputManager to handle input events. When disabled, the ProxyInputManager will be disposed and input events will no longer be processed for this scene. This method allows the user to control whether the scene should respond to user input.
     /// </summary>
     /// <param name="enable">True to enable input handling; false to disable it.</param>
-    public void SetEnableInput(bool enable)
+    public override void SetEnableInput(bool enable)
     {
         if (enable && InputManager == null)
         {
@@ -70,20 +65,6 @@ public abstract class Scene<T> : IDisposable where T : Object
             InputManager.Dispose();
             InputManager = null;
         }
-    }
-
-    /// <summary>
-    /// Registers a key event handler for the specified key. The onPress, onRelease, and onRepeat actions will be invoked when the corresponding key events occur. If input handling is not enabled for the scene, an InputException will be thrown. This method allows the user to define custom behavior for specific keys while the scene is active.
-    /// </summary>
-    /// <param name="key">The key for which to register the event handler.</param>
-    /// <param name="onPress">The action to invoke when the key is pressed.</param>
-    /// <param name="onRelease">The action to invoke when the key is released.</param>
-    /// <param name="onRepeat">The action to invoke when the key is repeated.</param>
-    /// <exception cref="InputException"></exception>
-    public void RegisterKey(Key key, Action? onPress = null, Action? onRelease = null, Action? onRepeat = null)
-    {
-        if (InputManager == null) throw new InputException("Input handling is not enabled for this scene. Call `SetEnableInput(true)` first.");
-        InputManager.RegisterKey(key, onPress, onRelease, onRepeat);
     }
 
     /// <summary>
@@ -105,17 +86,26 @@ public abstract class Scene<T> : IDisposable where T : Object
     public abstract void Draw(Shader shader);
 
     /// <summary>
+    /// Updates all objects in the scene by calling their Update methods. This should be called once per frame to ensure that the scene and its objects are updated correctly.
+    /// </summary>
+    public override void Update()
+    {
+        base.Update();
+        Objects.ForEach(o => o.Update());
+    }
+
+    /// <summary>
     /// Disposes of all objects in the scene and clears the collection. This method should be called when the scene is no longer needed to release resources held by the objects. Each object in the collection will have its Dispose method called, and then it will be removed from the collection. After calling this method, the scene's object collection will be empty.
     /// </summary>
-    public void Dispose()
+    public override void Dispose()
     {
         if (Disposed) return;
+        base.Dispose();
         while (Objects.Count > 0)
         {
             Objects[0].Dispose();
             Objects.RemoveAt(0);
         }
-        InputManager?.Dispose();
         Disposed = true;
     }
 }

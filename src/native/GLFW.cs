@@ -19,6 +19,7 @@ internal static class GLFW
     public const int GLFW_OPENGL_CORE_PROFILE = 0x00032001;
     public const int GLFW_RELEASE = 0;
     public const int GLFW_PRESS = 1;
+    public const int GLFW_REPEAT = 2;
     public const int GLFW_CURSOR = 0x00033001;
     public const int GLFW_CURSOR_NORMAL = 0x00034001;
     public const int GLFW_CURSOR_DISABLED = 0x00034003;
@@ -59,6 +60,9 @@ internal static class GLFW
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_glfwSetKeyCallback(IntPtr window, GLFWkeyCallback? callback);
     public delegate void GLFWkeyCallback(IntPtr window, int key, int scancode, int action, int mods);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwSetMouseButtonCallback(IntPtr window, GLFWmouseButtonCallback? callback);
+    public delegate void GLFWmouseButtonCallback(IntPtr window, int button, int action, int mods);
 
 #pragma warning disable CS8618
     public static d_glfwInit glfwInit;
@@ -78,6 +82,7 @@ internal static class GLFW
     public static d_glfwSetInputMode glfwSetInputMode;
     public static d_glfwGetTime glfwGetTime;
     public static d_glfwSetKeyCallback glfwSetKeyCallback;
+    public static d_glfwSetMouseButtonCallback glfwSetMouseButtonCallback;
 #pragma warning restore CS8618
 
     private static IntPtr _library;
@@ -118,6 +123,7 @@ internal static class GLFW
         glfwSetWindowShouldClose = GetFunction<d_glfwSetWindowShouldClose>("glfwSetWindowShouldClose");
         glfwGetProcAddress = GetFunction<d_glfwGetProcAddress>("glfwGetProcAddress");
         glfwSetKeyCallback = GetFunction<d_glfwSetKeyCallback>("glfwSetKeyCallback");
+        glfwSetMouseButtonCallback = GetFunction<d_glfwSetMouseButtonCallback>("glfwSetMouseButtonCallback");
 
         Loaded = true;
     }
