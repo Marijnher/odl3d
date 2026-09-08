@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Numerics;
 namespace odl3d;
 
 /// <summary>
@@ -30,9 +30,9 @@ public class Window : InputHost, IDisposable
     public bool Disposed { get; private set; } = false;
 
     /// <summary>
-    /// Indicates whether the cursor is currently enabled (visible and free to move within the window). When false, the cursor is hidden and locked to the window for camera control.
+    /// Indicates whether the cursor is currently captured (hidden and locked to the window for camera control). When false, the cursor is visible and free to move within the window.
     /// </summary>
-    public bool CursorEnabled { get; private set; } = true;
+    public bool CursorCaptured { get; private set; } = false;
 
     /// <summary>
     /// The background color used when clearing the window's color buffer. This is set at creation and can be changed at any time. The default is black (0,0,0).
@@ -58,6 +58,11 @@ public class Window : InputHost, IDisposable
     /// Indicates whether the window has been marked to close (e.g. by pressing Escape). This does not immediately destroy the window; it is up to the application to check this property and call Dispose() when appropriate.
     /// </summary>
     public bool ShouldClose => GLFW.glfwWindowShouldClose(Handle) != GLFW.GLFW_FALSE;
+
+    /// <summary>
+    /// The time at the previous frame, used to calculate delta time between frames. This is updated each frame during the window's update loop.
+    /// </summary>
+    private double? previousTime;
 
     /// <summary>
     /// Creates a new window with the specified width, height, and title. The window is centered on the primary monitor and its OpenGL context is made current. The cursor is hidden and locked to the window so mouse movement can drive camera look.
@@ -94,7 +99,10 @@ public class Window : InputHost, IDisposable
         GL.glViewport(0, 0, width, height);
         GL.glEnable(GL.GL_DEPTH_TEST);
 
-        Camera = new Camera(width, height);
+        // Default non-moveable camera
+        Camera = new Camera(this);
+
+        // Create input manager for this window
         SetEnableInput(true);
     }
 
@@ -104,13 +112,22 @@ public class Window : InputHost, IDisposable
     }
 
     /// <summary>
-    /// Enables or disables the cursor. When disabled, the cursor is hidden and locked to the window, allowing mouse movement to control camera look. When enabled, the cursor is visible and free to move within the window.
+    /// Sets the active camera for the window. This allows the application to change the camera used for rendering the 3D scene at runtime.
     /// </summary>
-    /// <param name="enabled">True to enable the cursor, false to disable it.</param>
-    public void SetCursor(bool enabled)
+    /// <param name="camera">The camera to set as the active camera for the window.</param>
+    public void SetCamera(Camera camera)
     {
-        GLFW.glfwSetInputMode(Handle, GLFW.GLFW_CURSOR, enabled ? GLFW.GLFW_CURSOR_NORMAL : GLFW.GLFW_CURSOR_DISABLED);
-        CursorEnabled = enabled;
+        Camera = camera;
+    }
+
+    /// <summary>
+    /// Captures or releases the cursor. When captured, the cursor is hidden and locked to the window, allowing mouse movement to control camera look. When released, the cursor is visible and free to move within the window.
+    /// </summary>
+    /// <param name="enabled">True to capture the cursor, false to release it.</param>
+    public void SetCursorCapture(bool capture)
+    {
+        GLFW.glfwSetInputMode(Handle, GLFW.GLFW_CURSOR, capture ? GLFW.GLFW_CURSOR_DISABLED : GLFW.GLFW_CURSOR_NORMAL);
+        CursorCaptured = capture;
     }
 
     /// <summary>
@@ -133,12 +150,18 @@ public class Window : InputHost, IDisposable
     /// <summary>
     /// Polls for window events, such as input and window close requests. This should be called once per frame before rendering.
     /// </summary>
-    public override void Update()
+    public override void Update(float _)
     {
         GLFW.glfwPollEvents();
-        base.Update();
-        Scenes3D.ForEach(s => s.Update());
-        Scenes2D.ForEach(s => s.Update());
+
+        double time = GLFW.glfwGetTime();
+        float deltaTime = (float) (time - (previousTime ?? time));
+        previousTime = time;
+
+        base.Update(deltaTime);
+        Scenes3D.ForEach(s => s.Update(deltaTime));
+        Scenes2D.ForEach(s => s.Update(deltaTime));
+        Camera.Update(deltaTime);
     }
 
     /// <summary>
@@ -155,10 +178,10 @@ public class Window : InputHost, IDisposable
     /// Returns the current cursor position in window pixel coordinates, with (0,0) at the top-left of the window. This can be used to implement camera look controls, for example.
     /// </summary>
     /// <returns>A tuple containing the X and Y coordinates of the cursor.</returns>
-    public (double X, double Y) GetCursorPosition()
+    public Vector2 GetCursorPosition()
     {
         GLFW.glfwGetCursorPos(Handle, out double x, out double y);
-        return (x, y);
+        return new Vector2((float) x, (float) y);
     }
 
     /// <summary>
@@ -177,7 +200,7 @@ public class Window : InputHost, IDisposable
     }
 
     /// <summary>
-    /// Renders all 3D and 2D scenes in the order they were added. Each scene's camera is used to render its objects, and the depth buffer is cleared between scenes so later scenes are not occluded by earlier ones. This should be called once per frame after PollEvents() and before SwapBuffers().
+    /// Renders all 3D and 2D scenes in the window using the specified shader. This method clears the window's color and depth buffers, sets the viewport, and then draws each scene in the order they were added. The depth buffer is cleared between scenes to prevent later scenes from being occluded by earlier ones.
     /// </summary>
     /// <param name="shader">The shader to use for rendering the scenes.</param>
     public void Render(Shader shader)

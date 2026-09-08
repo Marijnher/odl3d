@@ -88,10 +88,11 @@ public abstract class Scene<T> : InputHost, IDisposable where T : Object
     /// <summary>
     /// Updates all objects in the scene by calling their Update methods. This should be called once per frame to ensure that the scene and its objects are updated correctly.
     /// </summary>
-    public override void Update()
+    /// <param name="deltaTime">The time elapsed since the last frame, used to update the scene's objects consistently with frame timing.</param>
+    public override void Update(float deltaTime)
     {
-        base.Update();
-        Objects.ForEach(o => o.Update());
+        base.Update(deltaTime);
+        Objects.ForEach(o => o.Update(deltaTime));
     }
 
     /// <summary>

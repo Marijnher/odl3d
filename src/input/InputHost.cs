@@ -152,7 +152,8 @@ public abstract class InputHost : IDisposable
     /// <summary>
     /// Updates the input host by polling for input events and invoking the appropriate event handlers. This should be called once per frame to ensure that input is processed correctly.
     /// </summary>
-    public virtual void Update()
+    /// <param name="deltaTime">The time elapsed since the last frame, used to update the input host consistently with frame timing.</param>
+    public virtual void Update(float deltaTime)
     {
         InputManager?.Update();
     }

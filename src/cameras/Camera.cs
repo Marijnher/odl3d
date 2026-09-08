@@ -9,6 +9,11 @@ namespace odl3d;
 public class Camera
 {
     /// <summary>
+    /// The window associated with the camera. This property holds a reference to the rendering window or context that the camera is linked to. It allows the camera to access window-specific information, such as dimensions and input events, which may be necessary for calculating the aspect ratio, handling user input, or other camera-related operations.
+    /// </summary>
+    public Window Window { get; protected set; }
+
+    /// <summary>
     /// The position of the camera in world space. This vector defines where the camera is located in the 3D scene. The default position is at the origin (0, 0, 0).
     /// </summary>
     public Vector3 Position = Vector3.Zero;
@@ -86,21 +91,27 @@ public class Camera
     public Vector3 Down => Vector3.Normalize(Vector3.Cross(Front, Right));
 
     /// <summary>
-    /// Creates a new Camera instance with the specified width and height, calculating the aspect ratio based on these dimensions. The aspect ratio is set to the width divided by the height, which is essential for proper perspective projection in 3D rendering. This constructor allows for easy initialization of the camera with a specific viewport size, ensuring that the rendered scene maintains the correct proportions and avoids distortion.
+    /// Initializes a new instance of the Camera class using the specified window. The aspect ratio is automatically calculated based on the window's width and height.
     /// </summary>
-    /// <param name="width">The width of the camera's viewport.</param>
-    /// <param name="height">The height of the camera's viewport.</param>
-    public Camera(int width, int height)
-    {
-        AspectRatio = (float) width / height;
-    }
+    /// <param name="window">The window associated with the camera, used to determine the aspect ratio and access window-specific information.</param>
+    public Camera(Window window) : this(window, (float) window.Width / window.Height) { }
 
     /// <summary>
-    /// Creates a new Camera instance with the specified aspect ratio. The aspect ratio is defined as the width divided by the height of the viewport and is crucial for maintaining the correct proportions in the rendered scene. This constructor allows for flexible initialization of the camera when only the aspect ratio is known, without requiring specific width and height values.
+    /// Creates a new Camera instance with the specified width and height, calculating the aspect ratio based on these dimensions. The aspect ratio is set to the width divided by the height, which is essential for proper perspective projection in 3D rendering. This constructor allows for easy initialization of the camera with a specific viewport size, ensuring that the rendered scene maintains the correct proportions and avoids distortion.
     /// </summary>
-    /// <param name="aspectRatio">The aspect ratio of the camera's viewport (width divided by height).</param>
-    public Camera(float aspectRatio) 
+    /// <param name="window">The window associated with the camera, used to determine the aspect ratio and access window-specific information.</param>
+    /// <param name="width">The width of the viewport for the camera.</param>
+    /// <param name="height">The height of the viewport for the camera.</param>
+    public Camera(Window window, int width, int height) : this(window, (float) width / height) { }
+
+    /// <summary>
+    /// Initializes a new instance of the Camera class using the specified window and aspect ratio. This constructor allows for explicit control over the camera's aspect ratio, which is important for maintaining the correct perspective projection in 3D rendering. The aspect ratio is typically set to the width of the viewport divided by its height.
+    /// </summary>
+    /// <param name="window">The window associated with the camera, used to determine the aspect ratio and access window-specific information.</param>
+    /// <param name="aspectRatio">The aspect ratio of the camera's viewport, typically set to the width divided by the height of the viewport.</param>
+    public Camera(Window window, float aspectRatio)
     {
+        Window = window;
         AspectRatio = aspectRatio;
     }
 
@@ -128,4 +139,10 @@ public class Camera
     /// <returns>The perspective projection matrix representing the camera's projection from 3D world space to 2D screen space.</returns>
     public Matrix4x4 GetProjectionMatrix() =>
         Matrix4x4.CreatePerspectiveFieldOfView(FieldOfViewDegrees * MathF.PI / 180f, AspectRatio, NearPlane, FarPlane);
+
+    /// <summary>
+    /// Updates the camera's state based on the elapsed time since the last update. This method is intended to be overridden by derived camera classes that have dynamic behavior, such as movable cameras that respond to user input. The deltaTime parameter represents the time elapsed since the last update, allowing for frame-rate-independent movement and animation.
+    /// </summary>
+    /// <param name="deltaTime">The time elapsed since the last update, in seconds.</param>
+    public virtual void Update(float deltaTime) { }
 }

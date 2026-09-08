@@ -35,7 +35,8 @@ void main()
         int height = 600;
         Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
-        window.SetCursor(true);
+        window.SetCamera(new MoveableCamera(window));
+        window.SetCursorCapture(true);
         window.RegisterKeyPress(Key.Escape, () => window.Close());
 
         Shader shader = new Shader(VertexSource, FragmentSource);
@@ -54,45 +55,10 @@ void main()
         demoScene1.RegisterMouseRepeated(Mouse.Right, () => Console.WriteLine("Right repeated."));
 
         demoScene1.RegisterKeyRepeated(Key.V, () => Console.WriteLine("V repeated."));
-
-        window.RegisterMouseMoved((oldPos, newPos) =>
-        {
-            Console.WriteLine($"Mouse moved from {oldPos} to {newPos}");
-        });
-
-        double lastTime = Window.GetTime();
-        var (lastMouseX, lastMouseY) = window.GetCursorPosition();
-        const float moveSpeed = 3f;
-        const float mouseSensitivity = 0.1f;
-
+        
         while (!window.ShouldClose)
         {
-            window.Update();
-
-            double time = Window.GetTime();
-            float deltaTime = (float) (time - lastTime);
-            lastTime = time;
-
-            Camera camera = window.Camera;
-
-            Vector3 movement = Vector3.Zero;
-            if (window.IsKeyDown(Key.W)) movement += camera.Front;
-            if (window.IsKeyDown(Key.S)) movement += camera.Back;
-            if (window.IsKeyDown(Key.A)) movement += camera.Left;
-            if (window.IsKeyDown(Key.D)) movement += camera.Right;
-            if (window.IsKeyDown(Key.Space)) movement += camera.Up;
-            if (window.IsKeyDown(Key.LeftShift)) movement += camera.Down;
-            if (movement != Vector3.Zero)
-                camera.Position += Vector3.Normalize(movement) * moveSpeed * deltaTime;
-
-            var (mouseX, mouseY) = window.GetCursorPosition();
-            double deltaX = mouseX - lastMouseX;
-            double deltaY = mouseY - lastMouseY;
-            lastMouseX = mouseX;
-            lastMouseY = mouseY;
-            // screen Y grows downward, so an upward mouse move should increase pitch
-            camera.Rotate((float) deltaX * mouseSensitivity, (float) -deltaY * mouseSensitivity);
-
+            window.Update(0);
             window.Render(shader);
             window.SwapBuffers();
         }

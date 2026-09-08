@@ -135,9 +135,10 @@ public class Object : InputHost, IDisposable
     /// <summary>
     /// Updates the state of this object. This method should be called once per frame to ensure that the object's state is updated correctly.
     /// </summary>
-    public override void Update()
+    /// <param name="deltaTime">The time elapsed since the last frame, in seconds.</param>
+    public override void Update(float deltaTime)
     {
-        base.Update();
+        base.Update(deltaTime);
     }
 
     /// <summary>
