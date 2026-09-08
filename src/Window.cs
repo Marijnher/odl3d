@@ -23,11 +23,6 @@ public class Window : InputHost, IDisposable
     /// The height of the window in pixels. This is set at creation and does not change, as the window is non-resizable.
     /// </summary>
     public int Height { get; private set; }
-    
-    /// <summary>
-    /// Indicates whether the window has been disposed and its resources released. After disposing, the window should not be used again.
-    /// </summary>
-    public bool Disposed { get; private set; } = false;
 
     /// <summary>
     /// Indicates whether the cursor is currently captured (hidden and locked to the window for camera control). When false, the cursor is visible and free to move within the window.
@@ -58,11 +53,6 @@ public class Window : InputHost, IDisposable
     /// Indicates whether the window has been marked to close (e.g. by pressing Escape). This does not immediately destroy the window; it is up to the application to check this property and call Dispose() when appropriate.
     /// </summary>
     public bool ShouldClose => GLFW.glfwWindowShouldClose(Handle) != GLFW.GLFW_FALSE;
-
-    /// <summary>
-    /// Invoked when this window is disposed. Subscribers can use this event to perform cleanup or other actions when the window is no longer needed.
-    /// </summary>
-    public event Action? OnDisposed;
 
     /// <summary>
     /// The time at the previous frame, used to calculate delta time between frames. This is updated each frame during the window's update loop.
@@ -253,6 +243,5 @@ public class Window : InputHost, IDisposable
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;
-        OnDisposed?.Invoke();
     }
 }

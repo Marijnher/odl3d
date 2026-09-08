@@ -39,22 +39,22 @@ public abstract class AbstractInputManager : IDisposable
     /// <summary>
     /// An event that is triggered when a mouse button is pressed. Subscribers can register a callback to be notified when a mouse button press occurs, allowing for custom input handling in the application.
     /// </summary>
-    public event Action<Mouse>? OnMousePressed;
+    public event Action<Mouse, Vector2>? OnMousePressed;
 
     /// <summary>
     /// An event that is triggered when a mouse button is held down. Subscribers can register a callback to be notified when a mouse button is continuously pressed, allowing for custom input handling in the application.
     /// </summary>
-    public event Action<Mouse>? OnMouseDown;
+    public event Action<Mouse, Vector2>? OnMouseDown;
 
     /// <summary>
     /// An event that is triggered when a mouse button is repeated. Subscribers can register a callback to be notified when a mouse button repeat occurs, allowing for custom input handling in the application.
     /// </summary>
-    public event Action<Mouse>? OnMouseRepeated;
+    public event Action<Mouse, Vector2>? OnMouseRepeated;
 
     /// <summary>
     /// An event that is triggered when a mouse button is released. Subscribers can register a callback to be notified when a mouse button release occurs, allowing for custom input handling in the application.
     /// </summary>
-    public event Action<Mouse>? OnMouseReleased;
+    public event Action<Mouse, Vector2>? OnMouseReleased;
 
     /// <summary>
     /// An event that is triggered when the mouse is moved. Subscribers can register a callback to be notified when the mouse moves, allowing for custom input handling in the application. The Vector2 parameter represents the new mouse position.
@@ -103,28 +103,28 @@ public abstract class AbstractInputManager : IDisposable
     /// </summary>
     /// <param name="button">The mouse button for which to register the callbacks.</param>
     /// <param name="onPress">The action to perform when the mouse button is pressed.</param>
-    public abstract void RegisterMousePress(Mouse button, Action onPress);
+    public abstract void RegisterMousePress(Mouse button, Action<Vector2> onPress);
 
     /// <summary>
     /// Registers a callback for a specific mouse button down event.
     /// </summary>
     /// <param name="button">The mouse button for which to register the callback.</param>
     /// <param name="onDown">The action to perform when the mouse button is held down.</param>
-    public abstract void RegisterMouseDown(Mouse button, Action onDown);
+    public abstract void RegisterMouseDown(Mouse button, Action<Vector2> onDown);
 
     /// <summary>
     /// Registers a callback for a specific mouse button repeat event.
     /// </summary>
     /// <param name="button">The mouse button for which to register the callback.</param>
     /// <param name="onRepeat">The action to perform when the mouse button is repeated.</param>
-    public abstract void RegisterMouseRepeated(Mouse button, Action onRepeat);
+    public abstract void RegisterMouseRepeated(Mouse button, Action<Vector2> onRepeat);
 
     /// <summary>
     /// Registers a callback for a specific mouse button release event.
     /// </summary>
     /// <param name="button">The mouse button for which to register the callback.</param>
     /// <param name="onRelease">The action to perform when the mouse button is released.</param>
-    public abstract void RegisterMouseRelease(Mouse button, Action onRelease);
+    public abstract void RegisterMouseRelease(Mouse button, Action<Vector2> onRelease);
 
     /// <summary>
     /// Registers a callback for mouse movement events.
@@ -160,30 +160,34 @@ public abstract class AbstractInputManager : IDisposable
     /// Invokes the OnMousePressed event for the specified mouse button, notifying subscribers that the button has been pressed. This method is typically called by the input manager when a mouse button press event is detected, allowing registered callbacks to respond to the button press.
     /// </summary>
     /// <param name="button">The mouse button that was pressed.</param>
-    public void InvokeMousePressed(Mouse button) => OnMousePressed?.Invoke(button);
+    /// <param name="position">The position of the mouse at the time the button was pressed.</param>
+    public void InvokeMousePressed(Mouse button, Vector2 position) => OnMousePressed?.Invoke(button, position);
 
     /// <summary>
     /// Invokes the OnMouseDown event for the specified mouse button, notifying subscribers that the button is currently being held down. This method is typically called by the input manager during the update cycle to allow registered callbacks to respond to continuous mouse button presses.
     /// </summary>
     /// <param name="button">The mouse button that is currently being held down.</param>
-    /// 
-    public void InvokeMouseDown(Mouse button) => OnMouseDown?.Invoke(button);
+    /// <param name="position">The current position of the mouse while the button is held down.</param>
+    public void InvokeMouseDown(Mouse button, Vector2 position) => OnMouseDown?.Invoke(button, position);
 
     /// <summary>
     /// Invokes the OnMouseRepeat event for the specified mouse button, notifying subscribers that the button is being repeated. This method is typically called by the input manager when a mouse button repeat event is detected, allowing registered callbacks to respond to the repeated button press.
     /// </summary>
     /// <param name="button">The mouse button that is being repeated.</param>
-    public void InvokeMouseRepeated(Mouse button) => OnMouseRepeated?.Invoke(button);
+    /// <param name="position">The current position of the mouse while the button is being repeated.</param>
+    public void InvokeMouseRepeated(Mouse button, Vector2 position) => OnMouseRepeated?.Invoke(button, position);
 
     /// <summary>
     /// Invokes the OnMouseReleased event for the specified mouse button, notifying subscribers that the button has been released. This method is typically called by the input manager when a mouse button release event is detected, allowing registered callbacks to respond to the button release.
     /// </summary>
     /// <param name="button">The mouse button that was released.</param>
-    public void InvokeMouseReleased(Mouse button) => OnMouseReleased?.Invoke(button);
+    /// <param name="position">The position of the mouse at the time the button was released.</param>
+    public void InvokeMouseReleased(Mouse button, Vector2 position) => OnMouseReleased?.Invoke(button, position);
 
     /// <summary>
     /// Invokes the OnMouseMoved event, notifying subscribers that the mouse has moved to a new position. This method is typically called by the input manager when the mouse is moved, allowing registered callbacks to respond to the mouse movement.
     /// </summary>
+    /// <param name="oldPosition">The previous position of the mouse before it moved.</param>
     /// <param name="newPosition">The new position of the mouse after it moved.</param>
     public void InvokeMouseMoved(Vector2 oldPosition, Vector2 newPosition) => OnMouseMoved?.Invoke(oldPosition, newPosition);
 

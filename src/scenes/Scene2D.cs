@@ -45,8 +45,8 @@ public class Scene2D : Scene<Object>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
     public override void Draw(Shader shader)
     {
-        int vpX = Viewport.X + (int) SceneOffset.X;
-        int vpY = Viewport.Y + (int) SceneOffset.Y;
+        int vpX = Viewport.X + (int) Position.X;
+        int vpY = Viewport.Y + (int) Position.Y;
         GL.glViewport(vpX, Window.Height - vpY - Viewport.Height, Viewport.Width, Viewport.Height);
         Matrix4x4 projection = GetProjectionMatrix();
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.

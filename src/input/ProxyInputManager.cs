@@ -13,10 +13,10 @@ public class ProxyInputManager : AbstractInputManager
     private List<Action<Key>> keyDownEvents = new List<Action<Key>>();
     private List<Action<Key>> keyRepeatedEvents = new List<Action<Key>>();
     private List<Action<Key>> keyReleasedEvents = new List<Action<Key>>();
-    private List<Action<Mouse>> mousePressedEvents = new List<Action<Mouse>>();
-    private List<Action<Mouse>> mouseDownEvents = new List<Action<Mouse>>();
-    private List<Action<Mouse>> mouseRepeatedEvents = new List<Action<Mouse>>();
-    private List<Action<Mouse>> mouseReleasedEvents = new List<Action<Mouse>>();
+    private List<Action<Mouse, Vector2>> mousePressedEvents = new List<Action<Mouse, Vector2>>();
+    private List<Action<Mouse, Vector2>> mouseDownEvents = new List<Action<Mouse, Vector2>>();
+    private List<Action<Mouse, Vector2>> mouseRepeatedEvents = new List<Action<Mouse, Vector2>>();
+    private List<Action<Mouse, Vector2>> mouseReleasedEvents = new List<Action<Mouse, Vector2>>();
     private List<Action<Vector2, Vector2>> mouseMovedEvents = new List<Action<Vector2, Vector2>>();
 
     /// <summary>
@@ -139,13 +139,13 @@ public class ProxyInputManager : AbstractInputManager
     /// <param name="button">The mouse button to register.</param>
     /// <param name="onPress">The action to perform when the mouse button is pressed.</param>
     /// <exception cref="InputException">Thrown if the parent window's InputManager is null.</exception>
-    public override void RegisterMousePress(Mouse button, Action onPress)
+    public override void RegisterMousePress(Mouse button, Action<Vector2> onPress)
     {
         if (Window.InputManager == null) throw new InputException("Parent window's InputManager is null.");
-        Action<Mouse> mousePressedEvent = (pressedButton) =>
+        Action<Mouse, Vector2> mousePressedEvent = (pressedButton, position) =>
         {
             if (pressedButton == button)
-                onPress?.Invoke();
+                onPress?.Invoke(position);
         };
         Window.InputManager.OnMousePressed += mousePressedEvent;
         mousePressedEvents.Add(mousePressedEvent);
@@ -157,13 +157,13 @@ public class ProxyInputManager : AbstractInputManager
     /// <param name="button">The mouse button to register.</param>
     /// <param name="onDown">The action to perform when the mouse button is held down.</param>
     /// <exception cref="InputException">Thrown if the parent window's InputManager is null.</exception>
-    public override void RegisterMouseDown(Mouse button, Action onDown)
+    public override void RegisterMouseDown(Mouse button, Action<Vector2> onDown)
     {
         if (Window.InputManager == null) throw new InputException("Parent window's InputManager is null.");
-        Action<Mouse> mouseDownEvent = (downButton) =>
+        Action<Mouse, Vector2> mouseDownEvent = (downButton, position) =>
         {
             if (downButton == button)
-                onDown?.Invoke();
+                onDown?.Invoke(position);
         };
         Window.InputManager.OnMouseDown += mouseDownEvent;
         mouseDownEvents.Add(mouseDownEvent);
@@ -175,13 +175,13 @@ public class ProxyInputManager : AbstractInputManager
     /// <param name="button">The mouse button to register.</param>
     /// <param name="onRepeat">The action to perform when the mouse button is repeatedly pressed.</param>
     /// <exception cref="InputException">Thrown if the parent window's InputManager is null.</exception>
-    public override void RegisterMouseRepeated(Mouse button, Action onRepeat)
+    public override void RegisterMouseRepeated(Mouse button, Action<Vector2> onRepeat)
     {
         if (Window.InputManager == null) throw new InputException("Parent window's InputManager is null.");
-        Action<Mouse> mouseRepeatedEvent = (repeatedButton) =>
+        Action<Mouse, Vector2> mouseRepeatedEvent = (repeatedButton, position) =>
         {
             if (repeatedButton == button)
-                onRepeat?.Invoke();
+                onRepeat?.Invoke(position);
         };
         Window.InputManager.OnMouseRepeated += mouseRepeatedEvent;
         mouseRepeatedEvents.Add(mouseRepeatedEvent);
@@ -193,13 +193,13 @@ public class ProxyInputManager : AbstractInputManager
     /// <param name="button">The mouse button to register.</param>
     /// <param name="onRelease">The action to perform when the mouse button is released.</param>
     /// <exception cref="InputException">Thrown if the parent window's InputManager is null.</exception>
-    public override void RegisterMouseRelease(Mouse button, Action onRelease)
+    public override void RegisterMouseRelease(Mouse button, Action<Vector2> onRelease)
     {
         if (Window.InputManager == null) throw new InputException("Parent window's InputManager is null.");
-        Action<Mouse> mouseReleasedEvent = (releasedButton) =>
+        Action<Mouse, Vector2> mouseReleasedEvent = (releasedButton, position) =>
         {
             if (releasedButton == button)
-                onRelease?.Invoke();
+                onRelease?.Invoke(position);
         };
         Window.InputManager.OnMouseReleased += mouseReleasedEvent;
         mouseReleasedEvents.Add(mouseReleasedEvent);

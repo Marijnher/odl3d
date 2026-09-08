@@ -8,7 +8,7 @@ namespace odl3d;
 /// A generic scene containing a collection of objects of type T, where T is constrained to be a subclass of Object. The scene provides methods to add and remove objects, and an abstract Draw method that must be implemented by subclasses to render the scene using a given shader.
 /// </summary>
 /// <typeparam name="T">The type of objects contained in the scene, constrained to be a subclass of Object.</typeparam>
-public abstract class Scene<T> : InputHost, IDisposable where T : Object
+public abstract class Scene<T> : Drawable, IDisposable where T : Object
 {
     /// <summary>
     /// The window associated with the scene, used to determine the rendering context and other properties. This property is set in the constructor and is read-only for subclasses. The window provides access to the OpenGL context, input handling, and other features necessary for rendering the scene's objects.
@@ -19,22 +19,6 @@ public abstract class Scene<T> : InputHost, IDisposable where T : Object
     /// The camera used to render the scene. The camera's view and projection matrices are combined to create the view-projection matrix used for rendering the objects in the scene. The camera can be configured with position, orientation, field of view, aspect ratio, and other properties to control how the scene is viewed. This property is read-only for subclasses and is derived from the associated window.
     /// </summary>
     protected Camera Camera => Window.Camera;
-
-    /// <summary>
-    /// An optional offset applied to the positions of all objects in the scene when calculating their model matrices. This offset can be used to shift the entire scene in world space without modifying the individual positions of the objects. The offset is added to each object's position when computing its model matrix, allowing for easy translation of the entire scene.
-    /// This is intended for Scene3D. For Scene2D, you should prefer to the Viewport property instead.
-    /// </summary>
-    public Vector3 SceneOffset = Vector3.Zero;
-
-    /// <summary>
-    /// Indicates whether the scene has been disposed and its resources released. After disposing, the scene should not be used again.
-    /// </summary>
-    public bool Disposed { get; private set; } = false;
-
-    /// <summary>
-    /// Invoked when this scene is disposed. Subscribers can use this event to perform cleanup or other actions when the scene is no longer needed.
-    /// </summary>
-    public event Action? OnDisposed;
 
     /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
@@ -106,13 +90,12 @@ public abstract class Scene<T> : InputHost, IDisposable where T : Object
     public override void Dispose()
     {
         if (Disposed) return;
-        base.Dispose();
         while (Objects.Count > 0)
         {
             Objects[0].Dispose();
             Objects.RemoveAt(0);
         }
+        base.Dispose();
         Disposed = true;
-        OnDisposed?.Invoke();
     }
 }

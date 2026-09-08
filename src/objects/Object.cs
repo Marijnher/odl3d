@@ -6,7 +6,7 @@ namespace odl3d;
 /// <summary>
 /// A drawable 3D object consisting of a Mesh and an optional Texture, positioned and scaled in world space. The object can be drawn using a Shader and a view-projection matrix. Implements IDisposable to release GPU resources when no longer needed.
 /// </summary>
-public class Object : InputHost, IDisposable
+public class Object : Drawable
 {
     /// <summary>
     /// The Scene3D instance to which this object belongs. The scene provides context for the object's position and scale in world space, as well as access to the camera and other scene properties.
@@ -34,11 +34,6 @@ public class Object : InputHost, IDisposable
     public Mesh Mesh;
 
     /// <summary>
-    /// The position of this object in world space.
-    /// </summary>
-    public Vector3 Position;
-
-    /// <summary>
     /// The scale of this object in world space; defaults to (1,1,1).
     /// </summary>
     public Vector3 Scale = Vector3.One;
@@ -47,16 +42,6 @@ public class Object : InputHost, IDisposable
     /// If true, the texture will be automatically disposed when this object is disposed. If false, the texture will not be disposed and must be managed externally. Defaults to true.
     /// </summary>
     public bool AutoDisposeTexture = true;
-
-    /// <summary>
-    /// Indicates whether this object has been disposed and its resources released. After disposing, the object should not be used again.
-    /// </summary>
-    public bool Disposed { get; private set; } = false;
-
-    /// <summary>
-    /// Invoked when this object is disposed. Subscribers can use this event to perform cleanup or other actions when the object is no longer needed.
-    /// </summary>
-    public event Action? OnDisposed;
 
     /// <summary>
     /// Creates a new Object with the given mesh and optional texture.
@@ -109,7 +94,7 @@ public class Object : InputHost, IDisposable
     /// </summary>
     /// <returns>The model matrix that transforms this object's local coordinates to world coordinates.</returns>
     public virtual Matrix4x4 GetModelMatrix() =>
-        Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateTranslation(Position + Scene.SceneOffset);
+        Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateTranslation(Position + Scene.Position);
 
     /// <summary>
     /// Draws this object using the specified shader and the given view-projection matrix. The view-projection matrix is typically obtained from the camera and represents the combined view and projection transformations. This method sets up the necessary shader uniforms, binds the texture if available, and then draws the mesh associated with this object.
@@ -118,6 +103,7 @@ public class Object : InputHost, IDisposable
     /// <param name="viewProjection">The combined view and projection matrix, typically obtained from the camera.</param>
     public virtual void Draw(Shader shader, Matrix4x4 viewProjection)
     {
+        if (!Visible) return;
         Matrix4x4 mvp = GetModelMatrix() * viewProjection;
 
         shader.Use();
@@ -155,7 +141,7 @@ public class Object : InputHost, IDisposable
         Mesh.Dispose();
         if (AutoDisposeTexture)
             Texture?.Dispose();
+        base.Dispose();
         Disposed = true;
-        OnDisposed?.Invoke();
     }
 }

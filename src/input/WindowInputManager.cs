@@ -94,8 +94,9 @@ public class WindowInputManager : AbstractInputManager
             mouseButtons[button] = action != GLFW.GLFW_RELEASE;
             if (action == GLFW.GLFW_PRESS)
             {
-                InvokeMousePressed((Mouse) button);
-                InvokeMouseRepeated((Mouse) button);
+                Vector2 pos = Window.GetCursorPosition();
+                InvokeMousePressed((Mouse) button, pos);
+                InvokeMouseRepeated((Mouse) button, pos);
                 if (!mouseButtonTimers.ContainsKey((Mouse) button))
                 {
                     mouseButtonTimers[(Mouse) button] = new Timer(MOUSE_REPEAT_TIME_INITIAL);
@@ -107,7 +108,7 @@ public class WindowInputManager : AbstractInputManager
                 {
                     mouseButtonTimers.Remove((Mouse) button);
                 }
-                InvokeMouseReleased((Mouse) button);
+                InvokeMouseReleased((Mouse) button, Window.GetCursorPosition());
             }
         }
     }
@@ -186,12 +187,12 @@ public class WindowInputManager : AbstractInputManager
     /// </summary>
     /// <param name="button">The mouse button for which to register the callbacks.</param>
     /// <param name="onPress">The action to perform when the mouse button is pressed.</param>
-    public override void RegisterMousePress(Mouse button, Action onPress)
+    public override void RegisterMousePress(Mouse button, Action<Vector2> onPress)
     {
-        OnMousePressed += (pressedButton) =>
+        OnMousePressed += (pressedButton, pos) =>
         {
             if (pressedButton == button)
-                onPress?.Invoke();
+                onPress?.Invoke(pos);
         };
     }
 
@@ -200,12 +201,12 @@ public class WindowInputManager : AbstractInputManager
     /// </summary>
     /// <param name="button">The mouse button for which to register the callback.</param>
     /// <param name="onDown">The action to perform when the mouse button is held down.</param>
-    public override void RegisterMouseDown(Mouse button, Action onDown)
+    public override void RegisterMouseDown(Mouse button, Action<Vector2> onDown)
     {
-        OnMouseDown += (downButton) =>
+        OnMouseDown += (downButton, pos) =>
         {
             if (downButton == button)
-                onDown?.Invoke();
+                onDown?.Invoke(pos);
         };
     }
 
@@ -214,12 +215,12 @@ public class WindowInputManager : AbstractInputManager
     /// </summary>
     /// <param name="button">The mouse button for which to register the callback.</param>
     /// <param name="onRepeat">The action to perform when the mouse button is repeated.</param>
-    public override void RegisterMouseRepeated(Mouse button, Action onRepeat)
+    public override void RegisterMouseRepeated(Mouse button, Action<Vector2> onRepeat)
     {
-        OnMouseRepeated += (repeatedButton) =>
+        OnMouseRepeated += (repeatedButton, pos) =>
         {
             if (repeatedButton == button)
-                onRepeat?.Invoke();
+                onRepeat?.Invoke(pos);
         };
     }
 
@@ -228,12 +229,12 @@ public class WindowInputManager : AbstractInputManager
     /// </summary>
     /// <param name="button">The mouse button for which to register the callback.</param>
     /// <param name="onRelease">The action to perform when the mouse button is released.</param>
-    public override void RegisterMouseRelease(Mouse button, Action onRelease)
+    public override void RegisterMouseRelease(Mouse button, Action<Vector2> onRelease)
     {
-        OnMouseReleased += (releasedButton) =>
+        OnMouseReleased += (releasedButton, pos) =>
         {
             if (releasedButton == button)
-                onRelease?.Invoke();
+                onRelease?.Invoke(pos);
         };
     }
 
@@ -275,13 +276,13 @@ public class WindowInputManager : AbstractInputManager
             if (mouseButtons[i])
             {
                 Mouse button = (Mouse) i;
-                InvokeMouseDown(button);
+                InvokeMouseDown(button, Window.GetCursorPosition());
                 if (mouseButtonTimers.ContainsKey(button))
                 {
                     Timer timer = mouseButtonTimers[button];
                     if (timer.IsFinished)
                     {
-                        InvokeMouseRepeated(button);
+                        InvokeMouseRepeated(button, Window.GetCursorPosition());
                         timer.Reset(MOUSE_REPEAT_TIME_SUBSEQUENT);
                     }
                 }

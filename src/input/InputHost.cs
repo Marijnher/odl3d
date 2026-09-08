@@ -11,6 +11,16 @@ public abstract class InputHost : IDisposable
     public AbstractInputManager? InputManager { get; protected set; }
 
     /// <summary>
+    /// Indicates whether this object has been disposed and its resources released. After disposing, the object should not be used again.
+    /// </summary>
+    public bool Disposed { get; protected set; }
+
+    /// <summary>
+    /// Invoked when the object is disposed. Subscribers can use this event to perform cleanup or other actions when the object is no longer usable.
+    /// </summary>
+    public event Action? OnDisposed;
+
+    /// <summary>
     /// Enables or disables input handling for the object. When enabled, the object will create a concrete AbstractInputManager to handle input events. When disabled, the AbstractInputManager will be disposed and input events will no longer be processed for this object. This method allows the user to control whether the object should respond to user input.
     /// </summary>
     /// <param name="enable">True to enable input handling; false to disable it.</param>
@@ -96,7 +106,7 @@ public abstract class InputHost : IDisposable
     /// <param name="mouse">The mouse button for which to register the mouse press event handler.</param>
     /// <param name="onPress">The action to invoke when the mouse button is pressed.</param>
     /// <exception cref="InputException"></exception>
-    public void RegisterMousePress(Mouse mouse, Action onPress)
+    public void RegisterMousePress(Mouse mouse, Action<Vector2> onPress)
     {
         if (InputManager == null) throw new InputException("Input handling is not enabled for this object. Call `SetEnableInput(true)` first.");
         InputManager.RegisterMousePress(mouse, onPress);
@@ -108,7 +118,7 @@ public abstract class InputHost : IDisposable
     /// <param name="mouse">The mouse button for which to register the mouse down event handler.</param>
     /// <param name="onDown">The action to invoke when the mouse button is pressed down.</param>
     /// <exception cref="InputException"></exception>
-    public void RegisterMouseDown(Mouse mouse, Action onDown)
+    public void RegisterMouseDown(Mouse mouse, Action<Vector2> onDown)
     {
         if (InputManager == null) throw new InputException("Input handling is not enabled for this object. Call `SetEnableInput(true)` first.");
         InputManager.RegisterMouseDown(mouse, onDown);
@@ -120,7 +130,7 @@ public abstract class InputHost : IDisposable
     /// <param name="mouse">The mouse button for which to register the mouse repeated event handler.</param>
     /// <param name="onRepeat">The action to invoke when the mouse button is repeatedly pressed.</param>
     /// <exception cref="InputException"></exception>
-    public void RegisterMouseRepeated(Mouse mouse, Action onRepeat)
+    public void RegisterMouseRepeated(Mouse mouse, Action<Vector2> onRepeat)
     {
         if (InputManager == null) throw new InputException("Input handling is not enabled for this object. Call `SetEnableInput(true)` first.");
         InputManager.RegisterMouseRepeated(mouse, onRepeat);
@@ -132,7 +142,7 @@ public abstract class InputHost : IDisposable
     /// <param name="mouse">The mouse button for which to register the mouse release event handler.</param>
     /// <param name="onRelease">The action to invoke when the mouse button is released.</param>
     /// <exception cref="InputException"></exception>
-    public void RegisterMouseRelease(Mouse mouse, Action onRelease)
+    public void RegisterMouseRelease(Mouse mouse, Action<Vector2> onRelease)
     {
         if (InputManager == null) throw new InputException("Input handling is not enabled for this object. Call `SetEnableInput(true)` first.");
         InputManager.RegisterMouseRelease(mouse, onRelease);
@@ -163,10 +173,13 @@ public abstract class InputHost : IDisposable
     /// </summary>
     public virtual void Dispose()
     {
+        if (Disposed) return;
         if (InputManager != null)
         {
             InputManager.Dispose();
             InputManager = null;
         }
+        Disposed = true;
+        OnDisposed?.Invoke();
     }
 }

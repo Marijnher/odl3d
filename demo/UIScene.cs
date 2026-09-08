@@ -10,6 +10,13 @@ class UIScene : Scene2D
     {
         var topLeft = new Sprite2D(this, Texture.FromColor(32, 32, Color.Red));
         topLeft.Position = new Vector3(4, 4, 0);
+        topLeft.SetEnableInput(true);
+        topLeft.RegisterMousePress(Mouse.Left, (pos) =>
+        {
+            if (pos.X >= topLeft.Position.X && pos.X < topLeft.Position.X + topLeft.Texture!.Width &&
+                pos.Y >= topLeft.Position.Y && pos.Y < topLeft.Position.Y + topLeft.Texture!.Height)
+                    topLeft.Visible = !topLeft.Visible;
+        });
 
         var topRight = new Sprite2D(this, Texture.FromColor(32, 32, Color.Green));
         topRight.Position = new Vector3(window.Width - 36, 4, 0);

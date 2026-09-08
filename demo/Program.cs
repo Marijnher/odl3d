@@ -36,25 +36,13 @@ void main()
         Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window);
-        window.SetCursorCapture(true);
-        window.RegisterKeyPress(Key.Escape, () => window.Close());
+        window.SetCursorCapture(false);
+        window.RegisterKeyPress(Key.Escape, window.Close);
 
         Shader shader = new Shader(VertexSource, FragmentSource);
 
         DemoScene demoScene1 = new DemoScene(window);
         UIScene uiScene = new UIScene(window);
-        
-        demoScene1.SetEnableInput(true);
-        demoScene1.RegisterKeyPress(Key.C, () => Console.WriteLine("C pressed."));
-        demoScene1.RegisterKeyReleased(Key.C, () => Console.WriteLine("C released."));
-        demoScene1.RegisterKeyDown(Key.C, () => Console.WriteLine("C down."));
-
-        demoScene1.RegisterMousePress(Mouse.Left, () => Console.WriteLine("Left pressed."));
-        demoScene1.RegisterMouseRelease(Mouse.Left, () => Console.WriteLine("Left released."));
-        demoScene1.RegisterMouseDown(Mouse.Left, () => Console.WriteLine("Left down."));
-        demoScene1.RegisterMouseRepeated(Mouse.Right, () => Console.WriteLine("Right repeated."));
-
-        demoScene1.RegisterKeyRepeated(Key.V, () => Console.WriteLine("V repeated."));
 
         while (!window.ShouldClose)
         {
