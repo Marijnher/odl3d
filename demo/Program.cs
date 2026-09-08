@@ -35,7 +35,7 @@ void main()
         int height = 600;
         Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
-        window.SetCamera(new MoveableCamera(window));
+        window.Camera = new MoveableCamera(window);
         window.SetCursorCapture(true);
         window.RegisterKeyPress(Key.Escape, () => window.Close());
 
@@ -55,7 +55,7 @@ void main()
         demoScene1.RegisterMouseRepeated(Mouse.Right, () => Console.WriteLine("Right repeated."));
 
         demoScene1.RegisterKeyRepeated(Key.V, () => Console.WriteLine("V repeated."));
-        
+
         while (!window.ShouldClose)
         {
             window.Update(0);

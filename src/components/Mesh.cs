@@ -33,6 +33,11 @@ public class Mesh : IDisposable
     public bool Disposed { get; private set; } = false;
 
     /// <summary>
+    /// Invoked when this mesh is disposed. Subscribers can use this event to perform cleanup or other actions when the mesh is no longer needed.
+    /// </summary>
+    public event Action? OnDisposed;
+
+    /// <summary>
     /// Creates a new Mesh with the given vertex and index data. The vertex data should contain position (x, y, z) and texture coordinates (u, v) for each vertex, interleaved in the order [x, y, z, u, v]. The index data defines the triangles to draw using the vertices. This constructor generates the necessary GL buffers and configures the vertex attributes for rendering.
     /// </summary>
     /// <param name="vertices">The vertex data for the mesh, containing position (x, y, z) and texture coordinates (u, v) for each vertex, interleaved in the order [x, y, z, u, v].</param>
@@ -142,6 +147,7 @@ public class Mesh : IDisposable
         GL.glDeleteBuffers(1, ref _vbo);
         GL.glDeleteVertexArrays(1, ref _vao);
         Disposed = true;
+        OnDisposed?.Invoke();
     }
 
     /// <summary>

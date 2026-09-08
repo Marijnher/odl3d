@@ -39,6 +39,11 @@ public class Texture : IDisposable
     public bool Disposed { get; private set; } = false;
 
     /// <summary>
+    /// Invoked when this texture is disposed. Subscribers can use this event to perform cleanup or other actions when the texture is no longer needed.
+    /// </summary>
+    public event Action? OnDisposed;
+
+    /// <summary>
     /// Creates a new Texture with the given width and height, allocating a pixel buffer of Width * Height * 4 bytes (RGBA). The pixel data is uninitialized; it must be filled in before calling Upload().
     /// </summary>
     /// <param name="width">Width of the texture in pixels.</param>
@@ -181,5 +186,6 @@ public class Texture : IDisposable
             GL.glDeleteTextures(1, ref handle);
         }
         Disposed = true;
+        OnDisposed?.Invoke();
     }
 }

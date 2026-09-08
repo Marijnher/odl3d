@@ -37,12 +37,12 @@ public class Window : InputHost, IDisposable
     /// <summary>
     /// The background color used when clearing the window's color buffer. This is set at creation and can be changed at any time. The default is black (0,0,0).
     /// </summary>
-    public Color BackgroundColor { get; set; } = new Color(0, 0, 0);
+    public Color BackgroundColor = new Color(0, 0, 0);
 
     /// <summary>
     /// The camera used to render 3D scenes in the window. Each 3D scene can have its own camera, but this property provides a default camera for convenience. The camera's view and projection matrices are used to render the objects in the 3D scenes.
     /// </summary>
-    public Camera Camera { get; set; }
+    public Camera Camera;
 
     /// <summary>
     /// A window can display any number of 3D scenes, layered in the order added. Each scene's camera is used to render its objects, and the depth buffer is cleared between scenes so later scenes are not occluded by earlier ones.
@@ -58,6 +58,11 @@ public class Window : InputHost, IDisposable
     /// Indicates whether the window has been marked to close (e.g. by pressing Escape). This does not immediately destroy the window; it is up to the application to check this property and call Dispose() when appropriate.
     /// </summary>
     public bool ShouldClose => GLFW.glfwWindowShouldClose(Handle) != GLFW.GLFW_FALSE;
+
+    /// <summary>
+    /// Invoked when this window is disposed. Subscribers can use this event to perform cleanup or other actions when the window is no longer needed.
+    /// </summary>
+    public event Action? OnDisposed;
 
     /// <summary>
     /// The time at the previous frame, used to calculate delta time between frames. This is updated each frame during the window's update loop.
@@ -109,15 +114,6 @@ public class Window : InputHost, IDisposable
     ~Window()
     {
         if (!Disposed) Console.WriteLine("Warning: Window was not disposed before being finalized. This may cause a GLFW resource leak.");
-    }
-
-    /// <summary>
-    /// Sets the active camera for the window. This allows the application to change the camera used for rendering the 3D scene at runtime.
-    /// </summary>
-    /// <param name="camera">The camera to set as the active camera for the window.</param>
-    public void SetCamera(Camera camera)
-    {
-        Camera = camera;
     }
 
     /// <summary>
@@ -257,5 +253,6 @@ public class Window : InputHost, IDisposable
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;
+        OnDisposed?.Invoke();
     }
 }

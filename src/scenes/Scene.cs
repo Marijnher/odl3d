@@ -32,6 +32,11 @@ public abstract class Scene<T> : InputHost, IDisposable where T : Object
     public bool Disposed { get; private set; } = false;
 
     /// <summary>
+    /// Invoked when this scene is disposed. Subscribers can use this event to perform cleanup or other actions when the scene is no longer needed.
+    /// </summary>
+    public event Action? OnDisposed;
+
+    /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
     /// </summary>
     /// <param name="window">The window associated with the scene, used to determine the rendering context and other properties.</param>
@@ -108,5 +113,6 @@ public abstract class Scene<T> : InputHost, IDisposable where T : Object
             Objects.RemoveAt(0);
         }
         Disposed = true;
+        OnDisposed?.Invoke();
     }
 }

@@ -20,6 +20,11 @@ public class Shader : IDisposable
     public bool Disposed { get; private set; } = false;
 
     /// <summary>
+    /// Invoked when this shader is disposed. Subscribers can use this event to perform cleanup or other actions when the shader is no longer needed.
+    /// </summary>
+    public event Action? OnDisposed;
+
+    /// <summary>
     /// Creates a new Shader by compiling the given vertex and fragment shader source code, linking them into a shader program, and checking for compilation and linking errors. If any errors occur during compilation or linking, an exception is thrown with the error log. The resulting shader program can be used for rendering by calling Use() and setting uniform variables as needed.
     /// </summary>
     /// <param name="vertexSource">The source code of the vertex shader.</param>
@@ -129,6 +134,7 @@ public class Shader : IDisposable
         if (Disposed) return;
         GL.glDeleteProgram(Handle);
         Disposed = true;
+        OnDisposed?.Invoke();
     }
 }
 

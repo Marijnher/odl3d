@@ -54,6 +54,11 @@ public class Object : InputHost, IDisposable
     public bool Disposed { get; private set; } = false;
 
     /// <summary>
+    /// Invoked when this object is disposed. Subscribers can use this event to perform cleanup or other actions when the object is no longer needed.
+    /// </summary>
+    public event Action? OnDisposed;
+
+    /// <summary>
     /// Creates a new Object with the given mesh and optional texture.
     /// </summary>
     /// <param name="scene">The scene to which this object belongs.</param>
@@ -151,5 +156,6 @@ public class Object : InputHost, IDisposable
         if (AutoDisposeTexture)
             Texture?.Dispose();
         Disposed = true;
+        OnDisposed?.Invoke();
     }
 }
