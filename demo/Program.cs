@@ -55,6 +55,11 @@ void main()
 
         demoScene1.RegisterKeyRepeated(Key.V, () => Console.WriteLine("V repeated."));
 
+        window.RegisterMouseMoved((oldPos, newPos) =>
+        {
+            Console.WriteLine($"Mouse moved from {oldPos} to {newPos}");
+        });
+
         double lastTime = Window.GetTime();
         var (lastMouseX, lastMouseY) = window.GetCursorPosition();
         const float moveSpeed = 3f;

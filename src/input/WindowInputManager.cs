@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Diagnostics;
 
 namespace odl3d;
@@ -30,9 +31,18 @@ public class WindowInputManager : AbstractInputManager
     private bool[] mouseButtons = new bool[8]; // Assuming 8 mouse buttons, adjust as needed.
 
     /// <summary>
+    /// The previous position of the mouse before it moved. This is used to track the old position when the mouse is moved, allowing for the calculation of movement deltas and the invocation of the OnMouseMoved event.
+    /// </summary>
+    private Vector2? oldPosition;
+
+    /// <summary>
     /// A dictionary that maps each mouse button to a Timer instance. This is used to track the duration for which each mouse button has been held down. The Timer is started when the button is pressed and reset when the button is released, allowing for timing-based input handling.
     /// </summary>
     private Dictionary<Mouse, Timer> mouseButtonTimers = new Dictionary<Mouse, Timer>();
+
+    private GLFW.GLFWkeyfun? keyCallback;
+    private GLFW.GLFWmousebuttonfun? mouseButtonCallback;
+    private GLFW.GLFWcursorposfun? cursorPosCallback;
 
     /// <summary>
     /// Creates a new WindowInputManager for the specified window. It sets up the key callback to handle key press and release events, and initializes the keys array to track the state of each key. The WindowInputManager will listen for input events from the window and invoke the appropriate events when keys or mouse buttons are pressed or released.
@@ -40,8 +50,9 @@ public class WindowInputManager : AbstractInputManager
     /// <param name="window">The window for which to manage input.</param>
     public WindowInputManager(Window window) : base(window)
     {
-        GLFW.glfwSetKeyCallback(window.Handle, KeyCallback);
-        GLFW.glfwSetMouseButtonCallback(window.Handle, MouseButtonCallback);
+        GLFW.glfwSetKeyCallback(window.Handle, keyCallback = KeyCallback);
+        GLFW.glfwSetMouseButtonCallback(window.Handle, mouseButtonCallback = MouseButtonCallback);
+        GLFW.glfwSetCursorPosCallback(window.Handle, cursorPosCallback = CursorPosCallback);
     }
 
     /// <summary>
@@ -99,6 +110,19 @@ public class WindowInputManager : AbstractInputManager
                 InvokeMouseReleased((Mouse) button);
             }
         }
+    }
+    
+    /// <summary>
+    /// Called when the mouse is moved. It converts the new mouse position to a Vector2 and invokes the OnMouseMoved event.
+    /// </summary>
+    /// <param name="handle">The handle of the window that received the event.</param>
+    /// <param name="xpos">The new x-coordinate of the mouse cursor.</param>
+    /// <param name="ypos">The new y-coordinate of the mouse cursor.</param>
+    private void CursorPosCallback(IntPtr handle, double xpos, double ypos)
+    {
+        Vector2 newPosition = new Vector2((float) xpos, (float) ypos);
+        InvokeMouseMoved(oldPosition ?? newPosition, newPosition);
+        oldPosition = newPosition;
     }
 
     /// <summary>
@@ -214,6 +238,15 @@ public class WindowInputManager : AbstractInputManager
     }
 
     /// <summary>
+    /// Registers a callback for mouse movement events. The callback receives the old and new mouse positions as Vector2.
+    /// </summary>
+    /// <param name="onMoved">The action to perform when the mouse is moved, receiving the old and new mouse positions as Vector2.</param>
+    public override void RegisterMouseMoved(Action<Vector2, Vector2> onMoved)
+    {
+        OnMouseMoved += onMoved;
+    }
+
+    /// <summary>
     /// Checks if the specified key is currently pressed. It returns true if the key is down, or false if it is up. This method can be used to query the state of keys in the Update() method or in response to input events.
     /// </summary>
     /// <param name="key">The key to check.</param>
@@ -262,8 +295,9 @@ public class WindowInputManager : AbstractInputManager
     public override void Dispose()
     {
         if (Disposed) return;
-        GLFW.glfwSetKeyCallback(Window.Handle, null);
-        GLFW.glfwSetMouseButtonCallback(Window.Handle, null);
+        GLFW.glfwSetKeyCallback(Window.Handle, keyCallback = null);
+        GLFW.glfwSetMouseButtonCallback(Window.Handle, mouseButtonCallback = null);
+        GLFW.glfwSetCursorPosCallback(Window.Handle, cursorPosCallback = null);
         Disposed = true;
     }
 }

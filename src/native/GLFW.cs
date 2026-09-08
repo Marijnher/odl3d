@@ -58,11 +58,14 @@ internal static class GLFW
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate double d_glfwGetTime();
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_glfwSetKeyCallback(IntPtr window, GLFWkeyCallback? callback);
-    public delegate void GLFWkeyCallback(IntPtr window, int key, int scancode, int action, int mods);
+    public delegate void d_glfwSetKeyCallback(IntPtr window, GLFWkeyfun? callback);
+    public delegate void GLFWkeyfun(IntPtr window, int key, int scancode, int action, int mods);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_glfwSetMouseButtonCallback(IntPtr window, GLFWmouseButtonCallback? callback);
-    public delegate void GLFWmouseButtonCallback(IntPtr window, int button, int action, int mods);
+    public delegate void d_glfwSetMouseButtonCallback(IntPtr window, GLFWmousebuttonfun? callback);
+    public delegate void GLFWmousebuttonfun(IntPtr window, int button, int action, int mods);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwSetCursorPosCallback(IntPtr window, GLFWcursorposfun? callback);
+    public delegate void GLFWcursorposfun(IntPtr window, double xpos, double ypos);
 
 #pragma warning disable CS8618
     public static d_glfwInit glfwInit;
@@ -83,6 +86,7 @@ internal static class GLFW
     public static d_glfwGetTime glfwGetTime;
     public static d_glfwSetKeyCallback glfwSetKeyCallback;
     public static d_glfwSetMouseButtonCallback glfwSetMouseButtonCallback;
+    public static d_glfwSetCursorPosCallback glfwSetCursorPosCallback;
 #pragma warning restore CS8618
 
     private static IntPtr _library;
@@ -124,7 +128,8 @@ internal static class GLFW
         glfwGetProcAddress = GetFunction<d_glfwGetProcAddress>("glfwGetProcAddress");
         glfwSetKeyCallback = GetFunction<d_glfwSetKeyCallback>("glfwSetKeyCallback");
         glfwSetMouseButtonCallback = GetFunction<d_glfwSetMouseButtonCallback>("glfwSetMouseButtonCallback");
-
+        glfwSetCursorPosCallback = GetFunction<d_glfwSetCursorPosCallback>("glfwSetCursorPosCallback");
+    
         Loaded = true;
     }
 

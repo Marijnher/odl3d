@@ -57,6 +57,11 @@ public abstract class AbstractInputManager : IDisposable
     public event Action<Mouse>? OnMouseReleased;
 
     /// <summary>
+    /// An event that is triggered when the mouse is moved. Subscribers can register a callback to be notified when the mouse moves, allowing for custom input handling in the application. The Vector2 parameter represents the new mouse position.
+    /// </summary>
+    public event Action<Vector2, Vector2>? OnMouseMoved;
+
+    /// <summary>
     /// Creates a new InputManager for the specified window. It sets up the key callback to handle key press and release events, and initializes the keys array to track the state of each key. The InputManager will listen for input events from the window and invoke the appropriate events when keys or mouse buttons are pressed or released.
     /// </summary>
     /// <param name="window">The window for which to manage input.</param>
@@ -122,6 +127,12 @@ public abstract class AbstractInputManager : IDisposable
     public abstract void RegisterMouseRelease(Mouse button, Action onRelease);
 
     /// <summary>
+    /// Registers a callback for mouse movement events.
+    /// </summary>
+    /// <param name="onMoved">The action to perform when the mouse is moved, receiving the old and new mouse positions as Vector2.</param>
+    public abstract void RegisterMouseMoved(Action<Vector2, Vector2> onMoved);
+
+    /// <summary>
     /// Invokes the OnKeyPressed event for the specified key, notifying subscribers that the key has been pressed. This method is typically called by the input manager when a key press event is detected, allowing registered callbacks to respond to the key press.
     /// </summary>
     /// <param name="key">The key that was pressed.</param>
@@ -169,6 +180,12 @@ public abstract class AbstractInputManager : IDisposable
     /// </summary>
     /// <param name="button">The mouse button that was released.</param>
     public void InvokeMouseReleased(Mouse button) => OnMouseReleased?.Invoke(button);
+
+    /// <summary>
+    /// Invokes the OnMouseMoved event, notifying subscribers that the mouse has moved to a new position. This method is typically called by the input manager when the mouse is moved, allowing registered callbacks to respond to the mouse movement.
+    /// </summary>
+    /// <param name="newPosition">The new position of the mouse after it moved.</param>
+    public void InvokeMouseMoved(Vector2 oldPosition, Vector2 newPosition) => OnMouseMoved?.Invoke(oldPosition, newPosition);
 
     /// <summary>
     /// Checks if the specified key is currently pressed. It returns true if the key is down, or false if it is up. This method can be used to query the state of keys in the Update() method or in response to input events.

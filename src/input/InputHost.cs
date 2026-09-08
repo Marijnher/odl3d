@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 
 namespace odl3d;
 
@@ -135,6 +136,17 @@ public abstract class InputHost : IDisposable
     {
         if (InputManager == null) throw new InputException("Input handling is not enabled for this object. Call `SetEnableInput(true)` first.");
         InputManager.RegisterMouseRelease(mouse, onRelease);
+    }
+
+    /// <summary>
+    /// Registers a mouse moved event handler. The onMoved action will be invoked when the mouse is moved, providing the old and new mouse positions. If input handling is not enabled for the object, an InputException will be thrown. This method allows the user to define custom behavior for mouse movement while the object is active.
+    /// </summary>
+    /// <param name="onMoved">The action to invoke when the mouse is moved, providing the old and new mouse positions.</param>
+    /// <exception cref="InputException"></exception>
+    public void RegisterMouseMoved(Action<Vector2, Vector2> onMoved) 
+    {
+        if (InputManager == null) throw new InputException("Input handling is not enabled for this object. Call `SetEnableInput(true)` first.");
+        InputManager.RegisterMouseMoved(onMoved);
     }
 
     /// <summary>

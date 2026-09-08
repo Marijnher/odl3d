@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 
 namespace odl3d;
@@ -16,6 +17,7 @@ public class ProxyInputManager : AbstractInputManager
     private List<Action<Mouse>> mouseDownEvents = new List<Action<Mouse>>();
     private List<Action<Mouse>> mouseRepeatedEvents = new List<Action<Mouse>>();
     private List<Action<Mouse>> mouseReleasedEvents = new List<Action<Mouse>>();
+    private List<Action<Vector2, Vector2>> mouseMovedEvents = new List<Action<Vector2, Vector2>>();
 
     /// <summary>
     /// Initializes a new instance of the ProxyInputManager class for the specified window. This constructor sets up the input manager to handle key events for the owner, allowing the owner to respond to user input. It also initializes lists to keep track of registered key events for proper disposal later.
@@ -33,6 +35,7 @@ public class ProxyInputManager : AbstractInputManager
         Window.InputManager.OnMouseDown += InvokeMouseDown;
         Window.InputManager.OnMouseRepeated += InvokeMouseRepeated;
         Window.InputManager.OnMouseReleased += InvokeMouseReleased;
+        Window.InputManager.OnMouseMoved += InvokeMouseMoved;
     }
 
     /// <summary>
@@ -203,6 +206,22 @@ public class ProxyInputManager : AbstractInputManager
     }
 
     /// <summary>
+    /// Registers a callback to be invoked when the mouse is moved. This allows the owner to respond to mouse movement events.
+    /// </summary>
+    /// <param name="onMoved">The action to perform when the mouse is moved.</param>
+    /// <exception cref="InputException">Thrown if the parent window's InputManager is null.</exception>
+    public override void RegisterMouseMoved(Action<Vector2, Vector2> onMoved)
+    {
+        if (Window.InputManager == null) throw new InputException("Parent window's InputManager is null.");
+        Action<Vector2, Vector2> mouseMovedEvent = (oldPosition, newPosition) =>
+        {
+            onMoved?.Invoke(oldPosition, newPosition);
+        };
+        Window.InputManager.OnMouseMoved += mouseMovedEvent;
+        mouseMovedEvents.Add(mouseMovedEvent);
+    }
+
+    /// <summary>
     /// Updates the input state for the owner. This method is called during the owner's update cycle to process input events and invoke the appropriate callbacks for registered keys. It allows the owner to respond to user input in real-time.
     /// </summary>
     public override void Update() { }
@@ -231,6 +250,8 @@ public class ProxyInputManager : AbstractInputManager
         mouseRepeatedEvents.Clear();
         mouseReleasedEvents.ForEach(e => Window.InputManager.OnMouseReleased -= e);
         mouseReleasedEvents.Clear();
+        mouseMovedEvents.ForEach(e => Window.InputManager.OnMouseMoved -= e);
+        mouseMovedEvents.Clear();
         Window.InputManager.OnKeyPressed -= InvokeKeyPressed;
         Window.InputManager.OnKeyDown -= InvokeKeyDown;
         Window.InputManager.OnKeyRepeated -= InvokeKeyRepeated;
@@ -239,6 +260,7 @@ public class ProxyInputManager : AbstractInputManager
         Window.InputManager.OnMouseDown -= InvokeMouseDown;
         Window.InputManager.OnMouseRepeated -= InvokeMouseRepeated;
         Window.InputManager.OnMouseReleased -= InvokeMouseReleased;
+        Window.InputManager.OnMouseMoved -= InvokeMouseMoved;
         Disposed = true;
     }
 }
