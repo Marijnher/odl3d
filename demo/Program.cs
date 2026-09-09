@@ -28,8 +28,8 @@ void main()
 {
     vec4 color = uUseTexture ? texture(uTexture, vTexCoord) * texColor : uColor;
 
-    // Discard alpha for textures with either 0 or 255 opacity.
-    if (color.a < 0.5)
+    // Discard fully transparent fragments
+    if (color.a == 0)
         discard;
 
     FragColor = color;

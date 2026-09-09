@@ -1,5 +1,9 @@
 using System;
 using Assimp;
+using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
 
 namespace odl3d;
 
@@ -9,13 +13,15 @@ public static class DaeLoader
     {
         using var importer = new AssimpContext();
 
+        // Load and process the DAE file
         var mScene = importer.ImportFile(
             filename,
             PostProcessSteps.Triangulate |
-            PostProcessSteps.GenerateSmoothNormals |
-            PostProcessSteps.FlipUVs |
-            PostProcessSteps.JoinIdenticalVertices
+            PostProcessSteps.FlipUVs
         );
+        // Load the file again to extract only wrap_s and wrap_t values
+        var wrapValues = DaeWrapLoader.LoadWrapData(filename);
+        // TODO: Create own DAE parser to handle wrap modes directly
 
         Mesh[] meshes = new Mesh[mScene.MeshCount];
         Texture[] textures = new Texture[mScene.MeshCount];
@@ -61,13 +67,98 @@ public static class DaeLoader
             }
             string texFilename = mat.TextureDiffuse.FilePath;
             meshes[idx] = new Mesh(vertices, indices);
+            if (!mat.HasTextureDiffuse) continue;
+            string wrapName = texFilename.Replace(" ", "%20");
+            if (!wrapValues.ContainsKey(wrapName))
+            {
+                throw new Exception("Wrap values not found for texture: " + wrapName);
+            }
+            (TextureWrap wrapH, TextureWrap wrapV) = wrapValues[wrapName];
             textures[idx] = new Texture(textureFolder + "/" + texFilename)
             {
-                WrapModeV = TextureWrap.ClampToEdge,
-                WrapModeH = TextureWrap.MirroredRepeat
+                WrapModeH = wrapH,
+                WrapModeV = wrapV
             };
         }
 
         return (meshes, textures);
+    }
+}
+
+class DaeWrapLoader
+{
+    public static Dictionary<string, (TextureWrap WrapS, TextureWrap WrapT)>
+        LoadWrapData(string filename)
+    {
+        XDocument doc = XDocument.Load(filename);
+        XNamespace ns = doc.Root!.Name.Namespace;
+
+        var result = new Dictionary<string, (TextureWrap, TextureWrap)>();
+
+        // image id -> filename
+        Dictionary<string, string> images =
+            doc.Descendants(ns + "image")
+                .Where(i => i.Attribute("id") != null)
+                .ToDictionary(
+                    i => i.Attribute("id")!.Value,
+                    i => Path.GetFileName(
+                        i.Element(ns + "init_from")?.Value ?? ""));
+
+        foreach (var effect in doc.Descendants(ns + "effect"))
+        {
+            // sid -> element
+            var newParams = effect
+                .Descendants(ns + "newparam")
+                .ToDictionary(
+                    p => (string)p.Attribute("sid")!,
+                    p => p);
+
+            foreach (var samplerParam in newParams.Values)
+            {
+                var sampler = samplerParam.Element(ns + "sampler2D");
+                if (sampler == null)
+                    continue;
+
+                string? surfaceSid =
+                    sampler.Element(ns + "source")?.Value;
+
+                if (surfaceSid == null ||
+                    !newParams.TryGetValue(surfaceSid, out var surfaceParam))
+                    continue;
+
+                string? imageId =
+                    surfaceParam
+                        .Element(ns + "surface")
+                        ?.Element(ns + "init_from")
+                        ?.Value;
+
+                if (imageId == null ||
+                    !images.TryGetValue(imageId, out string? textureFile))
+                    continue;
+
+                if (textureFile == null) throw new Exception("Texture file not found for image ID: " + imageId);
+                result[textureFile] =
+                (
+                    ParseWrapMode(
+                        sampler.Element(ns + "wrap_s")?.Value),
+                    ParseWrapMode(
+                        sampler.Element(ns + "wrap_t")?.Value)
+                );
+            }
+        }
+
+        return result;
+    }
+
+    private static TextureWrap ParseWrapMode(string? value)
+    {
+        return value?.ToUpperInvariant() switch
+        {
+            "WRAP" => TextureWrap.Repeat,
+            "MIRROR" => TextureWrap.Mirror,
+            "CLAMP" => TextureWrap.Clamp,
+            "BORDER" => TextureWrap.Border,
+            _ => TextureWrap.Repeat
+        };
     }
 }

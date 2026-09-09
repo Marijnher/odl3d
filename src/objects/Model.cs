@@ -6,10 +6,7 @@ namespace odl3d;
 
 public class Model : Object
 {
-    private List<Object> Objects = new List<Object>();
-
-    public TextureWrap TextureWrapModeH = TextureWrap.MirroredRepeat;
-    public TextureWrap TextureWrapModeV = TextureWrap.ClampToEdge;
+    public List<Object> Objects = new List<Object>();
 
     public Model(Scene<Object> scene, string filename) : base(scene)
     {
@@ -23,12 +20,6 @@ public class Model : Object
             Object obj = new Object(Scene, meshes[i], textures[i]);
             Objects.Add(obj);
         }
-        int idx = -1;
-        RegisterKeyPress(Key.G, () =>
-        {
-            idx = (idx + 1) % Objects.Count;
-            Objects[idx].Visible = !Objects[idx].Visible;
-        });
     }
 
     public override void Draw(Shader shader, Matrix4x4 viewProjection)
@@ -37,8 +28,6 @@ public class Model : Object
         {
             obj.Position = Position;
             obj.Visible = Visible;
-            obj.Texture!.WrapModeH = TextureWrapModeH;
-            obj.Texture!.WrapModeV = TextureWrapModeV;
             obj.Draw(shader, viewProjection);
         }
     }
