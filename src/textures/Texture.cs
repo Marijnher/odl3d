@@ -35,6 +35,16 @@ public class Texture : IDisposable
     public bool Uploaded { get; private set; } = false;
 
     /// <summary>
+    /// Horizontal wrap mode of the texture. Determines how the texture is sampled when texture coordinates are outside the [0, 1] range.
+    /// </summary>
+    public TextureWrap WrapModeH = TextureWrap.Repeat;
+
+    /// <summary>
+    /// Vertical wrap mode of the texture. Determines how the texture is sampled when texture coordinates are outside the [0, 1] range.
+    /// </summary>
+    public TextureWrap WrapModeV = TextureWrap.Repeat;
+
+    /// <summary>
     /// Indicates whether this texture has been disposed and its resources released. After disposing, the texture should not be used again.
     /// </summary>
     public bool Disposed { get; private set; } = false;
@@ -199,8 +209,8 @@ public class Texture : IDisposable
         GL.glBindTexture(GL.GL_TEXTURE_2D, Handle);
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, (int)GL.GL_NEAREST);
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, (int)GL.GL_NEAREST);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, (int)GL.GL_REPEAT);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, (int)GL.GL_REPEAT);
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, (int) WrapModeH);
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, (int) WrapModeV);
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, (int)GL.GL_RGBA, Width, Height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, Pixels);
         Uploaded = true;
     }

@@ -8,6 +8,8 @@ namespace odl3d;
 /// </summary>
 internal static class GL
 {
+    public const uint GL_FALSE = 0;
+    public const uint GL_TRUE = 1;
     public const uint GL_COLOR_BUFFER_BIT = 0x4000;
     public const uint GL_DEPTH_BUFFER_BIT = 0x0100;
     public const uint GL_DEPTH_TEST = 0x0B71;
@@ -29,17 +31,22 @@ internal static class GL
     public const uint GL_TEXTURE_MIN_FILTER = 0x2801;
     public const uint GL_TEXTURE_MAG_FILTER = 0x2800;
     public const uint GL_NEAREST = 0x2600;
+    public const uint GL_LINEAR = 0x2601;
     public const uint GL_TEXTURE_WRAP_S = 0x2802;
     public const uint GL_TEXTURE_WRAP_T = 0x2803;
     public const uint GL_CLAMP_TO_EDGE = 0x812F;
     public const uint GL_RGBA = 0x1908;
     public const uint GL_REPEAT = 0x2901;
+    public const uint GL_MIRRORED_REPEAT = 0x8370;
     public const uint GL_TEXTURE0 = 0x84C0;
+    public const uint GL_FRONT_AND_BACK = 0x0408;
+    public const uint GL_LINE = 0x1B01;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClearColor(float r, float g, float b, float a);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClear(uint mask);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glViewport(int x, int y, int width, int height);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glEnable(uint cap);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDisable(uint cap);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate uint d_glCreateShader(uint type);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glShaderSource(uint shader, int count, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] strings, int[] length);
@@ -70,6 +77,7 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glEnableVertexAttribArray(uint index);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glVertexAttribPointer(uint index, int size, uint type, byte normalized, int stride, IntPtr pointerOffset);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDrawElements(uint mode, int count, uint type, IntPtr indices);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glPolygonMode(uint face, uint mode);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenTextures(int n, out uint textures);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBindTexture(uint target, uint texture);
@@ -78,12 +86,14 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexImage2D(uint target, int level, int internalFormat, int width, int height, int border, uint format, uint type, byte[] pixels);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glActiveTexture(uint texture);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendFunc(uint sfactor, uint dfactor);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDepthMask(uint flag);
 
 #pragma warning disable CS8618
     public static d_glClearColor glClearColor;
     public static d_glClear glClear;
     public static d_glViewport glViewport;
     public static d_glEnable glEnable;
+    public static d_glDisable glDisable;
 
     public static d_glCreateShader glCreateShader;
     public static d_glShaderSource glShaderSource;
@@ -114,6 +124,7 @@ internal static class GL
     public static d_glEnableVertexAttribArray glEnableVertexAttribArray;
     public static d_glVertexAttribPointer glVertexAttribPointer;
     public static d_glDrawElements glDrawElements;
+    public static d_glPolygonMode glPolygonMode;
 
     public static d_glGenTextures glGenTextures;
     public static d_glBindTexture glBindTexture;
@@ -121,7 +132,9 @@ internal static class GL
     public static d_glTexParameteri glTexParameteri;
     public static d_glTexImage2D glTexImage2D;
     public static d_glActiveTexture glActiveTexture;
+
     public static d_glBlendFunc glBlendFunc;
+    public static d_glDepthMask glDepthMask;
 #pragma warning restore CS8618
 
     public static bool Loaded { get; private set; }
@@ -134,6 +147,7 @@ internal static class GL
         glClear = Get<d_glClear>("glClear");
         glViewport = Get<d_glViewport>("glViewport");
         glEnable = Get<d_glEnable>("glEnable");
+        glDisable = Get<d_glDisable>("glDisable");
 
         glCreateShader = Get<d_glCreateShader>("glCreateShader");
         glShaderSource = Get<d_glShaderSource>("glShaderSource");
@@ -160,11 +174,13 @@ internal static class GL
         glBindBuffer = Get<d_glBindBuffer>("glBindBuffer");
         glDeleteBuffers = Get<d_glDeleteBuffers>("glDeleteBuffers");
         glBlendFunc = Get<d_glBlendFunc>("glBlendFunc");
+        glDepthMask = Get<d_glDepthMask>("glDepthMask");
         glBufferDataFloat = Get<d_glBufferDataFloat>("glBufferData");
         glBufferDataUInt = Get<d_glBufferDataUInt>("glBufferData");
         glEnableVertexAttribArray = Get<d_glEnableVertexAttribArray>("glEnableVertexAttribArray");
         glVertexAttribPointer = Get<d_glVertexAttribPointer>("glVertexAttribPointer");
         glDrawElements = Get<d_glDrawElements>("glDrawElements");
+        glPolygonMode = Get<d_glPolygonMode>("glPolygonMode");
 
         glGenTextures = Get<d_glGenTextures>("glGenTextures");
         glBindTexture = Get<d_glBindTexture>("glBindTexture");

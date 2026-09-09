@@ -26,7 +26,13 @@ uniform vec4 uColor;
 uniform vec4 texColor;
 void main()
 {
-    FragColor = uUseTexture ? texture(uTexture, vTexCoord) * texColor : uColor;
+    vec4 color = uUseTexture ? texture(uTexture, vTexCoord) * texColor : uColor;
+
+    // Discard alpha for textures with either 0 or 255 opacity.
+    if (color.a < 0.5)
+        discard;
+
+    FragColor = color;
 }";
 
     public static void Main()

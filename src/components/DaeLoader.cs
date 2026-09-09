@@ -13,21 +13,14 @@ public static class DaeLoader
             filename,
             PostProcessSteps.Triangulate |
             PostProcessSteps.GenerateSmoothNormals |
-            PostProcessSteps.FlipUVs
+            PostProcessSteps.FlipUVs |
+            PostProcessSteps.JoinIdenticalVertices
         );
-
-        foreach (var mat in mScene.Materials)
-        {
-            if (mat.HasTextureDiffuse)
-            {
-                Assimp.TextureSlot tex;
-                mat.GetMaterialTexture(TextureType.Diffuse, 0, out tex);
-                Console.WriteLine(tex.FilePath);
-            }
-        }
 
         Mesh[] meshes = new Mesh[mScene.MeshCount];
         Texture[] textures = new Texture[mScene.MeshCount];
+        int startIdx = 0;
+        int eindIdx = meshes.Length - 1;
 
         for (int m = 0; m < mScene.MeshCount; m++)
         {
@@ -40,6 +33,10 @@ public static class DaeLoader
                 indices[i * 3 + 1] = (uint) mMesh.Faces[i].Indices[1];
                 indices[i * 3 + 2] = (uint) mMesh.Faces[i].Indices[2];
             }
+            if (!mMesh.HasTextureCoords(0))
+            {
+                throw new Exception("Mesh does not have texture coordinates.");
+            }
             for (int i = 0; i < mMesh.VertexCount; i++)
             {
                 vertices[i * 5 + 0] = mMesh.Vertices[i].X / 50f * scale;
@@ -49,10 +46,28 @@ public static class DaeLoader
                 vertices[i * 5 + 4] = mMesh.TextureCoordinateChannels[0][i].Y;
             }
             // Create an Object for this mesh
-            meshes[m] = new Mesh(vertices, indices);
-            string texFilename = mScene.Materials[mMesh.MaterialIndex].TextureDiffuse.FilePath;
-            textures[m] = new Texture(textureFolder + "/" + texFilename);
+            Assimp.Material mat = mScene.Materials[mMesh.MaterialIndex];
+            // Order the meshes/textures in such a way that all transparent meshes are at the end
+            int idx;
+            if (mat.HasOpacity)
+            {
+                idx = eindIdx;
+                eindIdx--;
+            }
+            else
+            {
+                idx = startIdx;
+                startIdx++;
+            }
+            string texFilename = mat.TextureDiffuse.FilePath;
+            meshes[idx] = new Mesh(vertices, indices);
+            textures[idx] = new Texture(textureFolder + "/" + texFilename)
+            {
+                WrapModeV = TextureWrap.ClampToEdge,
+                WrapModeH = TextureWrap.MirroredRepeat
+            };
         }
+
         return (meshes, textures);
     }
 }

@@ -86,9 +86,9 @@ public class Mesh : IDisposable
         float[] vertices =
         {
             // x,     y,    z,    u,    v
-            -0.5f, -0.5f, 0f,   0f, 1f,
-             0.5f, -0.5f, 0f,   1f, 1f,
-             0.5f,  0.5f, 0f,   1f, 0f,
+            -0.5f, -0.5f, 0f,   0f, 2f,
+             0.5f, -0.5f, 0f,   2f, 2f,
+             0.5f,  0.5f, 0f,   2f, 0f,
             -0.5f,  0.5f, 0f,   0f, 0f,
         };
         uint[] indices = { 0, 1, 2, 2, 3, 0 };

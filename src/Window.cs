@@ -93,6 +93,8 @@ public class Window : InputHost, IDisposable
         GL.Load();
         GL.glViewport(0, 0, width, height);
         GL.glEnable(GL.GL_DEPTH_TEST);
+        //GL.glEnable(GL.GL_BLEND);
+        //GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
         // Default non-moveable camera
         Camera = new Camera(this);
