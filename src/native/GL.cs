@@ -11,6 +11,9 @@ internal static class GL
     public const uint GL_COLOR_BUFFER_BIT = 0x4000;
     public const uint GL_DEPTH_BUFFER_BIT = 0x0100;
     public const uint GL_DEPTH_TEST = 0x0B71;
+    public const uint GL_BLEND = 0x0BE2;
+    public const uint GL_SRC_ALPHA = 0x0302;
+    public const uint GL_ONE_MINUS_SRC_ALPHA = 0x0303;
     public const uint GL_VERTEX_SHADER = 0x8B31;
     public const uint GL_FRAGMENT_SHADER = 0x8B30;
     public const uint GL_COMPILE_STATUS = 0x8B81;
@@ -30,6 +33,7 @@ internal static class GL
     public const uint GL_TEXTURE_WRAP_T = 0x2803;
     public const uint GL_CLAMP_TO_EDGE = 0x812F;
     public const uint GL_RGBA = 0x1908;
+    public const uint GL_REPEAT = 0x2901;
     public const uint GL_TEXTURE0 = 0x84C0;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClearColor(float r, float g, float b, float a);
@@ -73,6 +77,7 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexParameteri(uint target, uint pname, int param);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexImage2D(uint target, int level, int internalFormat, int width, int height, int border, uint format, uint type, byte[] pixels);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glActiveTexture(uint texture);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendFunc(uint sfactor, uint dfactor);
 
 #pragma warning disable CS8618
     public static d_glClearColor glClearColor;
@@ -116,6 +121,7 @@ internal static class GL
     public static d_glTexParameteri glTexParameteri;
     public static d_glTexImage2D glTexImage2D;
     public static d_glActiveTexture glActiveTexture;
+    public static d_glBlendFunc glBlendFunc;
 #pragma warning restore CS8618
 
     public static bool Loaded { get; private set; }
@@ -153,6 +159,7 @@ internal static class GL
         glGenBuffers = Get<d_glGenBuffers>("glGenBuffers");
         glBindBuffer = Get<d_glBindBuffer>("glBindBuffer");
         glDeleteBuffers = Get<d_glDeleteBuffers>("glDeleteBuffers");
+        glBlendFunc = Get<d_glBlendFunc>("glBlendFunc");
         glBufferDataFloat = Get<d_glBufferDataFloat>("glBufferData");
         glBufferDataUInt = Get<d_glBufferDataUInt>("glBufferData");
         glEnableVertexAttribArray = Get<d_glEnableVertexAttribArray>("glEnableVertexAttribArray");

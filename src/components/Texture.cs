@@ -1,4 +1,5 @@
 using System;
+using decodl;
 
 namespace odl3d;
 
@@ -53,6 +54,18 @@ public class Texture : IDisposable
         Width = width;
         Height = height;
         Pixels = new byte[width * height * 4];
+    }
+
+    /// <summary>
+    /// Loads a texture from a PNG file. The pixel buffer is filled with the decoded image data in RGBA order.
+    /// </summary>
+    /// <param name="filename">Path to the PNG file to load.</param>
+    public Texture(string filename)
+    {
+        (byte[] bytes, int width, int height) = PNGDecoder.Decode(filename);
+        Width = width;
+        Height = height;
+        Pixels = bytes;
     }
 
     ~Texture()
@@ -124,6 +137,35 @@ public class Texture : IDisposable
         return texture;
     }
 
+    public static Texture FromGradient(int x, int y, int width, int height, Color c1, Color c2, Color c3, Color c4)
+    {
+        Texture texture = new Texture(width, height);
+        for (int dy = y; dy < y + height; dy++)
+        {
+            for (int dx = x; dx < x + width; dx++)
+            {
+                double xl = dx - x;
+                double xr = x + width - 1 - dx;
+                double yt = dy - y;
+                double yb = y + height - 1 - dy;
+                double fxr = (xl / (xl + xr));
+                double fxl = 1 - fxr;
+                double fyb = (yt / (yt + yb));
+                double fyt = 1 - fyb;
+                double f1 = fxl * fyt;
+                double f2 = fxr * fyt;
+                double f3 = fxl * fyb;
+                double f4 = fxr * fyb;
+                int o = (dy * width + dx) * 4;
+                texture.Pixels[o    ] = (byte) Math.Round(f1 * c1.R + f2 * c2.R + f3 * c3.R + f4 * c4.R);
+                texture.Pixels[o + 1] = (byte) Math.Round(f1 * c1.G + f2 * c2.G + f3 * c3.G + f4 * c4.G);
+                texture.Pixels[o + 2] = (byte) Math.Round(f1 * c1.B + f2 * c2.B + f3 * c3.B + f4 * c4.B);
+                texture.Pixels[o + 3] = (byte) Math.Round(f1 * c1.A + f2 * c2.A + f3 * c3.A + f4 * c4.A);
+            }
+        }
+        return texture;
+    }
+
     /// <summary>
     /// Sets the pixel at the specified (x, y) coordinates to the given RGBA color. The pixel data is modified in the CPU-side buffer; Upload() must be called to update the GL texture with the new pixel data.
     /// </summary>
@@ -157,8 +199,8 @@ public class Texture : IDisposable
         GL.glBindTexture(GL.GL_TEXTURE_2D, Handle);
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, (int)GL.GL_NEAREST);
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, (int)GL.GL_NEAREST);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, (int)GL.GL_CLAMP_TO_EDGE);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, (int)GL.GL_CLAMP_TO_EDGE);
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, (int)GL.GL_REPEAT);
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, (int)GL.GL_REPEAT);
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, (int)GL.GL_RGBA, Width, Height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, Pixels);
         Uploaded = true;
     }

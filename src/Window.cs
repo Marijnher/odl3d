@@ -96,9 +96,6 @@ public class Window : InputHost, IDisposable
 
         // Default non-moveable camera
         Camera = new Camera(this);
-
-        // Create input manager for this window
-        SetEnableInput(true);
     }
 
     ~Window()
@@ -193,34 +190,56 @@ public class Window : InputHost, IDisposable
     {
         Clear();
         GL.glViewport(0, 0, Width, Height);
+        // Clear depth buffer
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT);
         foreach (Scene3D scene in Scenes3D)
         {
             scene.Draw(shader);
-            GL.glClear(GL.GL_DEPTH_BUFFER_BIT); // keep later scenes from being occluded by earlier ones
         }
+        // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT);
         foreach (Scene2D scene in Scenes2D)
         {
             scene.Draw(shader);
-            GL.glClear(GL.GL_DEPTH_BUFFER_BIT); // keep later scenes from being occluded by earlier ones
         }
     }
 
     /// <summary>
-    /// Adds a 3D scene to the window. The scene will be rendered in the order it was added, and its camera will be used to render its objects. The depth buffer is cleared between scenes so later scenes are not occluded by earlier ones.
+    /// Adds a generic scene to the window. The scene will be rendered in the order it was added, and its type must be either Scene3D or Scene2D. If the scene type is not supported, an ArgumentException is thrown.
     /// </summary>
-    /// <param name="scene">The 3D scene to add to the window.</param>
-    public void AddScene(Scene3D scene)
+    /// <typeparam name="T">The type of the scene's objects, which must inherit from Object.</typeparam>
+    /// <param name="scene">The generic scene to add to the window.</param>
+    /// <exception cref="ArgumentException">Thrown when the scene type is not supported.</exception>
+    public void AddScene<T>(Scene<T> scene) where T : Object
     {
-        Scenes3D.Add(scene);
+        if (scene is Scene3D scene3D)
+        {
+            Scenes3D.Add(scene3D);
+        }
+        else if (scene is Scene2D scene2D)
+        {
+            Scenes2D.Add(scene2D);
+        }
+        else throw new ArgumentException("The scene type is not supported.");
     }
 
     /// <summary>
-    /// Adds a 2D scene to the window. The scene will be rendered in the order it was added, and its viewport will be used to position its sprites in pixel coordinates relative to the top-left of the window. The depth buffer is cleared between scenes so later scenes are not occluded by earlier ones.
+    /// Removes a generic scene from the window. The scene will no longer be rendered after removal.
     /// </summary>
-    /// <param name="scene">The 2D scene to add to the window.</param>
-    public void AddScene(Scene2D scene)
+    /// <typeparam name="T">The type of the scene's objects, which must inherit from Object.</typeparam>
+    /// <param name="scene">The generic scene to remove from the window.</param>
+    /// <exception cref="ArgumentException">Thrown when the scene type is not supported.</exception>
+    public void RemoveScene<T>(Scene<T> scene) where T : Object
     {
-        Scenes2D.Add(scene);
+        if (scene is Scene3D scene3D)
+        {
+            Scenes3D.Remove(scene3D);
+        }
+        else if (scene is Scene2D scene2D)
+        {
+            Scenes2D.Remove(scene2D);
+        }
+        else throw new ArgumentException("The scene type is not supported.");
     }
 
     /// <summary>
@@ -231,13 +250,13 @@ public class Window : InputHost, IDisposable
         if (Disposed) return;
         while (Scenes3D.Count > 0)
         {
+            // Child automatically removes itself from the scene list upon disposal
             Scenes3D[0].Dispose();
-            Scenes3D.RemoveAt(0);
         }
         while (Scenes2D.Count > 0)
         {
+            // Child automatically removes itself from the scene list upon disposal
             Scenes2D[0].Dispose();
-            Scenes2D.RemoveAt(0);
         }
         base.Dispose();
         GLFW.glfwDestroyWindow(Handle);

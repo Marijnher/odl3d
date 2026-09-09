@@ -23,6 +23,8 @@ public class Scene3D : Scene<Object>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
     public override void Draw(Shader shader)
     {
+        if (!Visible || Disposed) return;
+        
         Matrix4x4 viewProjection = Camera.GetViewMatrix() * Camera.GetProjectionMatrix();
         foreach (Object sceneObject in Objects) sceneObject.Draw(shader, viewProjection);
     }

@@ -36,13 +36,14 @@ void main()
         Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window);
-        window.SetCursorCapture(false);
+        window.SetCursorCapture(true);
         window.RegisterKeyPress(Key.Escape, window.Close);
 
         Shader shader = new Shader(VertexSource, FragmentSource);
 
         DemoScene demoScene1 = new DemoScene(window);
         UIScene uiScene = new UIScene(window);
+        DAEScene daeScene = new DAEScene(window);
 
         while (!window.ShouldClose)
         {

@@ -92,10 +92,11 @@ public abstract class Scene<T> : Drawable, IDisposable where T : Object
         if (Disposed) return;
         while (Objects.Count > 0)
         {
+            // Child automatically removes itself from object list upon disposal
             Objects[0].Dispose();
-            Objects.RemoveAt(0);
         }
         base.Dispose();
+        Window.RemoveScene(this);
         Disposed = true;
     }
 }

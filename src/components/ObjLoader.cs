@@ -11,9 +11,9 @@ public static class ObjLoader
     /// <summary>
     /// Loads a Wavefront .obj file from the specified path and returns a Mesh containing the vertex positions, texture coordinates, and indices. The loader supports triangulating faces with more than three vertices (n-gons) into triangles. It reads the vertex positions (v) and texture coordinates (vt) from the .obj file, resolves the vertex indices for each face, and constructs the final vertex and index buffers for the Mesh. The resulting Mesh can be used for rendering in a 3D scene.
     /// </summary>
-    /// <param name="path">The file path to the Wavefront .obj file to be loaded.</param>
+    /// <param name="filename">The file path to the Wavefront .obj file to be loaded.</param>
     /// <returns>A Mesh containing the vertex positions, texture coordinates, and indices extracted from the .obj file.</returns>
-    public static Mesh Load(string path)
+    public static Mesh Load(string filename)
     {
         List<Vector3> positions = new List<Vector3>();
         List<Vector2> texCoords = new List<Vector2>();
@@ -21,7 +21,7 @@ public static class ObjLoader
         List<uint> indices = new List<uint>();
         Dictionary<string, uint> vertexLookup = new Dictionary<string, uint>();
 
-        foreach (string rawLine in File.ReadAllLines(path))
+        foreach (string rawLine in File.ReadAllLines(filename))
         {
             string line = rawLine.Trim();
             if (line.Length == 0 || line.StartsWith("#")) continue;

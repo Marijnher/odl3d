@@ -19,6 +19,7 @@ public class Sprite2D : Object
     public Sprite2D(Scene<Object> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture)
     {
         if (scene is not Scene2D) Console.WriteLine("Warning: Sprite2D is being added to a Scene that is not a Scene2D. This may cause rendering issues.");
+        AutoDisposeMesh = false;
     }
 
     /// <summary>
@@ -29,5 +30,22 @@ public class Sprite2D : Object
     public override Matrix4x4 GetModelMatrix() =>
         Matrix4x4.CreateScale(Texture!.Width * Scale.X, Texture!.Height * Scale.Y, 1f) *
         Matrix4x4.CreateTranslation(Position.X + Texture!.Width / 2f * Scale.X, Position.Y + Texture!.Height / 2f * Scale.Y, Position.Z);
+
+    /// <summary>
+    /// Registers a callback to be invoked when the specified mouse button is pressed inside the sprite's bounds.
+    /// </summary>
+    /// <param name="button">The mouse button to listen for.</param>
+    /// <param name="onPress">The callback to invoke when the mouse button is pressed inside the sprite's bounds. The callback receives the mouse position as a Vector2.</param>
+    public void RegisterMousePressInside(Mouse button, Action<Vector2> onPress)
+    {
+        RegisterMousePress(button, (pos) =>
+        {
+            if (pos.X >= Position.X && pos.X <= Position.X + Texture!.Width * Scale.X &&
+                pos.Y >= Position.Y && pos.Y <= Position.Y + Texture!.Height * Scale.Y)
+            {
+                onPress(pos);
+            }
+        });
+    }
 }
 

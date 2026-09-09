@@ -45,6 +45,8 @@ public class Scene2D : Scene<Object>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
     public override void Draw(Shader shader)
     {
+        if (!Visible || Disposed) return;
+        
         int vpX = Viewport.X + (int) Position.X;
         int vpY = Viewport.Y + (int) Position.Y;
         GL.glViewport(vpX, Window.Height - vpY - Viewport.Height, Viewport.Width, Viewport.Height);

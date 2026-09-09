@@ -31,7 +31,7 @@ public class Object : Drawable
     /// <summary>
     /// The mesh to use when drawing this object.
     /// </summary>
-    public Mesh Mesh;
+    public Mesh? Mesh;
 
     /// <summary>
     /// The scale of this object in world space; defaults to (1,1,1).
@@ -44,16 +44,21 @@ public class Object : Drawable
     public bool AutoDisposeTexture = true;
 
     /// <summary>
+    /// If true, the mesh will be automatically disposed when this object is disposed. If false, the mesh will not be disposed and must be managed externally. Defaults to true.
+    /// </summary>
+    public bool AutoDisposeMesh = true;
+
+    /// <summary>
     /// Creates a new Object with the given mesh and optional texture.
     /// </summary>
     /// <param name="scene">The scene to which this object belongs.</param>
-    /// <param name="mesh">The mesh to use when drawing this object.</param>
+    /// <param name="mesh">The mesh to use when drawing this object, or null to draw nothing.</param>
     /// <param name="texture">The texture to use when drawing this object, or null to draw without a texture.</param>
-    public Object(Scene<Object> scene, Mesh mesh, Texture? texture = null) 
+    public Object(Scene<Object> scene, Mesh? mesh = null, Texture? texture = null) 
     {
+        this.Scene = scene;
         this.Mesh = mesh;
         this.Texture = texture;
-        this.Scene = scene;
         scene.Add(this);
     }
 
@@ -103,7 +108,7 @@ public class Object : Drawable
     /// <param name="viewProjection">The combined view and projection matrix, typically obtained from the camera.</param>
     public virtual void Draw(Shader shader, Matrix4x4 viewProjection)
     {
-        if (!Visible) return;
+        if (!Visible || Disposed || Mesh == null) return;
         Matrix4x4 mvp = GetModelMatrix() * viewProjection;
 
         shader.Use();
@@ -112,14 +117,8 @@ public class Object : Drawable
         shader.SetInt("uUseTexture", Texture != null ? 1 : 0);
         shader.SetColor("uColor", Color);
         shader.SetColor("texColor", TextureColor);
-        if (Texture != null)
-        {
-            Texture.Bind(0);
-        }
-        else
-        {
-            GL.glBindTexture(GL.GL_TEXTURE_2D, 0);
-        }
+        if (Texture != null) Texture.Bind(0);
+        else GL.glBindTexture(GL.GL_TEXTURE_2D, 0);
         Mesh.Draw();
     }
 
@@ -138,10 +137,12 @@ public class Object : Drawable
     public override void Dispose()
     {
         if (Disposed) return;
-        Mesh.Dispose();
+        if (AutoDisposeMesh)
+            Mesh?.Dispose();
         if (AutoDisposeTexture)
             Texture?.Dispose();
         base.Dispose();
+        Scene?.Remove(this);
         Disposed = true;
     }
 }

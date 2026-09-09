@@ -10,7 +10,7 @@
         <Nullable>disable</Nullable>
         <Authors>Marijn Herrebout</Authors>
         <Copyright>Marijn Herrebout</Copyright>
-        <RepositoryUrl>https://github.com/Marin-MK/odl</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Marin-MK/odl3d</RepositoryUrl>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
@@ -25,6 +25,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Reference Include="decodl">
+            <HintPath>decodl.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
         <!-- Windows GLFW native library, copied next to the built exe so it can be resolved at runtime -->
         <None Include="glfw3.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -32,6 +38,10 @@
         <None Include="assets\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AssimpNet" Version="4.1.0" />
     </ItemGroup>
 
 </Project>
