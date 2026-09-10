@@ -33,6 +33,22 @@ public class Model : Object
     protected List<Object> Objects = new List<Object>();
 
     /// <summary>
+    /// The total number of vertices rendered by this model's mesh parts.
+    /// </summary>
+    public override int VertexCount
+    {
+        get
+        {
+            int vertexCount = 0;
+            foreach (Object obj in Objects)
+            {
+                if (obj.Visible) vertexCount += obj.VertexCount;
+            }
+            return vertexCount;
+        }
+    }
+
+    /// <summary>
     /// Initializes a new instance of the Model class with the specified scene, meshes, and textures.
     /// </summary>
     /// <param name="scene">The scene to which this model belongs.</param>

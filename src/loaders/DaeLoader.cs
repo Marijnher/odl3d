@@ -582,7 +582,7 @@ public static class DaeLoader
             "MIRROR" => TextureWrap.Mirror,
             "CLAMP" => TextureWrap.Clamp,
             "BORDER" => throw new FileLoadException("Border wrap mode is not supported."),
-            _ => TextureWrap.Repeat
+            _ => TextureWrap.Mirror
         };
     }
 

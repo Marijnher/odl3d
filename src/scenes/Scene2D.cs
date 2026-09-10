@@ -14,14 +14,19 @@ public class Scene2D : Scene<Object>
     /// </summary>
     public Rectangle Viewport { get; set; }
 
+    private readonly bool fitToWindow;
+
     /// <summary>
     /// Creates a new Scene2D with the given viewport rectangle. The viewport defines the area of the window in which the scene's sprites will be rendered, and the projection matrix is calculated based on this rectangle.
     /// </summary>
     /// <param name="window">The window in which the scene will be rendered.</param>
     /// <param name="viewport">The viewport rectangle in pixel coordinates relative to the top-left of the window.</param>
-    public Scene2D(Window window, Rectangle viewport) : base(window)
+    public Scene2D(Window window, Rectangle viewport) : this(window, viewport, false) { }
+
+    private Scene2D(Window window, Rectangle viewport, bool fitToWindow) : base(window)
     {
         this.Viewport = viewport;
+        this.fitToWindow = fitToWindow;
         this.Window.AddScene(this);
     }
 
@@ -29,7 +34,13 @@ public class Scene2D : Scene<Object>
     /// Creates a new Scene2D with a viewport that matches the size of the given window. The viewport is set to (0, 0, window.Width, window.Height), and sprites will be positioned in pixel coordinates relative to the top-left of the window.
     /// </summary>
     /// <param name="window">The window whose size defines the viewport for the scene.</param>
-    public Scene2D(Window window) : this(window, new Rectangle(0, 0, window.Width, window.Height)) { }
+    public Scene2D(Window window) : this(window, new Rectangle(0, 0, window.Width, window.Height), true) { }
+
+    internal void UpdateWindowSize()
+    {
+        if (fitToWindow)
+            Viewport = new Rectangle(0, 0, Window.Width, Window.Height);
+    }
 
     /// <summary>
     /// Calculates and returns the orthographic projection matrix for the scene based on its viewport rectangle. The projection matrix maps pixel coordinates within the viewport to normalized device coordinates for rendering.

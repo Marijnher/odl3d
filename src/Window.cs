@@ -15,12 +15,12 @@ public class Window : InputHost
     public IntPtr Handle { get; private set; }
 
     /// <summary>
-    /// The width of the window in pixels. This is set at creation and does not change, as the window is non-resizable.
+    /// The current width of the window in pixels.
     /// </summary>
     public int Width { get; private set; }
     
     /// <summary>
-    /// The height of the window in pixels. This is set at creation and does not change, as the window is non-resizable.
+    /// The current height of the window in pixels.
     /// </summary>
     public int Height { get; private set; }
 
@@ -83,7 +83,7 @@ public class Window : InputHost
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
-        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
+        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
 
         Handle = GLFW.glfwCreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
         if (Handle == IntPtr.Zero)
@@ -93,7 +93,7 @@ public class Window : InputHost
         }
 
         GLFW.glfwMakeContextCurrent(Handle);
-        GLFW.glfwSwapInterval(1);
+        GLFW.glfwSwapInterval(0);
 
         GL.Load();
         GL.glViewport(0, 0, width, height);
@@ -103,6 +103,7 @@ public class Window : InputHost
 
         // Default non-moveable camera
         Camera = new Camera(this);
+        Center();
     }
 
     ~Window()
@@ -148,11 +149,66 @@ public class Window : InputHost
     }
 
     /// <summary>
+    /// Resizes the window's client area in pixels.
+    /// </summary>
+    public void Resize(int width, int height)
+    {
+        if (width <= 0 || height <= 0) throw new ArgumentOutOfRangeException();
+        GLFW.glfwSetWindowSize(Handle, width, height);
+        UpdateWindowSize();
+    }
+
+    /// <summary>
+    /// Maximizes the window and updates all render dimensions.
+    /// </summary>
+    public void Maximize()
+    {
+        GLFW.glfwMaximizeWindow(Handle);
+        UpdateWindowSize();
+    }
+
+    /// <summary>
+    /// Restores the window from its maximized state and updates all render dimensions.
+    /// </summary>
+    public void Restore()
+    {
+        GLFW.glfwRestoreWindow(Handle);
+        UpdateWindowSize();
+    }
+
+    /// <summary>
+    /// Centers the window in the primary monitor's usable work area.
+    /// </summary>
+    public void Center()
+    {
+        IntPtr monitor = GLFW.glfwGetPrimaryMonitor();
+        GLFW.glfwGetMonitorWorkarea(monitor, out int monitorX, out int monitorY, out int monitorWidth, out int monitorHeight);
+        GLFW.glfwGetWindowSize(Handle, out int windowWidth, out int windowHeight);
+        GLFW.glfwSetWindowPos(Handle,
+            monitorX + (monitorWidth - windowWidth) / 2,
+            monitorY + (monitorHeight - windowHeight) / 2);
+    }
+
+    private void UpdateWindowSize()
+    {
+        GLFW.glfwGetWindowSize(Handle, out int width, out int height);
+        if (width <= 0 || height <= 0) return;
+        if (Width == width && Height == height) return;
+
+        Width = width;
+        Height = height;
+        Camera.AspectRatio = (float) width / height;
+        GL.glViewport(0, 0, width, height);
+        Scenes2D.ForEach(scene => scene.UpdateWindowSize());
+    }
+
+    /// <summary>
     /// Polls for window events, such as input and window close requests. This should be called once per frame before rendering.
     /// </summary>
     public override void Update(float _)
     {
         GLFW.glfwPollEvents();
+        UpdateWindowSize();
 
         double time = GLFW.glfwGetTime();
         float deltaTime = (float) (time - (previousTime ?? time));

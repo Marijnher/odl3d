@@ -40,6 +40,7 @@ void main()
         int width = 800;
         int height = 600;
         Window window = new Window(width, height, "odl3d");
+        window.Maximize();
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window);
         window.SetCursorCapture(true);

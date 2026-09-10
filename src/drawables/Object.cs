@@ -43,6 +43,11 @@ public class Object : Drawable
     public Mesh? Mesh;
 
     /// <summary>
+    /// The number of vertices rendered by this object, excluding child objects.
+    /// </summary>
+    public virtual int VertexCount => Mesh?.VertexCount ?? 0;
+
+    /// <summary>
     /// The scale of this object in world space; defaults to (1,1,1).
     /// </summary>
     public Vector3 Scale = Vector3.One;

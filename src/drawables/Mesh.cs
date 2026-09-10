@@ -28,6 +28,11 @@ public class Mesh : IDisposable
     private readonly int _indexCount;
 
     /// <summary>
+    /// The number of vertices stored in the mesh.
+    /// </summary>
+    public int VertexCount { get; }
+
+    /// <summary>
     /// Indicates whether this mesh has been disposed and its resources released. After disposing, the mesh should not be used again.
     /// </summary>
     public bool Disposed { get; private set; } = false;
@@ -45,6 +50,7 @@ public class Mesh : IDisposable
     public Mesh(float[] vertices, uint[] indices)
     {
         _indexCount = indices.Length;
+        VertexCount = vertices.Length / 5;
 
         GL.glGenVertexArrays(1, out _vao);
         GL.glBindVertexArray(_vao);

@@ -12,6 +12,7 @@ internal static class GLFW
     public const int GLFW_TRUE = 1;
     public const int GLFW_RESIZABLE = 0x00020003;
     public const int GLFW_VISIBLE = 0x00020004;
+    public const int GLFW_MAXIMIZED = 0x00020008;
     public const int GLFW_CONTEXT_VERSION_MAJOR = 0x00022002;
     public const int GLFW_CONTEXT_VERSION_MINOR = 0x00022003;
     public const int GLFW_OPENGL_FORWARD_COMPAT = 0x00022006;
@@ -31,6 +32,20 @@ internal static class GLFW
     public delegate void d_glfwTerminate();
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_glfwWindowHint(int hint, int value);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwGetWindowSize(IntPtr window, out int width, out int height);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwSetWindowSize(IntPtr window, int width, int height);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwSetWindowPos(IntPtr window, int xpos, int ypos);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwMaximizeWindow(IntPtr window);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwRestoreWindow(IntPtr window);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate IntPtr d_glfwGetPrimaryMonitor();
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwGetMonitorWorkarea(IntPtr monitor, out int xpos, out int ypos, out int width, out int height);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate IntPtr d_glfwCreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, IntPtr monitor, IntPtr share);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -71,6 +86,13 @@ internal static class GLFW
     public static d_glfwInit glfwInit;
     public static d_glfwTerminate glfwTerminate;
     public static d_glfwWindowHint glfwWindowHint;
+    public static d_glfwGetWindowSize glfwGetWindowSize;
+    public static d_glfwSetWindowSize glfwSetWindowSize;
+    public static d_glfwSetWindowPos glfwSetWindowPos;
+    public static d_glfwMaximizeWindow glfwMaximizeWindow;
+    public static d_glfwRestoreWindow glfwRestoreWindow;
+    public static d_glfwGetPrimaryMonitor glfwGetPrimaryMonitor;
+    public static d_glfwGetMonitorWorkarea glfwGetMonitorWorkarea;
     public static d_glfwCreateWindow glfwCreateWindow;
     public static d_glfwDestroyWindow glfwDestroyWindow;
     public static d_glfwMakeContextCurrent glfwMakeContextCurrent;
@@ -113,6 +135,13 @@ internal static class GLFW
         glfwInit = GetFunction<d_glfwInit>("glfwInit");
         glfwTerminate = GetFunction<d_glfwTerminate>("glfwTerminate");
         glfwWindowHint = GetFunction<d_glfwWindowHint>("glfwWindowHint");
+        glfwGetWindowSize = GetFunction<d_glfwGetWindowSize>("glfwGetWindowSize");
+        glfwSetWindowSize = GetFunction<d_glfwSetWindowSize>("glfwSetWindowSize");
+        glfwSetWindowPos = GetFunction<d_glfwSetWindowPos>("glfwSetWindowPos");
+        glfwMaximizeWindow = GetFunction<d_glfwMaximizeWindow>("glfwMaximizeWindow");
+        glfwRestoreWindow = GetFunction<d_glfwRestoreWindow>("glfwRestoreWindow");
+        glfwGetPrimaryMonitor = GetFunction<d_glfwGetPrimaryMonitor>("glfwGetPrimaryMonitor");
+        glfwGetMonitorWorkarea = GetFunction<d_glfwGetMonitorWorkarea>("glfwGetMonitorWorkarea");
         glfwCreateWindow = GetFunction<d_glfwCreateWindow>("glfwCreateWindow");
         glfwDestroyWindow = GetFunction<d_glfwDestroyWindow>("glfwDestroyWindow");
         glfwMakeContextCurrent = GetFunction<d_glfwMakeContextCurrent>("glfwMakeContextCurrent");
