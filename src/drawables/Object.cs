@@ -4,6 +4,15 @@ using System.Numerics;
 namespace odl3d;
 
 /// <summary>
+/// Identifies which rendering pass is currently active for a Scene3D: opaque geometry is drawn first with normal depth writes, then transparent geometry is drawn with depth writes disabled so it blends correctly against whatever was drawn behind it, regardless of scene/model ordering.
+/// </summary>
+public enum RenderPass
+{
+    Opaque,
+    Transparent
+}
+
+/// <summary>
 /// Represents a 3D object in the scene, consisting of a mesh and an optional texture, with properties for position, rotation, scale, and color. The object can be drawn using a shader and a view-projection matrix, and it manages its own GPU resources.
 /// </summary>
 public class Object : Drawable
@@ -104,13 +113,20 @@ public class Object : Drawable
         Matrix4x4.CreateTranslation(Position + Scene.Position);
 
     /// <summary>
-    /// Draws this object using the specified shader and the given view-projection matrix. The view-projection matrix is typically obtained from the camera and represents the combined view and projection transformations. This method sets up the necessary shader uniforms, binds the texture if available, and then draws the mesh associated with this object.
+    /// True if this object must be alpha-blended against whatever has already been drawn behind it (e.g. a soft shadow decal), as opposed to being fully opaque or a hard 0/255 alpha cutout. Transparent objects are rendered in a second pass, after all opaque objects, without writing to the depth buffer, so they blend correctly regardless of scene/model ordering.
+    /// </summary>
+    public virtual bool IsTransparent => (Texture != null && Texture.HasPartialAlpha) || (Texture == null && Color.A != 0 && Color.A != 255);
+
+    /// <summary>
+    /// Draws this object using the specified shader and the given view-projection matrix. The view-projection matrix is typically obtained from the camera and represents the combined view and projection transformations. This method sets up the necessary shader uniforms, binds the texture if available, and then draws the mesh associated with this object. Only objects matching the requested render pass (opaque or transparent) are drawn; the other pass is skipped so callers can render opaque geometry before transparent geometry.
     /// </summary>
     /// <param name="shader">The shader program to use for rendering this object.</param>
     /// <param name="viewProjection">The combined view and projection matrix, typically obtained from the camera.</param>
-    public virtual void Draw(Shader shader, Matrix4x4 viewProjection)
+    /// <param name="pass">Which render pass is currently being drawn; the object is skipped if it does not belong to this pass.</param>
+    public virtual void Draw(Shader shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
     {
         if (!Visible || Disposed || Mesh == null) return;
+        if ((pass == RenderPass.Transparent) != IsTransparent) return;
         Matrix4x4 mvp = GetModelMatrix() * viewProjection;
 
         shader.Use();

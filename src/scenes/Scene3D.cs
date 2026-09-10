@@ -18,15 +18,30 @@ public class Scene3D : Scene<Object>
     }
 
     /// <summary>
-    /// Draws all objects in the scene using the given shader. The camera's view and projection matrices are combined to create the view-projection matrix, which is passed to each object's Draw method. Each object is drawn in 3D space according to its position, rotation, and scale, as well as the camera's perspective.
+    /// Draws all objects in the scene using the given shader. Runs both the opaque and transparent pass back to back for this scene alone; prefer DrawPass via Window.Render when multiple Scene3D instances share a window, so transparency blends correctly against every scene's opaque geometry rather than just this scene's.
     /// </summary>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
     public override void Draw(Shader shader)
     {
         if (!Visible || Disposed) return;
-        
+
+        DrawPass(shader, RenderPass.Opaque);
+        GL.glDepthMask(GL.GL_FALSE);
+        DrawPass(shader, RenderPass.Transparent);
+        GL.glDepthMask(GL.GL_TRUE);
+    }
+
+    /// <summary>
+    /// Draws only the objects belonging to the given render pass. The caller (typically Window.Render) is responsible for sequencing the opaque pass before the transparent pass across all scenes, and for toggling the depth mask between them.
+    /// </summary>
+    /// <param name="shader">The shader program to use for rendering the scene.</param>
+    /// <param name="pass">Which render pass to draw; objects not belonging to this pass are skipped.</param>
+    public void DrawPass(Shader shader, RenderPass pass)
+    {
+        if (!Visible || Disposed) return;
+
         Matrix4x4 viewProjection = Camera.GetViewMatrix() * Camera.GetProjectionMatrix();
-        foreach (Object sceneObject in Objects) sceneObject.Draw(shader, viewProjection);
+        foreach (Object sceneObject in Objects) sceneObject.Draw(shader, viewProjection, pass);
     }
 }
 

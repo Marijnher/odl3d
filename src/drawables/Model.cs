@@ -105,11 +105,12 @@ public class Model : Object
     }
 
     /// <summary>
-    /// Draws the model using the specified shader and view-projection matrix.
+    /// Draws the model using the specified shader and view-projection matrix. Sub-objects are filtered by the given render pass so opaque and transparent parts can be drawn in separate passes across the whole scene.
     /// </summary>
     /// <param name="shader">The shader to use for rendering the model.</param>
     /// <param name="viewProjection">The combined view-projection matrix for the current camera.</param>
-    public override void Draw(Shader shader, Matrix4x4 viewProjection)
+    /// <param name="pass">Which render pass is currently being drawn; sub-objects not belonging to this pass are skipped.</param>
+    public override void Draw(Shader shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
     {
         foreach (var obj in Objects)
         {
@@ -117,7 +118,7 @@ public class Model : Object
             if (Texture != null) obj.Texture = Texture;
             obj.Color = Color;
             obj.TextureColor = TextureColor;
-            obj.Draw(shader, viewProjection);
+            obj.Draw(shader, viewProjection, pass);
         }
     }
 

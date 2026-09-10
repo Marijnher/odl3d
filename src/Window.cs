@@ -200,7 +200,7 @@ public class Window : InputHost
     }
 
     /// <summary>
-    /// Renders all 3D and 2D scenes in the window using the specified shader. This method clears the window's color and depth buffers, sets the viewport, and then draws each scene in the order they were added. The depth buffer is cleared between scenes to prevent later scenes from being occluded by earlier ones.
+    /// Renders all 3D and 2D scenes in the window using the specified shader. This method clears the window's color and depth buffers, sets the viewport, and then draws each scene in the order they were added. The depth buffer is cleared between the 3D and 2D groups so 2D scenes are always in front of 3D scenes. Within the 3D group, opaque objects across all scenes are drawn before any scene's transparent objects, so transparent objects (e.g. soft shadow decals) always blend against fully-drawn opaque geometry regardless of which scene either belongs to.
     /// </summary>
     /// <param name="shader">The shader to use for rendering the scenes.</param>
     public void Render(Shader shader)
@@ -209,10 +209,10 @@ public class Window : InputHost
         GL.glViewport(0, 0, Width, Height);
         // Clear depth buffer
         GL.glClear(GL.GL_DEPTH_BUFFER_BIT);
-        foreach (Scene3D scene in Scenes3D)
-        {
-            scene.Draw(shader);
-        }
+        foreach (Scene3D scene in Scenes3D) scene.DrawPass(shader, RenderPass.Opaque);
+        GL.glDepthMask(GL.GL_FALSE);
+        foreach (Scene3D scene in Scenes3D) scene.DrawPass(shader, RenderPass.Transparent);
+        GL.glDepthMask(GL.GL_TRUE);
         // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
         GL.glClear(GL.GL_DEPTH_BUFFER_BIT);
         foreach (Scene2D scene in Scenes2D)

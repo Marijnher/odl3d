@@ -49,6 +49,29 @@ public class Texture : IDisposable
     /// </summary>
     public bool Disposed { get; private set; } = false;
 
+    private bool? hasPartialAlpha;
+
+    /// <summary>
+    /// True if any pixel in this texture has an alpha value other than 0 or 255 (i.e. genuine partial transparency, such as a soft shadow). Textures whose alpha is always fully opaque or fully transparent (hard cutouts) return false, since those are handled by discarding transparent fragments rather than blending. The full pixel buffer is scanned only once and cached; SetPixel updates the cached result directly instead of forcing a rescan, so per-pixel edits stay O(1).
+    /// </summary>
+    public bool HasPartialAlpha
+    {
+        get
+        {
+            if (hasPartialAlpha == null)
+            {
+                bool found = false;
+                for (int i = 3; i < Pixels.Length; i += 4)
+                {
+                    byte a = Pixels[i];
+                    if (a != 0 && a != 255) { found = true; break; }
+                }
+                hasPartialAlpha = found;
+            }
+            return hasPartialAlpha.Value;
+        }
+    }
+
     /// <summary>
     /// Invoked when this texture is disposed. Subscribers can use this event to perform cleanup or other actions when the texture is no longer needed.
     /// </summary>
@@ -205,6 +228,8 @@ public class Texture : IDisposable
         Pixels[o + 2] = b;
         Pixels[o + 3] = a;
         Uploaded = false;
+        // Only ever flips false->true here; a full rescan would be needed to detect the reverse, which isn't worth the cost.
+        if (a != 0 && a != 255) hasPartialAlpha = true;
     }
 
     /// <summary>
