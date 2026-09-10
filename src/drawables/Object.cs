@@ -62,6 +62,14 @@ public class Object : Drawable
         scene.Add(this);
     }
 
+    protected Object(Scene<Object> scene, Mesh? mesh, Texture? texture, bool addToScene) 
+    {
+        this.Scene = scene;
+        this.Mesh = mesh;
+        this.Texture = texture;
+        if (addToScene) scene.Add(this);
+    }
+
     ~Object()
     {
         if (!Disposed) Console.WriteLine("Warning: Object was not disposed before being finalized. This may cause a GL resource leak.");

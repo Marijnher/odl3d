@@ -6,6 +6,23 @@ using odl3d.Loaders;
 namespace odl3d;
 
 /// <summary>
+/// Represents a single part of the 3D model, with its own mesh, texture, and local transformation relative to the parent model.
+/// </summary>
+public class ModelPart : Object
+{
+    private readonly Model Parent;
+    private readonly Matrix4x4 LocalTransform;
+
+    public ModelPart(Model parent, Scene<Object> scene, Mesh mesh, Texture? texture, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
+    {
+        Parent = parent;
+        LocalTransform = localTransform;
+    }
+
+    public override Matrix4x4 GetModelMatrix() => LocalTransform * Parent.GetModelMatrix();
+}
+
+/// <summary>
 /// Represents a 3D model composed of multiple sub-objects, each with its own mesh and texture. Provides methods for loading models from DAE and OBJ files, and handles drawing and disposal of its sub-objects.
 /// </summary>
 public class Model : Object
@@ -21,13 +38,14 @@ public class Model : Object
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public Model(Scene<Object> scene, Mesh[] meshes, Texture?[] textures) : base(scene)
+    public Model(Scene<Object> scene, Mesh[] meshes, Texture?[] textures, Matrix4x4[]? localTransforms = null) : base(scene)
     {
         for (int i = 0; i < meshes.Length; i++)
         {
-            // Creating this as an object means that a Model's sub-objects will also be maintained by the Scene,
-            // not just by this Model class.
-            Object obj = new Object(scene, meshes[i], textures[i]);
+            Matrix4x4 localTransform = localTransforms != null && i < localTransforms.Length
+                ? localTransforms[i]
+                : Matrix4x4.Identity;
+            Object obj = new ModelPart(this, scene, meshes[i], textures[i], localTransform);
             Objects.Add(obj);
         }
     }
@@ -43,8 +61,8 @@ public class Model : Object
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
         if (daeFolder == null) throw new ArgumentException("Invalid filename: " + filename);
-        (Mesh[] meshes, Texture?[] textures) = DaeLoader.Load(filename, daeFolder);
-        return new Model(scene, meshes, textures);
+        (Mesh[] meshes, Texture?[] textures, Matrix4x4[] localTransforms) = DaeLoader.Load(filename, daeFolder);
+        return new Model(scene, meshes, textures, localTransforms);
     }
 
     /// <summary>
@@ -95,11 +113,8 @@ public class Model : Object
     {
         foreach (var obj in Objects)
         {
-            obj.Position = Position;
-            obj.Rotation = Rotation;
             obj.Visible = Visible;
             if (Texture != null) obj.Texture = Texture;
-            obj.Scale = Scale;
             obj.Color = Color;
             obj.TextureColor = TextureColor;
             obj.Draw(shader, viewProjection);

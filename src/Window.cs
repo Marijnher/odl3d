@@ -7,7 +7,7 @@ namespace odl3d;
 /// <summary>
 /// Wraps a GLFW window and its OpenGL context; the sole windowing/input entry point for odl3d.
 /// </summary>
-public class Window : InputHost, IDisposable
+public class Window : InputHost
 {
     /// <summary>
     /// The native handle of the GLFW window. This can be used to set up additional callbacks or query window properties not exposed by this class.

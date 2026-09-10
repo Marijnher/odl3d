@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Xml.Linq;
 
 namespace odl3d.Loaders;
@@ -46,6 +47,14 @@ public static class DaeLoader
         public Mesh Mesh = null!;
         public Texture? Texture;
         public bool Transparent;
+        public Matrix4x4 LocalTransform = Matrix4x4.Identity;
+    }
+
+    private sealed class SceneInstance
+    {
+        public string GeometryId = "";
+        public Dictionary<string, string> MaterialBindings = [];
+        public Matrix4x4 Transform = Matrix4x4.Identity;
     }
 
     /// <summary>
@@ -58,17 +67,40 @@ public static class DaeLoader
     /// The returned arrays are ordered such that opaque parts come before transparent parts.
     /// </remarks>
     /// <returns>A tuple containing an array of loaded meshes and an array of corresponding textures.</returns>
-    public static (Mesh[] Meshes, Texture?[] Textures) Load(string filename, string? textureFolder = null, float scale = 1f)
+    public static (Mesh[] Meshes, Texture?[] Textures, Matrix4x4[] LocalTransforms) Load(string filename, string? textureFolder = null, float scale = 1f)
     {
         XDocument document = XDocument.Load(filename);
         string baseFolder = textureFolder ?? Path.GetDirectoryName(filename) ?? ".";
         Dictionary<string, MaterialData> materials = ReadMaterials(document);
-        Dictionary<string, string> materialBindings = ReadMaterialBindings(document);
+        Dictionary<string, string> controllerGeometryIds = ReadControllerGeometryIds(document);
+        Dictionary<string, XElement> meshElements = document.Descendants()
+            .Where(x => x.Name.LocalName == "mesh" && x.Parent?.Attribute("id") != null)
+            .ToDictionary(x => RequiredAttribute(x.Parent!, "id"), x => x);
         List<LoadedPart> parts = [];
+        List<SceneInstance> sceneInstances = ReadSceneInstances(document, controllerGeometryIds, scale);
 
-        foreach (XElement meshElement in document.Descendants().Where(x => x.Name.LocalName == "mesh"))
+        if (sceneInstances.Count > 0)
         {
-            parts.AddRange(ReadMesh(meshElement, materials, materialBindings, baseFolder, scale));
+            foreach (SceneInstance instance in sceneInstances)
+            {
+                if (meshElements.TryGetValue(instance.GeometryId, out XElement? meshElement))
+                {
+                    parts.AddRange(ReadMesh(meshElement, materials, instance.MaterialBindings, baseFolder, scale, instance.Transform));
+                }
+            }
+        }
+        else
+        {
+            Dictionary<string, Dictionary<string, string>> materialBindings = ReadMaterialBindings(document, controllerGeometryIds);
+
+            foreach (KeyValuePair<string, XElement> meshEntry in meshElements)
+            {
+                Dictionary<string, string> meshMaterialBindings = materialBindings.TryGetValue(meshEntry.Key, out Dictionary<string, string>? bindings)
+                    ? bindings
+                    : [];
+
+                parts.AddRange(ReadMesh(meshEntry.Value, materials, meshMaterialBindings, baseFolder, scale, Matrix4x4.Identity));
+            }
         }
 
         LoadedPart[] orderedParts = parts
@@ -78,7 +110,8 @@ public static class DaeLoader
         return
         (
             orderedParts.Select(part => part.Mesh).ToArray(),
-            orderedParts.Select(part => part.Texture).ToArray()
+            orderedParts.Select(part => part.Texture).ToArray(),
+            orderedParts.Select(part => part.LocalTransform).ToArray()
         );
     }
 
@@ -87,7 +120,8 @@ public static class DaeLoader
         Dictionary<string, MaterialData> materials,
         Dictionary<string, string> materialBindings,
         string textureFolder,
-        float scale)
+        float scale,
+        Matrix4x4 localTransform)
     {
         Dictionary<string, SourceData> sources = meshElement.Elements()
             .Where(x => x.Name.LocalName == "source")
@@ -111,7 +145,8 @@ public static class DaeLoader
             {
                 Mesh = new Mesh(meshVertices, indices),
                 Texture = material?.TexturePath == null ? null : LoadTexture(textureFolder, material),
-                Transparent = material?.Transparent ?? false
+                Transparent = material?.Transparent ?? false,
+                LocalTransform = localTransform
             };
         }
     }
@@ -310,17 +345,161 @@ public static class DaeLoader
         return result;
     }
 
-    private static Dictionary<string, string> ReadMaterialBindings(XDocument document)
+    private static Dictionary<string, string> ReadControllerGeometryIds(XDocument document)
+    {
+        return document.Descendants()
+            .Where(x => x.Name.LocalName == "controller" && x.Attribute("id") != null)
+            .Select(controller => new
+            {
+                Id = RequiredAttribute(controller, "id"),
+                GeometryId = controller.Descendants()
+                    .FirstOrDefault(x => x.Name.LocalName == "skin")?
+                    .Attribute("source")?
+                    .Value
+                    .TrimStart('#')
+            })
+            .Where(controller => controller.GeometryId != null)
+            .ToDictionary(controller => controller.Id, controller => controller.GeometryId!);
+    }
+
+    private static List<SceneInstance> ReadSceneInstances(XDocument document, Dictionary<string, string> controllerGeometryIds, float scale)
+    {
+        List<SceneInstance> instances = [];
+        XElement? visualScene = document.Descendants().FirstOrDefault(x => x.Name.LocalName == "visual_scene");
+        if (visualScene == null)
+        {
+            return instances;
+        }
+
+        foreach (XElement node in visualScene.Elements().Where(x => x.Name.LocalName == "node"))
+        {
+            ReadNodeInstances(node, Matrix4x4.Identity);
+        }
+
+        return instances;
+
+        void ReadNodeInstances(XElement node, Matrix4x4 parentTransform)
+        {
+            Matrix4x4 nodeTransform = ReadNodeTransform(node, scale) * parentTransform;
+
+            foreach (XElement instance in node.Elements().Where(x => x.Name.LocalName is "instance_geometry" or "instance_controller"))
+            {
+                string? url = (string?)instance.Attribute("url");
+                if (url == null)
+                {
+                    continue;
+                }
+
+                string instanceId = url.TrimStart('#');
+                string geometryId = instance.Name.LocalName == "instance_controller"
+                    ? controllerGeometryIds.GetValueOrDefault(instanceId, instanceId)
+                    : instanceId;
+
+                instances.Add(new SceneInstance
+                {
+                    GeometryId = geometryId,
+                    MaterialBindings = ReadInstanceMaterialBindings(instance),
+                    Transform = nodeTransform
+                });
+            }
+
+            foreach (XElement childNode in node.Elements().Where(x => x.Name.LocalName == "node"))
+            {
+                ReadNodeInstances(childNode, nodeTransform);
+            }
+        }
+    }
+
+    private static Matrix4x4 ReadNodeTransform(XElement node, float scale)
+    {
+        Matrix4x4 transform = Matrix4x4.Identity;
+
+        foreach (XElement element in node.Elements())
+        {
+            transform = element.Name.LocalName switch
+            {
+                "matrix" => transform * ParseMatrix(element.Value, scale),
+                "translate" => transform * ParseTranslation(element.Value, scale),
+                _ => transform
+            };
+        }
+
+        return transform;
+    }
+
+    private static Matrix4x4 ParseMatrix(string text, float scale)
+    {
+        float[] values = ParseFloats(text);
+        if (values.Length != 16)
+        {
+            throw new FileLoadException("DAE matrix transform must contain 16 float values.");
+        }
+
+        return new Matrix4x4(
+            values[0], values[4], values[8], values[12],
+            values[1], values[5], values[9], values[13],
+            values[2], values[6], values[10], values[14],
+            values[3] / 50f * scale, values[7] / 50f * scale, values[11] / 50f * scale, values[15]);
+    }
+
+    private static Matrix4x4 ParseTranslation(string text, float scale)
+    {
+        float[] values = ParseFloats(text);
+        if (values.Length < 3)
+        {
+            throw new FileLoadException("DAE translate transform must contain at least 3 float values.");
+        }
+
+        return Matrix4x4.CreateTranslation(values[0] / 50f * scale, values[1] / 50f * scale, values[2] / 50f * scale);
+    }
+
+    private static Dictionary<string, string> ReadInstanceMaterialBindings(XElement instance)
     {
         Dictionary<string, string> bindings = [];
 
-        foreach (XElement instanceMaterial in document.Descendants().Where(x => x.Name.LocalName == "instance_material"))
+        foreach (XElement instanceMaterial in instance.Descendants().Where(x => x.Name.LocalName == "instance_material"))
         {
             string? symbol = (string?)instanceMaterial.Attribute("symbol");
             string? target = (string?)instanceMaterial.Attribute("target");
             if (symbol != null && target != null)
             {
                 bindings[symbol] = target.TrimStart('#');
+            }
+        }
+
+        return bindings;
+    }
+
+    private static Dictionary<string, Dictionary<string, string>> ReadMaterialBindings(XDocument document, Dictionary<string, string> controllerGeometryIds)
+    {
+
+        Dictionary<string, Dictionary<string, string>> bindings = [];
+
+        foreach (XElement instance in document.Descendants().Where(x => x.Name.LocalName is "instance_geometry" or "instance_controller"))
+        {
+            string? url = (string?)instance.Attribute("url");
+            if (url == null)
+            {
+                continue;
+            }
+
+            string instanceId = url.TrimStart('#');
+            string geometryId = instance.Name.LocalName == "instance_controller"
+                ? controllerGeometryIds.GetValueOrDefault(instanceId, instanceId)
+                : instanceId;
+
+            Dictionary<string, string> geometryBindings = bindings.TryGetValue(geometryId, out Dictionary<string, string>? existingBindings)
+                ? existingBindings
+                : bindings[geometryId] = [];
+
+            foreach (XElement instanceMaterial in instance.Descendants().Where(x => x.Name.LocalName == "instance_material"))
+            {
+                string? symbol = (string?)instanceMaterial.Attribute("symbol");
+                string? target = (string?)instanceMaterial.Attribute("target");
+                if (symbol != null && target != null)
+                {
+                    geometryBindings[symbol] = target.TrimStart('#');
+                }
             }
         }
 

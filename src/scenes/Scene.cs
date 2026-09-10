@@ -8,7 +8,7 @@ namespace odl3d;
 /// A generic scene containing a collection of objects of type T, where T is constrained to be a subclass of Object. The scene provides methods to add and remove objects, and an abstract Draw method that must be implemented by subclasses to render the scene using a given shader.
 /// </summary>
 /// <typeparam name="T">The type of objects contained in the scene, constrained to be a subclass of Object.</typeparam>
-public abstract class Scene<T> : Drawable, IDisposable where T : Object
+public abstract class Scene<T> : Drawable where T : Object
 {
     /// <summary>
     /// The window associated with the scene, used to determine the rendering context and other properties. This property is set in the constructor and is read-only for subclasses. The window provides access to the OpenGL context, input handling, and other features necessary for rendering the scene's objects.
