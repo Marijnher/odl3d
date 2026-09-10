@@ -4,6 +4,8 @@ using System.IO;
 using System.Globalization;
 using System.Linq;
 
+namespace odl3d.Loaders;
+
 /// <summary>
 /// Represents a material loaded from an MTL file, including its properties such as ambient, diffuse, and specular colors, shininess, dissolve factor, and associated textures.
 /// </summary>

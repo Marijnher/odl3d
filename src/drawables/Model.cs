@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using System.Collections.Generic;
+using odl3d.Loaders;
 
 namespace odl3d;
 
@@ -42,7 +43,7 @@ public class Model : Object
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
         if (daeFolder == null) throw new ArgumentException("Invalid filename: " + filename);
-        (Mesh[] meshes, Texture[] textures) = DaeLoader.Load(filename, daeFolder);
+        (Mesh[] meshes, Texture?[] textures) = DaeLoader.Load(filename, daeFolder);
         return new Model(scene, meshes, textures);
     }
 

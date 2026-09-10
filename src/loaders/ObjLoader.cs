@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Linq;
 using System;
 
-namespace odl3d;
+namespace odl3d.Loaders;
 
 /// <summary>
 /// Represents an OBJ file, containing a collection of meshes and an optional associated MTL file.

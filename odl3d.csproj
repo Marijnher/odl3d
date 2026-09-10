@@ -40,8 +40,4 @@
         </None>
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="AssimpNet" Version="4.1.0" />
-    </ItemGroup>
-
 </Project>
