@@ -55,6 +55,11 @@ public class Window : InputHost, IDisposable
     public bool ShouldClose => GLFW.glfwWindowShouldClose(Handle) != GLFW.GLFW_FALSE;
 
     /// <summary>
+    /// Indicates whether the window is currently rendering in wireframe mode. When set to true, all geometry is rendered as wireframes instead of filled polygons.
+    /// </summary>
+    public bool Wireframe { get; private set; } = false;
+
+    /// <summary>
     /// The time at the previous frame, used to calculate delta time between frames. This is updated each frame during the window's update loop.
     /// </summary>
     private double? previousTime;
@@ -130,6 +135,16 @@ public class Window : InputHost, IDisposable
             InputManager.Dispose();
             InputManager = null;
         }
+    }
+
+    /// <summary>
+    /// Sets the window to render in wireframe mode if enabled is true, or in filled polygon mode if enabled is false.
+    /// </summary>
+    /// <param name="enabled">True to enable wireframe mode, false to render filled polygons.</param>
+    public void SetWireFrame(bool enabled)
+    {
+        Wireframe = enabled;
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, enabled ? GL.GL_LINE : GL.GL_FILL);
     }
 
     /// <summary>

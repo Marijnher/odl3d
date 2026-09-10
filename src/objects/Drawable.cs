@@ -11,6 +11,11 @@ public abstract class Drawable : InputHost
     public Vector3 Position = Vector3.Zero;
 
     /// <summary>
+    /// The rotation of the object in world space, represented as Euler angles (in degrees) around the X, Y, and Z axes.
+    /// </summary>
+    public Vector3 Rotation = Vector3.Zero;
+
+    /// <summary>
     /// Indicates whether this drawable object is visible. If set to false, the object will not be rendered.
     /// </summary>
     public bool Visible = true;

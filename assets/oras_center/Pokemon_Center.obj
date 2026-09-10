@@ -1,6 +1,6 @@
 # Blender v2.74 (sub 0) OBJ File: ''
 # www.blender.org
-mtllib Pokemon Center.mtl
+mtllib Pokemon_Center.mtl
 o pokecenter_1
 v -1.599854 2.093630 31.676678
 v 3.065155 1.354731 31.676678

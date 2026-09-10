@@ -62,16 +62,6 @@ public class Object : Drawable
         scene.Add(this);
     }
 
-    /// <summary>
-    /// Creates a new Object by loading a mesh from the given OBJ file and using the optional texture. The mesh is loaded using the ObjLoader class.
-    /// </summary>
-    /// <param name="scene">The scene to which this object belongs.</param>
-    /// <param name="meshFilename">The file path to the Wavefront .obj file to be loaded as the mesh for this object.</param>
-    /// <param name="texture">The texture to use when drawing this object, or null to draw without a texture.</param>
-    public Object(Scene<Object> scene, string meshFilename, Texture? texture = null) :
-        this(scene, ObjLoader.Load(meshFilename), texture) { }
-
-
     ~Object()
     {
         if (!Disposed) Console.WriteLine("Warning: Object was not disposed before being finalized. This may cause a GL resource leak.");
@@ -99,7 +89,11 @@ public class Object : Drawable
     /// </summary>
     /// <returns>The model matrix that transforms this object's local coordinates to world coordinates.</returns>
     public virtual Matrix4x4 GetModelMatrix() =>
-        Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateTranslation(Position + Scene.Position);
+        Matrix4x4.CreateScale(Scale) *
+        Matrix4x4.CreateRotationX(MathF.PI / 180 * Rotation.X) *
+        Matrix4x4.CreateRotationY(MathF.PI / 180 * Rotation.Y) *
+        Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
+        Matrix4x4.CreateTranslation(Position + Scene.Position);
 
     /// <summary>
     /// Draws this object using the specified shader and the given view-projection matrix. The view-projection matrix is typically obtained from the camera and represents the combined view and projection transformations. This method sets up the necessary shader uniforms, binds the texture if available, and then draws the mesh associated with this object.

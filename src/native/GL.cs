@@ -41,6 +41,7 @@ internal static class GL
     public const uint GL_TEXTURE0 = 0x84C0;
     public const uint GL_FRONT_AND_BACK = 0x0408;
     public const uint GL_LINE = 0x1B01;
+    public const uint GL_FILL = 0x1B02;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClearColor(float r, float g, float b, float a);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClear(uint mask);

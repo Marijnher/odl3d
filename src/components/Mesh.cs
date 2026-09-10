@@ -81,15 +81,15 @@ public class Mesh : IDisposable
     /// Creates a new Mesh instance representing a unit quad centered at the origin, with vertices at (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), and (-0.5, 0.5), and texture coordinates (0, 1), (1, 1), (1, 0), and (0, 0). The mesh is created with the appropriate vertex and index data for rendering a quad using GL_TRIANGLES.
     /// </summary>
     /// <returns>A new Mesh instance representing the unit quad.</returns>
-    public static Mesh CreateQuad()
+    public static Mesh CreateQuad(float uMult = 1.0f, float vMult = 1.0f)
     {
         float[] vertices =
         {
-            // x,     y,    z,    u,    v
-            -0.5f, -0.5f, 0f,   0f, 2f,
-             0.5f, -0.5f, 0f,   2f, 2f,
-             0.5f,  0.5f, 0f,   2f, 0f,
-            -0.5f,  0.5f, 0f,   0f, 0f,
+            // x,     y,    z,      u,    v
+            -0.5f, -0.5f, 0f,       0f, vMult,
+             0.5f, -0.5f, 0f,       uMult, vMult,
+             0.5f,  0.5f, 0f,       uMult, 0f,
+            -0.5f,  0.5f, 0f,       0f, 0f,
         };
         uint[] indices = { 0, 1, 2, 2, 3, 0 };
         return new Mesh(vertices, indices);
@@ -102,20 +102,20 @@ public class Mesh : IDisposable
     /// <param name="height">The height of the plane.</param>
     /// <param name="length">The length of the plane along the z-axis.</param>
     /// <returns>A new Mesh instance representing the plane.</returns>
-    public static Mesh CreatePlane(float width, float height, float length)
+    public static Mesh CreatePlane(float width, float height, float length, float uMult = 1.0f, float vMult = 1.0f)
     {
         float[] vertices =
         {
-            // x,     y,    z,    u,    v
-            -width / 2f, 0f, -length / 2f, 0f, 1f,
-             width / 2f, 0f, -length / 2f, 1f, 1f,
-             width / 2f, height, -length / 2f, 1f, 0f,
-            -width / 2f, height, -length / 2f, 0f, 0f,
+            // x,     y,    z,                  u,    v
+            -width / 2f, 0f, -length / 2f,      0f, 0f, // bottom left (bottom)
+             width / 2f, 0f, -length / 2f,      uMult, 0f, // bottom right (bottom)
+             width / 2f, height, -length / 2f,  uMult, 0f, // bottom right (top)
+            -width / 2f, height, -length / 2f,  0f, 0f, // bottom left (top)
 
-            -width / 2f, 0f, length / 2f, 0f, 1f,
-             width / 2f, 0f, length / 2f, 1f, 1f,
-             width / 2f, height, length / 2f, 1f, 0f,
-            -width / 2f, height, length / 2f, 0f, 0f,
+            -width / 2f, 0f, length / 2f,       0f, vMult, // top left (bottom)
+             width / 2f, 0f, length / 2f,       uMult, vMult, // top right (bottom)
+             width / 2f, height, length / 2f,   uMult, vMult, // top right (top)
+            -width / 2f, height, length / 2f,   0f, vMult, // top left (top)
         };
         uint[] indices = {
             0, 1, 2, 2, 3, 0, // front face

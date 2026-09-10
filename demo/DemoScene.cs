@@ -14,13 +14,11 @@ class DemoScene : Scene3D
             Scale = new Vector3(2, 2, 1)
         };
 
-        string cubeFilename = System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "cube.obj");
-        Object cube = new Object(this, cubeFilename, texture)
-        {
-            Position = new Vector3(1.5f, 0, -3),
-            Scale = new Vector3(1.5f, 1.5f, 1.5f),
-            Color = Color.Red
-        };
+        Model cube = Model.LoadOBJ(this, "assets/cube.obj");
+        cube.Texture = texture;
+        cube.Position = new Vector3(1.5f, 0, -3);
+        cube.Scale = new Vector3(1.5f, 1.5f, 1.5f);
+        cube.Color = Color.Red;
 
         Sprite3D canvas = new Sprite3D(this, Texture.FromColor(64, 64, Color.White))
         {
@@ -35,9 +33,12 @@ class DemoScene : Scene3D
             Color = Color.Magenta
         };
 
-        Plane ground = new Plane(this, 10f, 0.2f, 10f)
+        Mesh groundMesh = Mesh.CreatePlane(20f, 0.2f, 20f, 25f, 25f);
+        Object ground = new Object(this, groundMesh,new Texture("assets/grass.png"))
         {
-            Position = new Vector3(0f, -1.5f, -5f)
+            Position = new Vector3(0f, -1.5f, -5f),
         };
+        ground.Texture!.WrapModeH = TextureWrap.Mirror;
+        ground.Texture!.WrapModeV = TextureWrap.Mirror;
     }
 }

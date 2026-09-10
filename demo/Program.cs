@@ -44,12 +44,13 @@ void main()
         window.Camera = new MoveableCamera(window);
         window.SetCursorCapture(true);
         window.RegisterKeyPress(Key.Escape, window.Close);
+        window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
         Shader shader = new Shader(VertexSource, FragmentSource);
 
         DemoScene demoScene1 = new DemoScene(window);
         UIScene uiScene = new UIScene(window);
-        DAEScene daeScene = new DAEScene(window);
+        ModelScene daeScene = new ModelScene(window);
 
         while (!window.ShouldClose)
         {
