@@ -147,6 +147,18 @@ public class Texture : IDisposable
         return texture;
     }
 
+    /// <summary>
+    /// Creates a new Texture with a gradient defined by the four corner colors. The gradient is interpolated across the specified rectangular region.
+    /// </summary>
+    /// <param name="x">X-coordinate of the top-left corner of the gradient region.</param>
+    /// <param name="y">Y-coordinate of the top-left corner of the gradient region.</param>
+    /// <param name="width">Width of the gradient region in pixels.</param>
+    /// <param name="height">Height of the gradient region in pixels.</param>
+    /// <param name="c1">Color of the top-left corner.</param>
+    /// <param name="c2">Color of the top-right corner.</param>
+    /// <param name="c3">Color of the bottom-left corner.</param>
+    /// <param name="c4">Color of the bottom-right corner.</param>
+    /// <returns>A new Texture initialized with the specified gradient.</returns>
     public static Texture FromGradient(int x, int y, int width, int height, Color c1, Color c2, Color c3, Color c4)
     {
         Texture texture = new Texture(width, height);

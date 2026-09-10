@@ -3,6 +3,9 @@ using System.Numerics;
 
 namespace odl3d;
 
+/// <summary>
+/// Represents a drawable object in the 3D scene, providing properties for position, rotation, and visibility.
+/// </summary>
 public abstract class Drawable : InputHost
 {
     /// <summary>

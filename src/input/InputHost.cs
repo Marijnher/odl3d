@@ -3,6 +3,9 @@ using System.Numerics;
 
 namespace odl3d;
 
+/// <summary>
+/// Provides an abstract base class for objects that can host an input manager, allowing them to handle input events such as keyboard and mouse interactions. It defines common properties, events, and methods for managing input, and derived classes must implement the specific input handling logic.
+/// </summary>
 public abstract class InputHost : IDisposable
 {
     /// <summary>

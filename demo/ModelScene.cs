@@ -17,15 +17,13 @@ public class ModelScene : Scene3D
         dragonGym.Position = new Vector3(3, -1.25f, -1.75f);
 
         Model orasCenter = Model.LoadOBJ(this, "assets/oras_center/Pokemon_center.obj");
-        //Mesh mesh = ObjLoader.Load("assets/oras_center/Pokemon_center.obj");
-        //Object orasCenter = new Object(this, mesh, Texture.FromColor(32, 32, Color.Yellow));
         orasCenter.Position = new Vector3(-3.5f, -0.25f, 2f);
         orasCenter.Scale = new Vector3(0.02f, 0.02f, 0.02f);
         orasCenter.Rotation = new Vector3(0, 90, 0);
 
         RegisterKeyDown(Key.C, () => {
             Console.WriteLine("Rotation...");
-            orasCenter.Rotation.Y += 0.1f;
+            orasCenter.Rotation.Y += 1f;
         });
     }
 }

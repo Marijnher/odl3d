@@ -78,9 +78,11 @@ public class Mesh : IDisposable
     private static Mesh? _quad;
 
     /// <summary>
-    /// Creates a new Mesh instance representing a unit quad centered at the origin, with vertices at (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), and (-0.5, 0.5), and texture coordinates (0, 1), (1, 1), (1, 0), and (0, 0). The mesh is created with the appropriate vertex and index data for rendering a quad using GL_TRIANGLES.
+    /// Creates a new Mesh instance representing a unit quad centered at the origin, with texture coordinates scaled by the specified u and v multipliers. This allows for repeating or stretching the texture across the quad.
     /// </summary>
-    /// <returns>A new Mesh instance representing the unit quad.</returns>
+    /// <param name="uMult">The multiplier for the U (horizontal) texture coordinate.</param>
+    /// <param name="vMult">The multiplier for the V (vertical) texture coordinate.</param>
+    /// <returns>A new Mesh instance representing the unit quad with scaled texture coordinates.</returns>
     public static Mesh CreateQuad(float uMult = 1.0f, float vMult = 1.0f)
     {
         float[] vertices =
@@ -96,12 +98,14 @@ public class Mesh : IDisposable
     }
 
     /// <summary>
-    /// Creates a new Mesh instance representing a plane with the given width, height, and length, centered at the origin. The plane is constructed with vertices at the corners of the rectangle defined by the width and height, and extends along the z-axis for the specified length. The mesh is created with appropriate vertex and index data for rendering a plane using GL_TRIANGLES.
+    /// Creates a new Mesh instance representing a plane with the given width, height, and length, centered at the origin. The plane's texture coordinates are scaled by the specified u and v multipliers, allowing for repeating or stretching the texture across the plane.
     /// </summary>
     /// <param name="width">The width of the plane.</param>
     /// <param name="height">The height of the plane.</param>
     /// <param name="length">The length of the plane along the z-axis.</param>
-    /// <returns>A new Mesh instance representing the plane.</returns>
+    /// <param name="uMult">The multiplier for the U (horizontal) texture coordinate.</param>
+    /// <param name="vMult">The multiplier for the V (vertical) texture coordinate.</param>
+    /// <returns>A new Mesh instance representing the plane with scaled texture coordinates.</returns>
     public static Mesh CreatePlane(float width, float height, float length, float uMult = 1.0f, float vMult = 1.0f)
     {
         float[] vertices =

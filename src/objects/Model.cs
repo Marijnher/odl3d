@@ -1,14 +1,25 @@
 using System;
 using System.Numerics;
 using System.Collections.Generic;
-using Microsoft.VisualBasic;
 
 namespace odl3d;
 
+/// <summary>
+/// Represents a 3D model composed of multiple sub-objects, each with its own mesh and texture. Provides methods for loading models from DAE and OBJ files, and handles drawing and disposal of its sub-objects.
+/// </summary>
 public class Model : Object
 {
-    public List<Object> Objects = new List<Object>();
+    /// <summary>
+    /// The list of sub-objects that make up this 3D model. Each sub-object has its own mesh and texture.
+    /// </summary>
+    protected List<Object> Objects = new List<Object>();
 
+    /// <summary>
+    /// Initializes a new instance of the Model class with the specified scene, meshes, and textures.
+    /// </summary>
+    /// <param name="scene">The scene to which this model belongs.</param>
+    /// <param name="meshes">An array of meshes that make up the model.</param>
+    /// <param name="textures">An array of textures corresponding to the meshes.</param>
     public Model(Scene<Object> scene, Mesh[] meshes, Texture?[] textures) : base(scene)
     {
         for (int i = 0; i < meshes.Length; i++)
@@ -20,6 +31,13 @@ public class Model : Object
         }
     }
 
+    /// <summary>
+    /// Loads a 3D model from a DAE (Collada) file and returns a new Model instance.
+    /// </summary>
+    /// <param name="scene">The scene to which the loaded model will belong.</param>
+    /// <param name="filename">The path to the DAE file to load.</param>
+    /// <returns>A new Model instance representing the loaded 3D model.</returns>
+    /// <exception cref="ArgumentException">Thrown if the filename is invalid or the DAE file cannot be loaded.</exception>
     public static Model LoadDAE(Scene<Object> scene, string filename)
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
@@ -28,6 +46,13 @@ public class Model : Object
         return new Model(scene, meshes, textures);
     }
 
+    /// <summary>
+    /// Loads a 3D model from an OBJ file and returns a new Model instance.
+    /// </summary>
+    /// <param name="scene">The scene to which the loaded model will belong.</param>
+    /// <param name="objFilename">The path to the OBJ file to load.</param>
+    /// <returns>A new Model instance representing the loaded 3D model.</returns>
+    /// <exception cref="ArgumentException">Thrown if the filename is invalid or the OBJ file cannot be loaded.</exception>
     public static Model LoadOBJ(Scene<Object> scene, string objFilename)
     {
         string? objFolder = System.IO.Path.GetDirectoryName(objFilename);
@@ -60,6 +85,11 @@ public class Model : Object
         return new Model(scene, meshes, textures);
     }
 
+    /// <summary>
+    /// Draws the model using the specified shader and view-projection matrix.
+    /// </summary>
+    /// <param name="shader">The shader to use for rendering the model.</param>
+    /// <param name="viewProjection">The combined view-projection matrix for the current camera.</param>
     public override void Draw(Shader shader, Matrix4x4 viewProjection)
     {
         foreach (var obj in Objects)
@@ -75,6 +105,9 @@ public class Model : Object
         }
     }
 
+    /// <summary>
+    /// Disposes of the model and releases all associated resources, including its constituent objects.
+    /// </summary>
     public override void Dispose()
     {
         if (Disposed) return;

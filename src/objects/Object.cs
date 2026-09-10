@@ -4,7 +4,7 @@ using System.Numerics;
 namespace odl3d;
 
 /// <summary>
-/// A drawable 3D object consisting of a Mesh and an optional Texture, positioned and scaled in world space. The object can be drawn using a Shader and a view-projection matrix. Implements IDisposable to release GPU resources when no longer needed.
+/// Represents a 3D object in the scene, consisting of a mesh and an optional texture, with properties for position, rotation, scale, and color. The object can be drawn using a shader and a view-projection matrix, and it manages its own GPU resources.
 /// </summary>
 public class Object : Drawable
 {

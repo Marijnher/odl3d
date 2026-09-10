@@ -4,24 +4,67 @@ using System.IO;
 using System.Globalization;
 using System.Linq;
 
+/// <summary>
+/// Represents a material loaded from an MTL file, including its properties such as ambient, diffuse, and specular colors, shininess, dissolve factor, and associated textures.
+/// </summary>
 public class Material
 {
+    /// <summary>
+    /// The name of the material as specified in the MTL file.
+    /// </summary>
     public string Name { get; set; } = "";
 
-    public float[] Ka { get; set; } = { 0, 0, 0 }; // Ambient
-    public float[] Kd { get; set; } = { 1, 1, 1 }; // Diffuse
-    public float[] Ks { get; set; } = { 0, 0, 0 }; // Specular
+    /// <summary>
+    /// The ambient color of the material, represented as an array of three floats [r, g, b].
+    /// </summary>
+    public float[] Ka { get; set; } = { 0, 0, 0 };
 
-    public float Ns { get; set; }                  // Shininess
-    public float Dissolve { get; set; } = 1.0f;    // d / Tr
+    /// <summary>
+    /// The diffuse color of the material, represented as an array of three floats [r, g, b].
+    /// </summary>
+    public float[] Kd { get; set; } = { 1, 1, 1 };
 
-    public string? DiffuseTexture { get; set; }    // map_Kd
-    public string? NormalTexture { get; set; }     // map_Bump / bump
+    /// <summary>
+    /// The specular color of the material, represented as an array of three floats [r, g, b].
+    /// </summary>
+    public float[] Ks { get; set; } = { 0, 0, 0 };
+
+    /// <summary>
+    /// The shininess of the material.
+    /// </summary>
+    public float Ns { get; set; }
+
+    /// <summary>
+    /// The dissolve factor (transparency) of the material, corresponding to the 'd' or 'Tr' value in the MTL file.
+    /// </summary>
+    public float Dissolve { get; set; } = 1.0f;
+
+    /// <summary>
+    /// The file path to the diffuse texture (map_Kd) associated with the material.
+    /// </summary>
+    public string? DiffuseTexture { get; set; }
+
+    /// <summary>
+    /// The file path to the normal texture (map_Bump or bump) associated with the material.
+    /// </summary>
+    public string? NormalTexture { get; set; }
+
+    /// <summary>
+    /// The file path to the specular texture (map_Ks) associated with the material.
+    /// </summary>
     public string? SpecularTexture { get; set; }   // map_Ks
 }
 
+/// <summary>
+/// Provides functionality to load materials from an MTL file into a dictionary of Material objects.
+/// </summary>
 public static class MtlLoader
 {
+    /// <summary>
+    /// Loads materials from the specified MTL file and returns them as a dictionary keyed by material name.
+    /// </summary>
+    /// <param name="path">The file path to the MTL file to be loaded.</param>
+    /// <returns>A dictionary of Material objects keyed by their names.</returns>
     public static Dictionary<string, Material> Load(string path)
     {
         Dictionary<string, Material> materials = new();
@@ -88,6 +131,11 @@ public static class MtlLoader
         return materials;
     }
 
+    /// <summary>
+    /// Parses a Vec3 (three-component vector) from the given parts of a line in the MTL file.
+    /// </summary>
+    /// <param name="parts">The parts of the line containing the Vec3 components.</param>
+    /// <returns>An array of three floats representing the Vec3.</returns>
     private static float[] ParseVec3(string[] parts)
     {
         return new[]
@@ -98,6 +146,11 @@ public static class MtlLoader
         };
     }
 
+    /// <summary>
+    /// Parses a float from the given string using the invariant culture.
+    /// </summary>
+    /// <param name="s">The string to parse as a float.</param>
+    /// <returns>The parsed float value.</returns>
     private static float ParseFloat(string s)
     {
         return float.Parse(s, CultureInfo.InvariantCulture);

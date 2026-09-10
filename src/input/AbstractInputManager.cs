@@ -4,6 +4,9 @@ using System.Numerics;
 
 namespace odl3d;
 
+/// <summary>
+/// Provides an abstract base class for managing input from a window, including keyboard and mouse events. It defines common events and methods for handling input, and derived classes must implement the specific input handling logic.
+/// </summary>
 public abstract class AbstractInputManager : IDisposable
 {
     /// <summary>

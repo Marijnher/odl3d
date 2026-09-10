@@ -3,8 +3,15 @@ using System.Numerics;
 
 namespace odl3d;
 
+/// <summary>
+/// A camera that can be moved using keyboard and mouse input. This class extends the base Camera class and provides functionality for first-person style movement and orientation control.
+/// </summary>
 public class MoveableCamera : Camera
 {
+    /// <summary>
+    /// Initializes a new instance of the MoveableCamera class with the specified window.
+    /// </summary>
+    /// <param name="window">The window associated with the camera, used to capture input and manage the camera's view.</param>
     public MoveableCamera(Window window) : base(window) { }
 
     /// <summary>
@@ -22,6 +29,10 @@ public class MoveableCamera : Camera
     /// </summary>
     private Vector2? lastPosition;
 
+    /// <summary>
+    /// Updates the camera's position and orientation based on user input. This method should be called once per frame.
+    /// </summary>
+    /// <param name="deltaTime">The time elapsed since the last frame, used to ensure consistent movement speed regardless of frame rate.</param>
     public override void Update(float deltaTime)
     {
         base.Update(deltaTime);

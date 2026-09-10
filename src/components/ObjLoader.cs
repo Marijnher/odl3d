@@ -7,11 +7,26 @@ using System;
 
 namespace odl3d;
 
+/// <summary>
+/// Represents an OBJ file, containing a collection of meshes and an optional associated MTL file.
+/// </summary>
 public class ObjFile
 {
+    /// <summary>
+    /// The collection of meshes in the OBJ file, keyed by their names.
+    /// </summary>
     public Dictionary<string, ObjGroup> Meshes;
+    
+    /// <summary>
+    /// The file name of the associated MTL file, if any.
+    /// </summary>
     public string? MtlFilename;
 
+    /// <summary>
+    /// Initializes a new instance of the ObjFile class with the specified meshes and MTL file name.
+    /// </summary>
+    /// <param name="meshes">The collection of meshes in the OBJ file, keyed by their names.</param>
+    /// <param name="mtlFilename">The file name of the associated MTL file, if any.</param>
     public ObjFile(Dictionary<string, ObjGroup> meshes, string? mtlFilename)
     {
         Meshes = meshes;
@@ -19,12 +34,32 @@ public class ObjFile
     }
 }
 
+/// <summary>
+/// Represents a group within an OBJ file, containing a mesh and an optional associated material.
+/// </summary>
 public class ObjGroup
 {
+    /// <summary>
+    /// The name of the group.
+    /// </summary>
     public string Name;
+
+    /// <summary>
+    /// The name of the associated material, if any.
+    /// </summary>
     public string? MtlName;
+
+    /// <summary>
+    /// The mesh associated with this group.
+    /// </summary>
     public Mesh Mesh;
 
+    /// <summary>
+    /// Initializes a new instance of the ObjGroup class with the specified name, material name, and mesh.
+    /// </summary>
+    /// <param name="name">The name of the group.</param>
+    /// <param name="mtlName">The name of the associated material, if any.</param>
+    /// <param name="mesh">The mesh associated with this group.</param>
     public ObjGroup(string name, string? mtlName, Mesh mesh)
     {
         Name = name;
@@ -33,8 +68,16 @@ public class ObjGroup
     }
 }
 
+/// <summary>
+/// Provides functionality to load OBJ files into ObjFile objects.
+/// </summary>
 public static class ObjLoader
 {
+    /// <summary>
+    /// Loads an OBJ file from the specified filename and returns it as an ObjFile object.
+    /// </summary>
+    /// <param name="filename">The file path to the OBJ file to be loaded.</param>
+    /// <returns>An ObjFile object representing the loaded OBJ file.</returns>
     public static ObjFile Load(string filename)
     {
         List<Vector3> positions = new();

@@ -4,7 +4,7 @@ using System.Numerics;
 namespace odl3d;
 
 /// <summary>
-/// A simple camera class for 3D rendering, providing position, orientation (yaw and pitch), field of view, aspect ratio, and near/far clipping planes. The camera can generate view and projection matrices for use in rendering 3D scenes.
+/// Represents a camera in a 3D scene, providing properties for position, orientation, field of view, aspect ratio, and near/far clipping planes. This class serves as a base for more specialized camera types, such as moveable or first-person cameras.
 /// </summary>
 public class Camera
 {

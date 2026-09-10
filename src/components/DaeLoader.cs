@@ -7,8 +7,22 @@ using System.IO;
 
 namespace odl3d;
 
+/// <summary>
+/// Provides functionality to load meshes and textures from a COLLADA (DAE) file, including handling texture wrap modes.
+/// </summary>
 public static class DaeLoader
 {
+    /// <summary>
+    /// Loads meshes and textures from a COLLADA (DAE) file, applying the specified scale to the vertex positions and handling texture wrap modes.
+    /// </summary>
+    /// <param name="filename">The path to the COLLADA (DAE) file to load.</param>
+    /// <param name="textureFolder">The folder containing the textures referenced by the DAE file.</param>
+    /// <param name="scale">A scale factor to apply to the vertex positions.</param>
+    /// <exception cref="FileLoadException">Thrown if the wrap values for a texture are not found in the DAE file.</exception>
+    /// <exception cref="FileLoadException">Thrown if the wrap mode is "BORDER", which is not supported.</exception>
+    /// <exception cref="FileLoadException">Thrown if the texture file for an image ID is not found.</exception>
+    /// <exception cref="FileLoadException">Thrown if the mesh does not have texture coordinates.</exception>
+    /// <returns>A tuple containing an array of loaded meshes and an array of corresponding textures.</returns>
     public static (Mesh[], Texture[]) Load(string filename, string textureFolder, float scale = 1f)
     {
         using var importer = new AssimpContext();
@@ -41,7 +55,7 @@ public static class DaeLoader
             }
             if (!mMesh.HasTextureCoords(0))
             {
-                throw new Exception("Mesh does not have texture coordinates.");
+                throw new FileLoadException("Mesh does not have texture coordinates.");
             }
             for (int i = 0; i < mMesh.VertexCount; i++)
             {
@@ -71,7 +85,7 @@ public static class DaeLoader
             string wrapName = texFilename.Replace(" ", "%20");
             if (!wrapValues.ContainsKey(wrapName))
             {
-                throw new Exception("Wrap values not found for texture: " + wrapName);
+                throw new FileLoadException("Wrap values not found for texture: " + wrapName);
             }
             (TextureWrap wrapH, TextureWrap wrapV) = wrapValues[wrapName];
             textures[idx] = new Texture(textureFolder + "/" + texFilename)
@@ -85,8 +99,18 @@ public static class DaeLoader
     }
 }
 
+/// <summary>
+/// Loads texture wrap mode data from a COLLADA (DAE) file, mapping texture filenames to their corresponding wrap modes.
+/// </summary>
 class DaeWrapLoader
 {
+    /// <summary>
+    /// Loads texture wrap mode data from the specified COLLADA (DAE) file.
+    /// </summary>
+    /// <param name="filename">The path to the COLLADA (DAE) file containing texture wrap mode information.</param>
+    /// <exception cref="FileLoadException">Thrown when the wrap mode is "BORDER", which is not supported.</exception>
+    /// <exception cref="FileLoadException">Thrown when the texture file for an image ID is not found.</exception>
+    /// <returns>A dictionary mapping texture filenames to their corresponding wrap modes (WrapS and WrapT).</returns>
     public static Dictionary<string, (TextureWrap WrapS, TextureWrap WrapT)>
         LoadWrapData(string filename)
     {
@@ -136,7 +160,7 @@ class DaeWrapLoader
                     !images.TryGetValue(imageId, out string? textureFile))
                     continue;
 
-                if (textureFile == null) throw new Exception("Texture file not found for image ID: " + imageId);
+                if (textureFile == null) throw new FileLoadException("Texture file not found for image ID: " + imageId);
                 result[textureFile] =
                 (
                     ParseWrapMode(
@@ -150,6 +174,12 @@ class DaeWrapLoader
         return result;
     }
 
+    /// <summary>
+    /// Parses a string representing a texture wrap mode and returns the corresponding TextureWrap enum value. If the input is null or unrecognized, it defaults to TextureWrap.Repeat.
+    /// </summary>
+    /// <param name="value">The string representation of the wrap mode (e.g., "WRAP", "MIRROR", "CLAMP", "BORDER").</param>
+    /// <exception cref="FileLoadException">Thrown when the wrap mode is "BORDER", which is not supported.</exception>
+    /// <returns>The corresponding TextureWrap enum value.</returns>
     private static TextureWrap ParseWrapMode(string? value)
     {
         return value?.ToUpperInvariant() switch
@@ -157,7 +187,7 @@ class DaeWrapLoader
             "WRAP" => TextureWrap.Repeat,
             "MIRROR" => TextureWrap.Mirror,
             "CLAMP" => TextureWrap.Clamp,
-            "BORDER" => TextureWrap.Border,
+            "BORDER" => throw new FileLoadException("Border wrap mode is not supported."),
             _ => TextureWrap.Repeat
         };
     }

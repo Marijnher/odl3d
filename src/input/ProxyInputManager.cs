@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace odl3d;
 
 /// <summary>
-/// A specialized InputManager for handling input events within a Scene or Object. It acts as a proxy to the Window's InputManager, allowing the owner to register and respond to key events while maintaining its own state and event subscriptions. This class is responsible for managing key press, release, and down events specific to the owner, and ensures proper disposal of event handlers when the owner is no longer active.
+/// Provides a proxy input manager that forwards input events from the parent window's InputManager to the owner, allowing the owner to handle key and mouse events independently.
 /// </summary>
 public class ProxyInputManager : AbstractInputManager
 {
