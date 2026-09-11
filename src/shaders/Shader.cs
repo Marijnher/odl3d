@@ -92,7 +92,7 @@ public class Shader : IDisposable
     /// </summary>
     /// <param name="name">The name of the uniform variable in the shader program.</param>
     /// <param name="matrix">The 4x4 matrix value to set for the uniform variable.</param>
-    public void SetMatrix4(string name, Matrix4x4 matrix)
+    public void SetMatrix(string name, Matrix4x4 matrix)
     {
         int location = Renderer.GetUniformLocation(Handle, name);
         Renderer.SetUniformMatrix(location, matrix);

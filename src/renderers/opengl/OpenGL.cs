@@ -37,8 +37,6 @@ public partial class OpenGL : IRenderer
 
     public void SetWireFrame(bool enable) => glPolygonMode(GL_FRONT_AND_BACK, enable ? GL_LINE : GL_FILL);
 
-    public void BindTexture(Texture? texture) => glBindTexture(GL_TEXTURE_2D, texture?.Handle ?? 0);
-
     public void ClearColor(Color color) => glClearColor(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
 
     public void ClearColorBuffer() => glClear(GL_COLOR_BUFFER_BIT);

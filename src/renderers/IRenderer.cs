@@ -17,7 +17,18 @@ public interface IRenderer : IDisposable
 
     public void SetWireFrame(bool enable);
 
+    #region Texture Methods
+    public uint CreateTexture();
+    public void DeleteTexture(Texture texture);
     public void BindTexture(Texture? texture);
+    public void SetTextureMinFilter(TextureFilter filterMode, MipmapFilter mipmapFilter);
+    public void SetTextureMagFilter(TextureFilter filterMode);
+    public void SetTextureWrapModeH(TextureWrap wrapModeH);
+    public void SetTextureWrapModeV(TextureWrap wrapModeV);
+    public void SetTextureAnisotropicFilter(AnisotropicFilter anisotropicFilter);
+    public void UploadTexture(Texture texture);
+    public void GenerateMipmaps();
+    #endregion
 
     #region Shader Methods
     public uint CreateShader(ShaderType shaderType);

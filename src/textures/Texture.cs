@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using decodl;
 
 namespace odl3d;
@@ -14,6 +15,8 @@ public class Texture : IDisposable
     public static TextureFilter DefaultFilterMode = TextureFilter.Nearest;
     public static MipmapFilter DefaultMipmapMode = MipmapFilter.None;
     public static AnisotropicFilter DefaultAnisotropicMode = AnisotropicFilter.None;
+
+    private IRenderer? Renderer;
     
     /// <summary>
     /// Width of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).
@@ -71,20 +74,6 @@ public class Texture : IDisposable
     /// Indicates whether this texture has been disposed and its resources released. After disposing, the texture should not be used again.
     /// </summary>
     public bool Disposed { get; private set; } = false;
-
-    /// <summary>
-    /// The OpenGL constant representing the appropriate minification filter based on the current FilterMode and Mipmap settings.
-    /// </summary>
-    private int MinFilter => (FilterMode, Mipmap) switch
-    {
-        (TextureFilter.Nearest, MipmapFilter.None) => (int) GL.GL_NEAREST,
-        (TextureFilter.Nearest, MipmapFilter.Nearest) => (int) GL.GL_NEAREST_MIPMAP_NEAREST,
-        (TextureFilter.Nearest, MipmapFilter.Linear) => (int) GL.GL_NEAREST_MIPMAP_LINEAR,
-        (TextureFilter.Linear, MipmapFilter.None) => (int) GL.GL_LINEAR,
-        (TextureFilter.Linear, MipmapFilter.Nearest) => (int) GL.GL_LINEAR_MIPMAP_NEAREST,
-        (TextureFilter.Linear, MipmapFilter.Linear) => (int) GL.GL_LINEAR_MIPMAP_LINEAR,
-        _ => (int) GL.GL_NEAREST
-    };
 
     private bool? hasPartialAlpha;
 
@@ -272,21 +261,18 @@ public class Texture : IDisposable
     /// <summary>
     /// Uploads the pixel data to the GPU, creating a GL texture if necessary. If the texture has already been uploaded and has not been modified since the last upload, this method does nothing. After calling this method, the texture can be bound and used for rendering.
     /// </summary>
-    public void Upload()
+    public void Upload(IRenderer renderer)
     {
-        if (Handle == 0)
-        {
-            GL.glGenTextures(1, out uint handle);
-            Handle = handle;
-        }
-        GL.glBindTexture(GL.GL_TEXTURE_2D, Handle);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, MinFilter);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, (int) FilterMode);
-        if (AnisotropicFilter != AnisotropicFilter.None) GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAX_ANISOTROPY_EXT, (int) AnisotropicFilter);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, (int) WrapModeH);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, (int) WrapModeV);
-        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, (int)GL.GL_RGBA, Width, Height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, Pixels);
-        if (Mipmap != MipmapFilter.None) GL.glGenerateMipmap(GL.GL_TEXTURE_2D);
+        Renderer = renderer;
+        if (Handle == 0) Handle = Renderer.CreateTexture();
+        Renderer.BindTexture(this);
+        Renderer.SetTextureMinFilter(FilterMode, Mipmap);
+        Renderer.SetTextureMagFilter(FilterMode);
+        Renderer.SetTextureAnisotropicFilter(AnisotropicFilter);
+        Renderer.SetTextureWrapModeH(WrapModeH);
+        Renderer.SetTextureWrapModeV(WrapModeV);
+        Renderer.UploadTexture(this);
+        if (Mipmap != MipmapFilter.None) Renderer.GenerateMipmaps();
         Uploaded = true;
     }
 
@@ -296,11 +282,7 @@ public class Texture : IDisposable
     public void Dispose()
     {
         if (Disposed) return;
-        if (Handle != 0)
-        {
-            uint handle = Handle;
-            GL.glDeleteTextures(1, ref handle);
-        }
+        if (Handle != 0 && Renderer != null) Renderer.DeleteTexture(this);
         Disposed = true;
         OnDisposed?.Invoke();
     }

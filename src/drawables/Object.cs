@@ -140,18 +140,18 @@ public class Object : Drawable
         Matrix4x4 model = GetModelMatrix();
 
         shader.Use();
-        shader.SetMatrix4("uMVP", model * viewProjection);
+        shader.SetMatrix("uMVP", model * viewProjection);
         shader.SetInt("uTexture", 0);
-        shader.SetInt("uUseTexture", Texture != null ? 1 : 0);
+        shader.SetInt("uUseTexture", Texture == null ? 0 : 1);
         shader.SetColor("uColor", Color);
         shader.SetColor("texColor", TextureColor);
         // Lighting uniforms are only meaningful for meshes that carry normals; shaders without them ignore these.
         shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
-        if (Mesh.HasNormals) shader.SetMatrix4("uModel", model);
+        if (Mesh.HasNormals) shader.SetMatrix("uModel", model);
 
-        if (Texture != null && !Texture.Uploaded) Texture.Upload();
+        if (Texture != null && !Texture.Uploaded) Texture.Upload(Renderer);
         Renderer.BindTexture(Texture);
-        
+
         Mesh.Draw();
     }
 
