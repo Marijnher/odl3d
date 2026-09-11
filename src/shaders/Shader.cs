@@ -15,6 +15,11 @@ public class Shader : IDisposable
     public uint Handle { get; private set; }
 
     /// <summary>
+    /// The renderer responsible for executing the shader program. This property is set when the shader is created and is used to bind the shader for rendering and to set uniform variables.
+    /// </summary>
+    public IRenderer Renderer { get; private set; }
+
+    /// <summary>
     /// Indicates whether this shader has been disposed and its resources released. After disposing, the shader should not be used again. The Disposed property is set to true when Dispose() is called, and it can be checked to prevent multiple disposals or usage of a disposed shader.
     /// </summary>
     public bool Disposed { get; private set; } = false;
@@ -30,26 +35,26 @@ public class Shader : IDisposable
     /// <param name="vertexSource">The source code of the vertex shader.</param>
     /// <param name="fragmentSource">The source code of the fragment shader.</param>
     /// <exception cref="ShaderException">Thrown if the vertex or fragment shader fails to compile, or if the shader program fails to link.</exception>
-    public Shader(string vertexSource, string fragmentSource)
+    public Shader(IRenderer renderer,string vertexSource, string fragmentSource)
     {
-        uint vertex = Compile(GL.GL_VERTEX_SHADER, vertexSource);
-        uint fragment = Compile(GL.GL_FRAGMENT_SHADER, fragmentSource);
+        Renderer = renderer;
 
-        Handle = GL.glCreateProgram();
-        GL.glAttachShader(Handle, vertex);
-        GL.glAttachShader(Handle, fragment);
-        GL.glLinkProgram(Handle);
+        uint vertex = Compile(ShaderType.Vertex, vertexSource);
+        uint fragment = Compile(ShaderType.Fragment, fragmentSource);
 
-        GL.glGetProgramiv(Handle, GL.GL_LINK_STATUS, out int success);
-        if (success == 0)
+        Handle = Renderer.CreateShaderProgram();
+        Renderer.AttachShader(Handle, vertex);
+        Renderer.AttachShader(Handle, fragment);
+        bool success = Renderer.LinkShaderProgram(Handle);
+
+        if (!success)
         {
-            byte[] log = new byte[1024];
-            GL.glGetProgramInfoLog(Handle, log.Length, out int len, log);
-            throw new ShaderException("Shader program failed to link: " + Encoding.ASCII.GetString(log, 0, len));
+            string log = Renderer.GetShaderProgramLog(Handle);
+            throw new ShaderException("Shader program failed to link: " + log);
         }
 
-        GL.glDeleteShader(vertex);
-        GL.glDeleteShader(fragment);
+        Renderer.DeleteShader(vertex);
+        Renderer.DeleteShader(fragment);
     }
 
     ~Shader()
@@ -60,22 +65,19 @@ public class Shader : IDisposable
     /// <summary>
     /// Compiles a shader of the given type (vertex or fragment) from the provided source code. If compilation fails, an exception is thrown with the error log. The compiled shader handle is returned for linking into a shader program.
     /// </summary>
-    /// <param name="type">The type of shader to compile (GL.GL_VERTEX_SHADER or GL.GL_FRAGMENT_SHADER).</param>
+    /// <param name="type">The type of shader to compile (ShaderType.Vertex or ShaderType.Fragment).</param>
     /// <param name="source">The source code of the shader.</param>
     /// <returns>The handle of the compiled shader.</returns>
     /// <exception cref="ShaderException">Thrown if the shader fails to compile.</exception>
-    private static uint Compile(uint type, string source)
+    private uint Compile(ShaderType type, string source)
     {
-        uint shader = GL.glCreateShader(type);
-        GL.glShaderSource(shader, 1, [source], [source.Length]);
-        GL.glCompileShader(shader);
-
-        GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS, out int success);
-        if (success == 0)
+        uint shader = Renderer.CreateShader(type);
+        Renderer.SetShaderSource(shader, source);
+        bool success = Renderer.CompileShader(shader);
+        if (!success)
         {
-            byte[] log = new byte[1024];
-            GL.glGetShaderInfoLog(shader, log.Length, out int len, log);
-            throw new ShaderException("Shader failed to compile: " + Encoding.ASCII.GetString(log, 0, len));
+            string log = Renderer.GetShaderLog(shader);
+            throw new ShaderException("Shader failed to compile: " + log);
         }
         return shader;
     }
@@ -83,24 +85,17 @@ public class Shader : IDisposable
     /// <summary>
     /// Binds the shader program for use in rendering. After calling this method, subsequent draw calls will use this shader program until another shader is bound or the program is unbound. This method should be called before setting uniform variables or drawing objects that require this shader.
     /// </summary>
-    public void Use() => GL.glUseProgram(Handle);
+    public void Use() => Renderer.UseShaderProgram(Handle);
 
     /// <summary>
-    /// Sets a 4x4 matrix uniform variable in the shader program. The matrix is provided as a System.Numerics.Matrix4x4, and it is converted to a float array in column-major order before being passed to OpenGL. The uniform variable is identified by its name, and the shader program must be in use (bound) when this method is called.
+    /// Sets a 4x4 matrix uniform variable in the shader program. The matrix is provided as a System.Numerics.Matrix4x4, and it is converted to a float array in column-major order before being passed to the renderer. The uniform variable is identified by its name, and the shader program must be in use (bound) when this method is called.
     /// </summary>
     /// <param name="name">The name of the uniform variable in the shader program.</param>
     /// <param name="matrix">The 4x4 matrix value to set for the uniform variable.</param>
     public void SetMatrix4(string name, Matrix4x4 matrix)
     {
-        int location = GL.glGetUniformLocation(Handle, name);
-        float[] data =
-        [
-            matrix.M11, matrix.M12, matrix.M13, matrix.M14,
-            matrix.M21, matrix.M22, matrix.M23, matrix.M24,
-            matrix.M31, matrix.M32, matrix.M33, matrix.M34,
-            matrix.M41, matrix.M42, matrix.M43, matrix.M44
-        ];
-        GL.glUniformMatrix4fv(location, 1, 0, data);
+        int location = Renderer.GetUniformLocation(Handle, name);
+        Renderer.SetUniformMatrix(location, matrix);
     }
 
     /// <summary>
@@ -110,8 +105,8 @@ public class Shader : IDisposable
     /// <param name="value">The integer value to set for the uniform variable.</param>
     public void SetInt(string name, int value)
     {
-        int location = GL.glGetUniformLocation(Handle, name);
-        GL.glUniform1i(location, value);
+        int location = Renderer.GetUniformLocation(Handle, name);
+        Renderer.SetUniformInt(location, value);
     }
 
     /// <summary>
@@ -121,9 +116,8 @@ public class Shader : IDisposable
     /// <param name="color">The color value to set.</param>
     public void SetColor(string name, Color color)
     {
-        int location = GL.glGetUniformLocation(Handle, name);
-        const float byteToFloat = 1f / 255f;
-        GL.glUniform4f(location, color.R * byteToFloat, color.G * byteToFloat, color.B * byteToFloat, color.A * byteToFloat);
+        int location = Renderer.GetUniformLocation(Handle, name);
+        Renderer.SetUniformColor(location, color);
     }
 
     /// <summary>
@@ -132,7 +126,7 @@ public class Shader : IDisposable
     public void Dispose()
     {
         if (Disposed) return;
-        GL.glDeleteProgram(Handle);
+        Renderer.DeleteShaderProgram(Handle);
         Disposed = true;
         OnDisposed?.Invoke();
     }

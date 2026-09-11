@@ -14,7 +14,7 @@ public class Texture : IDisposable
     public static TextureFilter DefaultFilterMode = TextureFilter.Nearest;
     public static MipmapFilter DefaultMipmapMode = MipmapFilter.None;
     public static AnisotropicFilter DefaultAnisotropicMode = AnisotropicFilter.None;
-
+    
     /// <summary>
     /// Width of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).
     /// </summary>
@@ -288,17 +288,6 @@ public class Texture : IDisposable
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, (int)GL.GL_RGBA, Width, Height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, Pixels);
         if (Mipmap != MipmapFilter.None) GL.glGenerateMipmap(GL.GL_TEXTURE_2D);
         Uploaded = true;
-    }
-
-    /// <summary>
-    /// Binds the texture to the specified texture unit for use in rendering. If the texture has not yet been uploaded, Upload() is called automatically. After calling this method, the texture is active and can be used in shaders.
-    /// </summary>
-    /// <param name="unit">Texture unit to bind the texture to (e.g., 0 for GL_TEXTURE0).</param>
-    public void Bind(uint unit = 0)
-    {
-        if (!Uploaded) Upload();
-        GL.glActiveTexture(GL.GL_TEXTURE0 + unit);
-        GL.glBindTexture(GL.GL_TEXTURE_2D, Handle);
     }
 
     /// <summary>

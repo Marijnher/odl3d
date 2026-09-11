@@ -158,7 +158,15 @@ internal static class GLFW
         glfwSetKeyCallback = GetFunction<d_glfwSetKeyCallback>("glfwSetKeyCallback");
         glfwSetMouseButtonCallback = GetFunction<d_glfwSetMouseButtonCallback>("glfwSetMouseButtonCallback");
         glfwSetCursorPosCallback = GetFunction<d_glfwSetCursorPosCallback>("glfwSetCursorPosCallback");
-    
+        
+        if (glfwInit() == GLFW_FALSE)
+            throw new RenderException("Failed to initialize GLFW.");
+            
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+        
         Loaded = true;
     }
 
