@@ -33,10 +33,10 @@ class DemoScene : Scene3D
             Color = Color.Magenta
         };
 
-        Mesh groundMesh = Mesh.CreatePlane(20f, 0.2f, 20f, 25f, 25f);
-        Object ground = new Object(this, groundMesh,new Texture("assets/grass.png"))
+        Mesh groundMesh = Mesh.CreatePlane(20f, 0.2f, 20f, 50f, 50f);
+        Object ground = new Object(this, groundMesh, new Texture("assets/grass.png"))
         {
-            Position = new Vector3(0f, -1.5f, -5f),
+            Position = new Vector3(0f, -1.5f, -5f)
         };
         ground.Texture!.WrapModeH = TextureWrap.Mirror;
         ground.Texture!.WrapModeV = TextureWrap.Mirror;
