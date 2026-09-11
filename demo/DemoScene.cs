@@ -40,5 +40,16 @@ class DemoScene : Scene3D
         };
         ground.Texture!.WrapModeH = TextureWrap.Mirror;
         ground.Texture!.WrapModeV = TextureWrap.Mirror;
+
+        Text3D helloWorld = new Text3D(this, Font.Get("consola", 96), "Hello world!", depth: 0.05f)
+        {
+            Position = new Vector3(0, 2, -2),
+            Color = Color.Red
+        };
+
+        TextBillboard billboard = new TextBillboard(this, Font.Get("consola", 48), "Billboarded quad text")
+        {
+            Position = new Vector3(-1.5f, 3f, -2)
+        };
     }
 }

@@ -132,14 +132,17 @@ public class Object : Drawable
     {
         if (!Visible || Disposed || Mesh == null) return;
         if ((pass == RenderPass.Transparent) != IsTransparent) return;
-        Matrix4x4 mvp = GetModelMatrix() * viewProjection;
+        Matrix4x4 model = GetModelMatrix();
 
         shader.Use();
-        shader.SetMatrix4("uMVP", mvp);
+        shader.SetMatrix4("uMVP", model * viewProjection);
         shader.SetInt("uTexture", 0);
         shader.SetInt("uUseTexture", Texture != null ? 1 : 0);
         shader.SetColor("uColor", Color);
         shader.SetColor("texColor", TextureColor);
+        // Lighting uniforms are only meaningful for meshes that carry normals; shaders without them ignore these.
+        shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
+        if (Mesh.HasNormals) shader.SetMatrix4("uModel", model);
         if (Texture != null) Texture.Bind(0);
         else GL.glBindTexture(GL.GL_TEXTURE_2D, 0);
         Mesh.Draw();

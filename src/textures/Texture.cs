@@ -45,6 +45,13 @@ public class Texture : IDisposable
     public TextureWrap WrapModeV = TextureWrap.Repeat;
 
     /// <summary>
+    /// Filtering mode used when sampling this texture at a size other than its native resolution. Defaults to
+    /// Nearest (crisp, suited to pixel art); set to Linear for smoother results with anti-aliased content such
+    /// as rasterized text.
+    /// </summary>
+    public TextureFilter FilterMode = TextureFilter.Nearest;
+
+    /// <summary>
     /// Indicates whether this texture has been disposed and its resources released. After disposing, the texture should not be used again.
     /// </summary>
     public bool Disposed { get; private set; } = false;
@@ -244,8 +251,8 @@ public class Texture : IDisposable
         }
 
         GL.glBindTexture(GL.GL_TEXTURE_2D, Handle);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, (int)GL.GL_NEAREST);
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, (int)GL.GL_NEAREST);
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, (int)FilterMode);
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, (int)FilterMode);
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, (int) WrapModeH);
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, (int) WrapModeV);
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, (int)GL.GL_RGBA, Width, Height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, Pixels);

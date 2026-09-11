@@ -62,13 +62,19 @@ public class Scene2D : Scene<Object>
         int vpY = Viewport.Y + (int) Position.Y;
         GL.glViewport(vpX, Window.Height - vpY - Viewport.Height, Viewport.Width, Viewport.Height);
         Matrix4x4 projection = GetProjectionMatrix();
+        // Two passes (like Scene3D) so sprites with genuine partial alpha (e.g. anti-aliased Text) still
+        // render; a single Opaque-only pass would skip them entirely since IsTransparent would be true.
+        DrawObjects(shader, projection, RenderPass.Opaque);
+        GL.glDepthMask(GL.GL_FALSE);
+        DrawObjects(shader, projection, RenderPass.Transparent);
+        GL.glDepthMask(GL.GL_TRUE);
+    }
+
+    private void DrawObjects(Shader shader, Matrix4x4 projection, RenderPass pass)
+    {
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
-        {
-            Object sprite = Objects[i];
-            if (sprite is not Sprite2D) Console.WriteLine("Warning: Scene2D contains a non-Sprite2D object. This may cause rendering issues.");
-            sprite.Draw(shader, projection);
-        }
+            Objects[i].Draw(shader, projection, pass);
     }
 }
 

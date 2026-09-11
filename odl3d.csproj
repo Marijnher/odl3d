@@ -35,6 +35,10 @@
         <None Include="glfw3.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <!-- Windows FreeType native library (text rendering), copied next to the built exe if present -->
+        <None Include="freetype.dll" Condition="Exists('freetype.dll')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Include="assets\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
