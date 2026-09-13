@@ -58,9 +58,13 @@ public class Scene2D : Scene<Object>
     {
         if (!Visible || Disposed) return;
         
-        int vpX = Viewport.X + (int) Position.X;
-        int vpY = Viewport.Y + (int) Position.Y;
-        GL.glViewport(vpX, Window.Height - vpY - Viewport.Height, Viewport.Width, Viewport.Height);
+        float scaleX = (float) Window.FramebufferWidth / Window.Width;
+        float scaleY = (float) Window.FramebufferHeight / Window.Height;
+        int vpX = (int) ((Viewport.X + Position.X) * scaleX);
+        int vpY = (int) ((Viewport.Y + Position.Y) * scaleY);
+        int vpWidth = (int) (Viewport.Width * scaleX);
+        int vpHeight = (int) (Viewport.Height * scaleY);
+        GL.glViewport(vpX, Window.FramebufferHeight - vpY - vpHeight, vpWidth, vpHeight);
         Matrix4x4 projection = GetProjectionMatrix();
         // Two passes (like Scene3D) so sprites with genuine partial alpha (e.g. anti-aliased Text) still
         // render; a single Opaque-only pass would skip them entirely since IsTransparent would be true.
@@ -77,4 +81,3 @@ public class Scene2D : Scene<Object>
             Objects[i].Draw(shader, projection, pass);
     }
 }
-

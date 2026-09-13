@@ -35,6 +35,8 @@ internal static class GLFW
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_glfwGetWindowSize(IntPtr window, out int width, out int height);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwGetFramebufferSize(IntPtr window, out int width, out int height);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_glfwSetWindowSize(IntPtr window, int width, int height);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_glfwSetWindowPos(IntPtr window, int xpos, int ypos);
@@ -87,6 +89,7 @@ internal static class GLFW
     public static d_glfwTerminate glfwTerminate;
     public static d_glfwWindowHint glfwWindowHint;
     public static d_glfwGetWindowSize glfwGetWindowSize;
+    public static d_glfwGetFramebufferSize glfwGetFramebufferSize;
     public static d_glfwSetWindowSize glfwSetWindowSize;
     public static d_glfwSetWindowPos glfwSetWindowPos;
     public static d_glfwMaximizeWindow glfwMaximizeWindow;
@@ -127,7 +130,7 @@ internal static class GLFW
 
         foreach (string candidate in candidates)
         {
-            if (NativeLibrary.TryLoad(candidate, out _library)) break;
+            if (NativeLibrary.TryLoad("bin/" + candidate, out _library)) break;
         }
         if (_library == IntPtr.Zero)
             throw new DllNotFoundException("Could not locate the GLFW native library (glfw3.dll / libglfw.so.3 / libglfw.3.dylib). Install it or place it next to the executable.");
@@ -136,6 +139,7 @@ internal static class GLFW
         glfwTerminate = GetFunction<d_glfwTerminate>("glfwTerminate");
         glfwWindowHint = GetFunction<d_glfwWindowHint>("glfwWindowHint");
         glfwGetWindowSize = GetFunction<d_glfwGetWindowSize>("glfwGetWindowSize");
+        glfwGetFramebufferSize = GetFunction<d_glfwGetFramebufferSize>("glfwGetFramebufferSize");
         glfwSetWindowSize = GetFunction<d_glfwSetWindowSize>("glfwSetWindowSize");
         glfwSetWindowPos = GetFunction<d_glfwSetWindowPos>("glfwSetWindowPos");
         glfwMaximizeWindow = GetFunction<d_glfwMaximizeWindow>("glfwMaximizeWindow");

@@ -21,7 +21,7 @@ class UIScene : Scene2D
         topRight.Position = new Vector3(window.Width - 36, 4, 0);
         topRight.RegisterMousePressInside(Mouse.Left, _ => topRight.Dispose());
         
-        infoText = new Text2D(this, Font.Get("consola", 16));
+        infoText = new Text2D(this, Font.Get("arial", 16));
         infoText.Position = new Vector3(6, window.Height - infoText.MeasureString().Y - 6, 1);
         UpdateInfoText(0, 0);
     }

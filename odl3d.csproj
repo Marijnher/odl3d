@@ -31,14 +31,23 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- Windows GLFW native library, copied next to the built exe so it can be resolved at runtime -->
-        <None Include="glfw3.dll">
+        <!-- GLFW -->
+        <None Include="bin/glfw3.dll" Condition="Exists('bin/glfw3.dll')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <!-- Windows FreeType native library (text rendering), copied next to the built exe if present -->
-        <None Include="freetype.dll" Condition="Exists('freetype.dll')">
+        <None Include="bin/libglfw.3.dylib" Condition="Exists('bin/libglfw.3.dylib')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+
+        <!-- Freetype -->
+        <None Include="bin/freetype6.dll" Condition="Exists('bin/freetype6.dll')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="bin/libfreetype.6.dylib" Condition="Exists('bin/libfreetype.6.dylib')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+
+        <!-- Assets -->
         <None Include="assets\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

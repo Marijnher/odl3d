@@ -25,6 +25,16 @@ public class Window : InputHost
     public int Height { get; private set; }
 
     /// <summary>
+    /// The current OpenGL framebuffer width in pixels. This can differ from Width on high-DPI displays.
+    /// </summary>
+    public int FramebufferWidth { get; private set; }
+
+    /// <summary>
+    /// The current OpenGL framebuffer height in pixels. This can differ from Height on high-DPI displays.
+    /// </summary>
+    public int FramebufferHeight { get; private set; }
+
+    /// <summary>
     /// Indicates whether the cursor is currently captured (hidden and locked to the window for camera control). When false, the cursor is visible and free to move within the window.
     /// </summary>
     public bool CursorCaptured { get; private set; } = false;
@@ -96,7 +106,7 @@ public class Window : InputHost
         GLFW.glfwSwapInterval(0);
 
         GL.Load();
-        GL.glViewport(0, 0, width, height);
+        UpdateFramebufferSize();
         GL.glEnable(GL.GL_DEPTH_TEST);
         GL.glEnable(GL.GL_BLEND);
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
@@ -193,13 +203,25 @@ public class Window : InputHost
     {
         GLFW.glfwGetWindowSize(Handle, out int width, out int height);
         if (width <= 0 || height <= 0) return;
-        if (Width == width && Height == height) return;
-
+        bool windowSizeChanged = Width != width || Height != height;
         Width = width;
         Height = height;
-        Camera.AspectRatio = (float) width / height;
+        if (windowSizeChanged)
+        {
+            Camera.AspectRatio = (float) width / height;
+            Scenes2D.ForEach(scene => scene.UpdateWindowSize());
+        }
+        UpdateFramebufferSize();
+    }
+
+    private void UpdateFramebufferSize()
+    {
+        GLFW.glfwGetFramebufferSize(Handle, out int width, out int height);
+        if (width <= 0 || height <= 0) return;
+
+        FramebufferWidth = width;
+        FramebufferHeight = height;
         GL.glViewport(0, 0, width, height);
-        Scenes2D.ForEach(scene => scene.UpdateWindowSize());
     }
 
     /// <summary>
@@ -262,7 +284,7 @@ public class Window : InputHost
     public void Render(Shader shader)
     {
         Clear();
-        GL.glViewport(0, 0, Width, Height);
+        GL.glViewport(0, 0, FramebufferWidth, FramebufferHeight);
         // Clear depth buffer
         GL.glClear(GL.GL_DEPTH_BUFFER_BIT);
         foreach (Scene3D scene in Scenes3D) scene.DrawPass(shader, RenderPass.Opaque);

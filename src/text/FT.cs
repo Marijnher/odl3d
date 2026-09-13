@@ -272,7 +272,7 @@ internal static unsafe class FT
 
         foreach (string candidate in candidates)
         {
-            if (NativeLibrary.TryLoad(candidate, out _library)) break;
+            if (NativeLibrary.TryLoad("bin/" + candidate, out _library)) break;
         }
         if (_library == IntPtr.Zero)
             throw new DllNotFoundException("Could not locate the FreeType native library (freetype.dll / libfreetype.so.6 / libfreetype.6.dylib). Install it or place it next to the executable.");
