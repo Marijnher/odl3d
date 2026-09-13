@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Numerics;
 
 namespace odl3d;
@@ -12,7 +11,7 @@ public class Scene2D : Scene<Object3D>
     /// <summary>
     /// The viewport rectangle in pixel coordinates relative to the top-left of the window. Sprites are positioned within this rectangle, and the projection matrix is calculated based on this viewport.
     /// </summary>
-    public Rectangle Viewport { get; set; }
+    public Rect Viewport { get; set; }
 
     private readonly bool fitToWindow;
 
@@ -21,9 +20,9 @@ public class Scene2D : Scene<Object3D>
     /// </summary>
     /// <param name="window">The window in which the scene will be rendered.</param>
     /// <param name="viewport">The viewport rectangle in pixel coordinates relative to the top-left of the window.</param>
-    public Scene2D(Window window, Rectangle viewport) : this(window, viewport, false) { }
+    public Scene2D(Window window, Rect viewport) : this(window, viewport, false) { }
 
-    private Scene2D(Window window, Rectangle viewport, bool fitToWindow) : base(window)
+    private Scene2D(Window window, Rect viewport, bool fitToWindow) : base(window)
     {
         this.Viewport = viewport;
         this.fitToWindow = fitToWindow;
@@ -34,12 +33,12 @@ public class Scene2D : Scene<Object3D>
     /// Creates a new Scene2D with a viewport that matches the size of the given window. The viewport is set to (0, 0, window.Width, window.Height), and sprites will be positioned in pixel coordinates relative to the top-left of the window.
     /// </summary>
     /// <param name="window">The window whose size defines the viewport for the scene.</param>
-    public Scene2D(Window window) : this(window, new Rectangle(0, 0, window.Width, window.Height), true) { }
+    public Scene2D(Window window) : this(window, new Rect(0, 0, window.Width, window.Height), true) { }
 
     internal void UpdateWindowSize()
     {
         if (fitToWindow)
-            Viewport = new Rectangle(0, 0, Window.Width, Window.Height);
+            Viewport = new Rect(0, 0, Window.Width, Window.Height);
     }
 
     /// <summary>
