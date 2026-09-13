@@ -55,7 +55,7 @@ public class TextBillboard : RasterizedText
         if (scene is not Scene3D) Console.WriteLine("Warning: TextBillboard is being added to a Scene that is not a Scene3D. This may cause rendering issues.");
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(pixelsPerWorldUnit, 0f);
         _pixelsPerWorldUnit = pixelsPerWorldUnit;
-        Mesh = Mesh.Quad;
+        Mesh = MeshBuilder.CreateQuad();
         AutoDisposeMesh = false;
         Rebuild();
     }
@@ -72,7 +72,7 @@ public class TextBillboard : RasterizedText
         return Matrix4x4.CreateScale(width * Scale.X, height * Scale.Y, 1f) *
             GetOrientation() *
             Matrix4x4.CreateTranslation(
-                Position.X + Scene.Position.X + width * Scale.X / 2f,
+                Position.X + Scene.Position.X,
                 Position.Y + Scene.Position.Y,
                 Position.Z + Scene.Position.Z);
     }
@@ -92,12 +92,12 @@ public class TextBillboard : RasterizedText
         // screen (no perspective distortion) rather than swivelling toward the camera's position.
         Camera camera = Scene.Window.Camera;
         Vector3 right = camera.Right;
-        Vector3 up = camera.Up;
-        Vector3 backward = -camera.Front;
+        Vector3 down = camera.Down;
+        Vector3 back = camera.Back;
         return new Matrix4x4(
             right.X, right.Y, right.Z, 0f,
-            up.X, up.Y, up.Z, 0f,
-            backward.X, backward.Y, backward.Z, 0f,
+            down.X, down.Y, down.Z, 0f,
+            back.X, back.Y, back.Z, 0f,
             0f, 0f, 0f, 1f);
     }
 

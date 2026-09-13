@@ -15,7 +15,7 @@ public class Sprite3D : Object3D
     /// </summary>
     /// <param name="scene">The scene to which this sprite belongs.</param>
     /// <param name="texture">The texture to use for the sprite.</param>
-    public Sprite3D(Scene<Object3D> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture) { }
+    public Sprite3D(Scene<Object3D> scene, Texture? texture = null) : base(scene, MeshBuilder.CreateQuad(), texture) { }
 
     /// <inheritdoc/>
     public override Matrix4x4 GetModelMatrix() =>

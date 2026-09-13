@@ -79,6 +79,5 @@ void main()
 
         window.Dispose();
         shader.Dispose();
-        Mesh.DisposeShared();
     }
 }

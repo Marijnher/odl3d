@@ -16,7 +16,7 @@ public class Sprite2D : Object3D
     /// </summary>
     /// <param name="scene">The Scene2D to which this sprite belongs.</param>
     /// <param name="texture">The optional texture to use for the sprite.</param>
-    public Sprite2D(Scene<Object3D> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture)
+    public Sprite2D(Scene<Object3D> scene, Texture? texture = null) : base(scene, MeshBuilder.CreateQuad(), texture)
     {
         if (scene is not Scene2D) Console.WriteLine("Warning: Sprite2D is being added to a Scene that is not a Scene2D. This may cause rendering issues.");
         AutoDisposeMesh = false;
@@ -29,7 +29,7 @@ public class Sprite2D : Object3D
     /// <returns>The model matrix for the sprite.</returns>
     public override Matrix4x4 GetModelMatrix() =>
         Matrix4x4.CreateScale(Texture!.Width * Scale.X, Texture!.Height * Scale.Y, 1f) *
-        Matrix4x4.CreateTranslation(Position.X + Texture!.Width / 2f * Scale.X, Position.Y + Texture!.Height / 2f * Scale.Y, Position.Z);
+        Matrix4x4.CreateTranslation(Position.X, Position.Y, Position.Z);
 
     /// <summary>
     /// Registers a callback to be invoked when the specified mouse button is pressed inside the sprite's bounds.

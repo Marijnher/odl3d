@@ -22,7 +22,7 @@ public class Text2D : RasterizedText
         : base(scene, font, content, style, align, atlas)
     {
         if (scene is not Scene2D) Console.WriteLine("Warning: Text2D is being added to a Scene that is not a Scene2D. This may cause rendering issues.");
-        Mesh = Mesh.QuadFlippedV;
+        Mesh = MeshBuilder.CreateQuad();
         AutoDisposeMesh = false;
         Rebuild();
     }
@@ -38,7 +38,7 @@ public class Text2D : RasterizedText
             Matrix4x4.CreateRotationY(MathF.PI / 180 * Rotation.Y) *
             Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
             Matrix4x4.CreateTranslation(
-                Position.X + Scene.Position.X + width / 2f * Scale.X,
+                Position.X + Scene.Position.X,
                 Position.Y + Scene.Position.Y,
                 Position.Z + Scene.Position.Z);
     }

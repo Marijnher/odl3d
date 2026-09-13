@@ -20,12 +20,12 @@ public partial class Mesh : IDisposable
     /// <summary>
     /// The renderer-backed vertex buffer object (VBO) handle for this mesh; contains the vertex data (position xyz + uv per vertex). The VBO is bound to the VAO and used for drawing.
     /// </summary>
-    Buffer vbo;
+    private Buffer vbo;
 
     /// <summary>
     /// The renderer-backed element buffer object (EBO) handle for this mesh; contains the index data for drawing the mesh. The EBO is bound to the VAO and used for indexed drawing.
     /// </summary>
-    Buffer ebo;
+    private Buffer ebo;
 
     /// <summary>
     /// The number of indices in the mesh; used to determine how many elements to draw when rendering. This value is set during mesh creation and remains constant for the lifetime of the mesh.
@@ -114,16 +114,5 @@ public partial class Mesh : IDisposable
         vao.Dispose();
         Disposed = true;
         OnDisposed?.Invoke();
-    }
-
-    /// <summary>
-    /// Disposes of the shared quad mesh, releasing its renderer buffers and vertex array object. After calling this method, the shared quad mesh should not be used again. This is useful for cleaning up resources when the application is shutting down. If the shared quad mesh has already been disposed, this method does nothing.
-    /// </summary>
-    public static void DisposeShared()
-    {
-        _quad?.Dispose();
-        _quad = null;
-        _quadFlippedV?.Dispose();
-        _quadFlippedV = null;
     }
 }

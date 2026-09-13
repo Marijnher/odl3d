@@ -78,7 +78,7 @@ public class Camera
     /// <summary>
     /// Calculates and returns the normalized right direction vector of the camera, which is perpendicular to both the Front vector and the global up direction (Y-axis). This vector points to the right side of the camera in world space and can be used for strafing or lateral movement. It is computed using the cross product of the Front vector and the global up vector (0, 1, 0), ensuring that it is orthogonal to both and has a length of 1.
     /// </summary>
-    public Vector3 Right => Vector3.Normalize(Vector3.Cross(Front, Vector3.UnitY));
+    public Vector3 Right => -Left;
 
     /// <summary>
     /// Calculates and returns the normalized upward direction vector of the camera, which is perpendicular to both the Right vector and the Front vector. This vector points directly above the camera in world space and can be used for vertical movement or orientation purposes. It is computed using the cross product of the Right vector and the Front vector, ensuring that it is orthogonal to both and has a length of 1.
@@ -88,7 +88,7 @@ public class Camera
     /// <summary>
     /// Calculates and returns the normalized downward direction vector of the camera, which is the opposite of the Up vector. This vector points directly below the camera in world space and can be used for vertical movement or orientation purposes. It is computed by taking the cross product of the Front vector and the Right vector, ensuring that it is orthogonal to both and has a length of 1.
     /// </summary>
-    public Vector3 Down => Vector3.Normalize(Vector3.Cross(Front, Right));
+    public Vector3 Down => -Up;
 
     /// <summary>
     /// Initializes a new instance of the Camera class using the specified window. The aspect ratio is automatically calculated based on the window's width and height.
