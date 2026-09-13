@@ -22,6 +22,9 @@ public class Object : Drawable
     /// </summary>
     public Scene<Object> Scene;
 
+    /// <summary>
+    /// The position of this object in world space, relative to the scene's origin. The position is used to compute the model matrix for rendering, which transforms the object's local coordinates to world coordinates.
+    /// </summary>
     protected IRenderer Renderer => RenderFactory.Renderer;
 
     /// <summary>

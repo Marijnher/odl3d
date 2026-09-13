@@ -42,4 +42,6 @@ public partial class OpenGL : IRenderer
     public void ClearColorBuffer() => glClear(GL_COLOR_BUFFER_BIT);
 
     public void ClearDepthBuffer() => glClear(GL_DEPTH_BUFFER_BIT);
+
+    public void DrawElements(int count) => glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, IntPtr.Zero);
 }

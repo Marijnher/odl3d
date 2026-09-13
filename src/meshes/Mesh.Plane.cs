@@ -4,6 +4,14 @@ namespace odl3d;
 
 public partial class Mesh
 {
+    /// <summary>
+    /// Represents a single vertex in a mesh, containing its position in 3D space (X, Y, Z) and its texture coordinates (U, V). The vertex structure is used to define the geometry of a mesh and how textures are mapped onto it.
+    /// </summary>
+    /// <param name="X">The X coordinate of the vertex's position.</param>
+    /// <param name="Y">The Y coordinate of the vertex's position.</param>
+    /// <param name="Z">The Z coordinate of the vertex's position.</param>
+    /// <param name="U">The U texture coordinate.</param>
+    /// <param name="V">The V texture coordinate.</param>
     private readonly record struct Vertex(float X, float Y, float Z, float U, float V);
 
     private readonly record struct PlaneSideUvs(float LeftU, float RightU, float TopV, float BottomV);

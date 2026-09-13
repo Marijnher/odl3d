@@ -10,15 +10,34 @@ namespace odl3d;
 /// </summary>
 public class ModelPart : Object
 {
+    /// <summary>
+    /// The parent model to which this part belongs. The parent model provides the overall transformation and context for this part, allowing it to be positioned and rendered correctly within the scene.
+    /// </summary>
     private readonly Model Parent;
+
+    /// <summary>
+    /// The local transformation matrix for this model part, defining its position, rotation, and scale relative to the parent model. This matrix is combined with the parent's model matrix to compute the final transformation for rendering this part in the scene.
+    /// </summary>
     private readonly Matrix4x4 LocalTransform;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ModelPart"/> class, representing a single part of a 3D model. The constructor takes the parent model, scene, mesh, texture, and local transformation matrix as parameters, and initializes the corresponding properties. The model part is not automatically added to the scene; it is managed by the parent model.
+    /// </summary>
+    /// <param name="parent">The parent model to which this part belongs.</param>
+    /// <param name="scene">The scene to which this part belongs.</param>
+    /// <param name="mesh">The mesh for this part.</param>
+    /// <param name="texture">The texture for this part.</param>
+    /// <param name="localTransform">The local transformation matrix for this part.</param>
     public ModelPart(Model parent, Scene<Object> scene, Mesh mesh, Texture? texture, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
     {
         Parent = parent;
         LocalTransform = localTransform;
     }
 
+    /// <summary>
+    /// Gets the model matrix for this model part, which is the product of its local transformation matrix and the parent's model matrix. This matrix is used to transform the part's vertices from local space to world space for rendering.
+    /// </summary>
+    /// <returns>The model matrix for this model part.</returns>
     public override Matrix4x4 GetModelMatrix() => LocalTransform * Parent.GetModelMatrix();
 }
 

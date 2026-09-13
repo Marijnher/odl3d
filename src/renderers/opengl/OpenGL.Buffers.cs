@@ -51,6 +51,4 @@ public partial class OpenGL : IRenderer
 
     public void AddVertexAttribute(int index, int size, int stride, int offset) =>
         glVertexAttribPointer((uint) index, size, GL_FLOAT, 0, stride, (nint) offset * sizeof(float));
-
-    public void DrawElements(int count) => glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, IntPtr.Zero);
 }

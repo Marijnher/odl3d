@@ -60,7 +60,10 @@ public class TextBillboard : RasterizedText
         Rebuild();
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the model matrix for this text, which transforms its local coordinates to world coordinates. The model matrix is computed based on the text's position, rotation, scale, and the scene's position, and is used for rendering the text in the correct location and orientation within the scene.
+    /// </summary>
+    /// <returns>The model matrix for this text.</returns>
     public override Matrix4x4 GetModelMatrix()
     {
         float width = Width;
@@ -74,6 +77,10 @@ public class TextBillboard : RasterizedText
                 Position.Z + Scene.Position.Z);
     }
 
+    /// <summary>
+    /// Gets the orientation matrix for this text, which defines its rotation in world space. If FaceCamera is true, the orientation is aligned with the camera's axes to create a billboard effect; otherwise, it is based on the text's Rotation property. This matrix is used in conjunction with the model matrix to transform the text's local coordinates to world coordinates for rendering.
+    /// </summary>
+    /// <returns>The orientation matrix for this text.</returns>
     private Matrix4x4 GetOrientation()
     {
         if (!FaceCamera)
@@ -94,7 +101,9 @@ public class TextBillboard : RasterizedText
             0f, 0f, 0f, 1f);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Called when the texture for this text is rebuilt. This method is used to configure the texture's wrapping behavior.
+    /// </summary>
     protected override void OnTextureRebuilt()
     {
         if (Texture == null) return;

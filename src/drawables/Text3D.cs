@@ -64,13 +64,19 @@ public class Text3D : Text
         }
     }
 
-    /// <summary>The width of the text block in world units, before Scale.</summary>
+    /// <summary>
+    /// The width of the text block in world units, before Scale. This is the distance from the left edge of the leftmost glyph to the right edge of the rightmost glyph, including any spacing between them.
+    /// </summary>
     public float Width { get; private set; }
 
-    /// <summary>The height of the text block in world units, before Scale.</summary>
+    /// <summary>
+    /// The height of the text block in world units, before Scale. This is the distance from the top edge of the highest glyph to the bottom edge of the lowest glyph, including any spacing between them.
+    /// </summary>
     public float Height { get; private set; }
 
-    /// <summary>The full bounding size of the text in world units, before Scale.</summary>
+    /// <summary>
+    /// The depth of the text block in world units, before Scale. This is the distance from the front face of the text to the back face, determined by the Depth property.
+    /// </summary>
     public Vector3 Size => new Vector3(Width, Height, Depth);
 
     /// <summary>
@@ -97,7 +103,10 @@ public class Text3D : Text
         Rebuild();
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the model matrix for this text, which transforms its local coordinates to world coordinates. The model matrix is computed based on the text's position, rotation, scale, and the scene's position, and is used for rendering the text in the correct location and orientation within the scene.
+    /// </summary>
+    /// <returns>The model matrix for this text.</returns>
     public override Matrix4x4 GetModelMatrix() =>
         Matrix4x4.CreateScale(Scale) *
         Matrix4x4.CreateRotationX(MathF.PI / 180 * Rotation.X) *
@@ -108,7 +117,9 @@ public class Text3D : Text
             Position.Y + Scene.Position.Y,
             Position.Z + Scene.Position.Z);
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Rebuilds the geometry of the 3D text based on the current font, content, style, alignment, depth, pixels per world unit, and smoothing angle. The method generates the vertex and index data for the text's mesh, calculates its width and height, and updates the mesh used for rendering. If the generated geometry has no indices (i.e., no visible geometry), the mesh is set to null.
+    /// </summary>
     protected override void Rebuild()
     {
         TextGeometry.Result geometry = TextGeometry.Build(Font, Content, Style, Align, Underline, Strikethrough, _depth, _pixelsPerWorldUnit, _smoothingAngle);
