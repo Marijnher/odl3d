@@ -33,23 +33,26 @@ class DemoScene : Scene3D
             Color = Color.Magenta
         };
 
-        Mesh groundMesh = Mesh.CreatePlane(20f, 0.2f, 20f, 25f, 25f);
-        Object ground = new Object(this, groundMesh,new Texture("assets/grass.png"))
+        Mesh groundMesh = Mesh.CreatePlane(20f, 0.2f, 20f, 50f, 50f);
+        Object ground = new Object(this, groundMesh, new Texture("assets/grass.png"))
         {
-            Position = new Vector3(0f, -1.5f, -5f),
+            Position = new Vector3(0f, -1.5f, -5f)
         };
         ground.Texture!.WrapModeH = TextureWrap.Mirror;
         ground.Texture!.WrapModeV = TextureWrap.Mirror;
 
-        Text3D helloWorld = new Text3D(this, Font.Get("arial", 96), "Hello world!", depth: 0.05f)
+        Text3D helloWorld = new Text3D(this, Font.Get("arial", 96))
         {
             Position = new Vector3(0, 2, -2),
-            Color = Color.Red
+            Color = Color.Red,
+            Content = "Hello world!",
+            Depth = 0.05f
         };
 
-        TextBillboard billboard = new TextBillboard(this, Font.Get("arial", 48), "Billboarded quad text")
+        TextBillboard billboard = new TextBillboard(this, Font.Get("arial", 48))
         {
-            Position = new Vector3(-1.5f, 3f, -2)
+            Position = new Vector3(-1.5f, 3f, -2),
+            Content = "Billboard"
         };
     }
 }

@@ -28,26 +28,33 @@ internal static class GL
     public const uint GL_UNSIGNED_BYTE = 0x1401;
     public const uint GL_TRIANGLES = 0x0004;
     public const uint GL_TEXTURE_2D = 0x0DE1;
-    public const uint GL_TEXTURE_MIN_FILTER = 0x2801;
-    public const uint GL_TEXTURE_MAG_FILTER = 0x2800;
-    public const uint GL_NEAREST = 0x2600;
-    public const uint GL_LINEAR = 0x2601;
+    public const int GL_NEAREST_MIPMAP_NEAREST = 0x2700;
+    public const int GL_LINEAR_MIPMAP_NEAREST = 0x2701;
+    public const int GL_NEAREST_MIPMAP_LINEAR = 0x2702;
+    public const int GL_LINEAR_MIPMAP_LINEAR = 0x2703;
+    public const int GL_TEXTURE_MIN_FILTER = 0x2801;
+    public const int GL_TEXTURE_MAG_FILTER = 0x2800;
+    public const int GL_NEAREST = 0x2600;
+    public const int GL_LINEAR = 0x2601;
     public const uint GL_TEXTURE_WRAP_S = 0x2802;
     public const uint GL_TEXTURE_WRAP_T = 0x2803;
     public const uint GL_CLAMP_TO_EDGE = 0x812F;
-    public const uint GL_RGBA = 0x1908;
+    public const int GL_RGBA = 0x1908;
     public const uint GL_REPEAT = 0x2901;
     public const uint GL_MIRRORED_REPEAT = 0x8370;
     public const uint GL_TEXTURE0 = 0x84C0;
     public const uint GL_FRONT_AND_BACK = 0x0408;
     public const uint GL_LINE = 0x1B01;
     public const uint GL_FILL = 0x1B02;
+    public const uint GL_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
+    public const uint GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClearColor(float r, float g, float b, float a);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClear(uint mask);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glViewport(int x, int y, int width, int height);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glEnable(uint cap);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDisable(uint cap);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGetFloatv(uint pname, out float data);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate uint d_glCreateShader(uint type);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glShaderSource(uint shader, int count, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] strings, int[] length);
@@ -84,8 +91,11 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBindTexture(uint target, uint texture);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDeleteTextures(int n, ref uint textures);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexParameteri(uint target, uint pname, int param);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexParameterf(uint target, uint pname, float param);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexImage2D(uint target, int level, int internalFormat, int width, int height, int border, uint format, uint type, byte[] pixels);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glActiveTexture(uint texture);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenerateMipmap(uint target);
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendFunc(uint sfactor, uint dfactor);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDepthMask(uint flag);
 
@@ -95,6 +105,7 @@ internal static class GL
     public static d_glViewport glViewport;
     public static d_glEnable glEnable;
     public static d_glDisable glDisable;
+    public static d_glGetFloatv glGetFloatv;
 
     public static d_glCreateShader glCreateShader;
     public static d_glShaderSource glShaderSource;
@@ -131,12 +142,16 @@ internal static class GL
     public static d_glBindTexture glBindTexture;
     public static d_glDeleteTextures glDeleteTextures;
     public static d_glTexParameteri glTexParameteri;
+    public static d_glTexParameterf glTexParameterf;
     public static d_glTexImage2D glTexImage2D;
     public static d_glActiveTexture glActiveTexture;
+    public static d_glGenerateMipmap glGenerateMipmap;
 
     public static d_glBlendFunc glBlendFunc;
     public static d_glDepthMask glDepthMask;
 #pragma warning restore CS8618
+
+    public static float MaxAnisotropy { get; private set; }
 
     public static bool Loaded { get; private set; }
 
@@ -149,6 +164,7 @@ internal static class GL
         glViewport = Get<d_glViewport>("glViewport");
         glEnable = Get<d_glEnable>("glEnable");
         glDisable = Get<d_glDisable>("glDisable");
+        glGetFloatv = Get<d_glGetFloatv>("glGetFloatv");
 
         glCreateShader = Get<d_glCreateShader>("glCreateShader");
         glShaderSource = Get<d_glShaderSource>("glShaderSource");
@@ -187,8 +203,13 @@ internal static class GL
         glBindTexture = Get<d_glBindTexture>("glBindTexture");
         glDeleteTextures = Get<d_glDeleteTextures>("glDeleteTextures");
         glTexParameteri = Get<d_glTexParameteri>("glTexParameteri");
+        glTexParameterf = Get<d_glTexParameterf>("glTexParameterf");
         glTexImage2D = Get<d_glTexImage2D>("glTexImage2D");
         glActiveTexture = Get<d_glActiveTexture>("glActiveTexture");
+        glGenerateMipmap = Get<d_glGenerateMipmap>("glGenerateMipmap");
+
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, out float maxAnisotropy);
+        MaxAnisotropy = maxAnisotropy;
 
         Loaded = true;
     }

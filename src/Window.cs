@@ -15,6 +15,11 @@ public class Window : InputHost
     public IntPtr Handle { get; private set; }
 
     /// <summary>
+    /// The renderer responsible for drawing the window's contents. This is typically an instance of a class implementing the IRenderer interface, such as an OpenGL renderer.
+    /// </summary>
+    public IRenderer Renderer;
+
+    /// <summary>
     /// The current width of the window in pixels.
     /// </summary>
     public int Width { get; private set; }
@@ -80,36 +85,27 @@ public class Window : InputHost
     /// <param name="height">Window height in pixels.</param>
     /// <param name="title">Window title.</param>
     /// </summary>
-    public Window(int width, int height, string title)
+    public Window(IRenderer renderer, int width, int height, string title)
     {
+        Renderer = renderer;
         Width = width;
         Height = height;
 
-        GLFW.Load();
-        if (GLFW.glfwInit() == GLFW.GLFW_FALSE)
-            throw new Exception("Failed to initialize GLFW.");
-
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
-        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
-        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
-
         Handle = GLFW.glfwCreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
         if (Handle == IntPtr.Zero)
         {
             GLFW.glfwTerminate();
             throw new Exception("Failed to create a GLFW window.");
         }
-
         GLFW.glfwMakeContextCurrent(Handle);
         GLFW.glfwSwapInterval(0);
 
-        GL.Load();
+        Renderer.Initialize();
         UpdateFramebufferSize();
-        GL.glEnable(GL.GL_DEPTH_TEST);
-        GL.glEnable(GL.GL_BLEND);
-        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+        Renderer.SetEnableDepthTest(true);
+        Renderer.SetAlphaBlending(true);
+
 
         // Default non-moveable camera
         Camera = new Camera(this);
@@ -155,7 +151,7 @@ public class Window : InputHost
     public void SetWireFrame(bool enabled)
     {
         Wireframe = enabled;
-        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, enabled ? GL.GL_LINE : GL.GL_FILL);
+        Renderer.SetWireFrame(enabled);
     }
 
     /// <summary>
@@ -218,10 +214,9 @@ public class Window : InputHost
     {
         GLFW.glfwGetFramebufferSize(Handle, out int width, out int height);
         if (width <= 0 || height <= 0) return;
-
         FramebufferWidth = width;
         FramebufferHeight = height;
-        GL.glViewport(0, 0, width, height);
+        Renderer.SetViewport(0, 0, width, height);
     }
 
     /// <summary>
@@ -273,8 +268,9 @@ public class Window : InputHost
     /// </summary>
     public void Clear()
     {
-        GL.glClearColor(BackgroundColor.R / 255f, BackgroundColor.G / 255f, BackgroundColor.B / 255f, BackgroundColor.A / 255f);
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+        Renderer.ClearColor(BackgroundColor);
+        Renderer.ClearColorBuffer();
+        Renderer.ClearDepthBuffer();
     }
 
     /// <summary>
@@ -284,15 +280,16 @@ public class Window : InputHost
     public void Render(Shader shader)
     {
         Clear();
-        GL.glViewport(0, 0, FramebufferWidth, FramebufferHeight);
+        Renderer.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
         // Clear depth buffer
-        GL.glClear(GL.GL_DEPTH_BUFFER_BIT);
+        Renderer.ClearDepthBuffer();
         foreach (Scene3D scene in Scenes3D) scene.DrawPass(shader, RenderPass.Opaque);
-        GL.glDepthMask(GL.GL_FALSE);
+        // Draw transparent objects after opaque ones without writing to the depth buffer
+        Renderer.SetDepthMask(false);
         foreach (Scene3D scene in Scenes3D) scene.DrawPass(shader, RenderPass.Transparent);
-        GL.glDepthMask(GL.GL_TRUE);
+        Renderer.SetDepthMask(true);
         // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
-        GL.glClear(GL.GL_DEPTH_BUFFER_BIT);
+        Renderer.ClearDepthBuffer();
         foreach (Scene2D scene in Scenes2D)
         {
             scene.Draw(shader);
@@ -354,6 +351,7 @@ public class Window : InputHost
             Scenes2D[0].Dispose();
         }
         base.Dispose();
+        Renderer.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;

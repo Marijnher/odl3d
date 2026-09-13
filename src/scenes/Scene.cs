@@ -16,6 +16,11 @@ public abstract class Scene<T> : Drawable where T : Object
     public Window Window { get; }
 
     /// <summary>
+    /// The renderer responsible for drawing the scene's objects. This property is derived from the associated window and is read-only for subclasses.
+    /// </summary>
+    public IRenderer Renderer => Window.Renderer;
+
+    /// <summary>
     /// The camera used to render the scene. The camera's view and projection matrices are combined to create the view-projection matrix used for rendering the objects in the scene. The camera can be configured with position, orientation, field of view, aspect ratio, and other properties to control how the scene is viewed. This property is read-only for subclasses and is derived from the associated window.
     /// </summary>
     protected Camera Camera => Window.Camera;
