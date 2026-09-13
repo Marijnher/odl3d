@@ -12,9 +12,13 @@ public partial class OpenGL : IRenderer
         return vao;
     }
 
-    public void DeleteVertexArray(uint vao) => glDeleteVertexArrays(1, ref vao);
+    public void DeleteVertexArray(VertexArray vao)
+    {
+        uint handle = vao.Handle;
+        glDeleteVertexArrays(1, ref handle);
+    }
 
-    public void BindVertexArray(uint vao) => glBindVertexArray(vao);
+    public void BindVertexArray(VertexArray? vao) => glBindVertexArray(vao?.Handle ?? 0);
 
     public uint CreateBuffer()
     {
@@ -22,7 +26,11 @@ public partial class OpenGL : IRenderer
         return buffer;
     }
 
-    public void DeleteBuffer(uint buffer) => glDeleteBuffers(1, ref buffer);
+    public void DeleteBuffer(Buffer buffer)
+    {
+        uint handle = buffer.Handle;
+        glDeleteBuffers(1, ref handle);
+    }
 
     private uint GetGLBufferTarget(BufferTarget target) => target switch
     {

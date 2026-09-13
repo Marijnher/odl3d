@@ -3,45 +3,15 @@ using System.Numerics;
 
 namespace odl3d;
 
+/// <summary>
+/// Defines the interface for a renderer, which provides methods for creating and managing graphics resources, rendering operations, and shader programs. The IRenderer interface abstracts the underlying graphics API (e.g., OpenGL, DirectX) and allows for flexible rendering implementations. It includes methods for initializing the renderer, creating and deleting buffers, textures, and shaders, binding resources, setting data, and performing draw calls. Implementations of this interface are responsible for handling the specifics of the graphics API while providing a consistent interface for rendering operations.
+/// </summary>
 public interface IRenderer : IDisposable
 {
     /// <summary>
     /// Initializes the renderer, setting up any necessary graphics context, resources, and state for rendering. This method should be called before any rendering operations are performed, and it prepares the renderer to handle drawing commands, buffer management, and shader compilation.
     /// </summary>
     public void Initialize();
-
-    /// <summary>
-    /// Sets the viewport for rendering, defining the rectangular area of the window where rendering will occur. The viewport is specified by its lower-left corner (x, y) and its width and height. This method configures the renderer to map normalized device coordinates to the specified viewport area, allowing for proper rendering of 3D objects within the defined region of the window.
-    /// </summary>
-    /// <param name="x">The X coordinate of the viewport's lower-left corner.</param>
-    /// <param name="y">The Y coordinate of the viewport's lower-left corner.</param>
-    /// <param name="width">The width of the viewport.</param>
-    /// <param name="height">The height of the viewport.</param>
-    public void SetViewport(int x, int y, int width, int height);
-
-    /// <summary>
-    /// Enables or disables depth testing in the renderer. When depth testing is enabled, the renderer compares the depth values of incoming fragments against the existing depth buffer to determine whether a fragment should be drawn or discarded. This is essential for correctly rendering 3D scenes with overlapping objects, ensuring that closer objects obscure those that are farther away. Disabling depth testing can be useful for rendering transparent objects or 2D overlays.
-    /// </summary>
-    /// <param name="enable">True to enable depth testing, false to disable it.</param>
-    public void SetEnableDepthTest(bool enable);
-
-    /// <summary>
-    /// Enables or disables writing to the depth buffer in the renderer. When depth writing is enabled, the depth values of incoming fragments are written to the depth buffer, allowing for proper occlusion of objects based on their distance from the camera. Disabling depth writing can be useful for rendering transparent objects or special effects where depth information should not be updated.
-    /// </summary>
-    /// <param name="enable">True to enable depth writing, false to disable it.</param>
-    public void SetDepthMask(bool enable);
-
-    /// <summary>
-    /// Enables or disables alpha blending in the renderer. When alpha blending is enabled, the renderer combines the color of incoming fragments with the color already in the framebuffer based on their alpha values, allowing for transparency effects. Disabling alpha blending results in opaque rendering, where incoming fragments completely overwrite existing colors. This method is essential for rendering scenes with transparent objects, such as glass or water.
-    /// </summary>
-    /// <param name="enable"></param>
-    public void SetAlphaBlending(bool enable);
-
-    /// <summary>
-    /// Enables or disables wireframe rendering mode in the renderer. When wireframe mode is enabled, the renderer draws only the edges of polygons, allowing for a clear view of the underlying geometry and structure of 3D models. Disabling wireframe mode results in solid rendering, where polygons are filled with their assigned colors or textures. This method is useful for debugging, visualizing mesh topology, and creating stylistic effects in 3D scenes.
-    /// </summary>
-    /// <param name="enable">True to enable wireframe mode, false to disable it.</param>
-    public void SetWireFrame(bool enable);
 
     #region Buffer Methods
     /// <summary>
@@ -53,12 +23,12 @@ public interface IRenderer : IDisposable
     /// Deletes the specified vertex array object (VAO) in the renderer, releasing any associated resources and state. The VAO is no longer valid after this operation, and any attempts to bind or use it will result in undefined behavior. This method is used to manage the lifecycle of VAOs, ensuring that resources are properly cleaned up when they are no longer needed.
     /// </summary>
     /// <param name="vao">The handle to the vertex array object (VAO) to delete.</param>
-    public void DeleteVertexArray(uint vao);
+    public void DeleteVertexArray(VertexArray vao);
     /// <summary>
-    /// Binds the specified vertex array object (VAO) in the renderer, making it the current VAO for subsequent rendering operations. The VAO encapsulates the state of vertex attributes and buffer bindings, allowing for efficient switching between different vertex configurations. Binding a VAO ensures that the correct vertex attribute setup is used when drawing meshes, enabling proper rendering of 3D objects with varying vertex formats.
+    /// Binds the specified vertex array object (VAO) in the renderer, making it the current VAO for subsequent rendering operations. The VAO encapsulates the state of vertex attributes and buffer bindings, allowing for efficient switching between different vertex configurations. Binding a VAO ensures that the correct vertex attribute layout and buffer bindings are used when rendering meshes, enabling proper interpretation of vertex data during draw calls.
     /// </summary>
-    /// <param name="vao">The handle to the vertex array object (VAO) to bind.</param>
-    public void BindVertexArray(uint vao);
+    /// <param name="vao">The vertex array object (VAO) to bind, or null to unbind the current VAO.</param>
+    public void BindVertexArray(VertexArray? vao);
     /// <summary>
     /// Creates a new buffer object in the renderer, which can be used to store vertex data, index data, or other types of data for rendering. The buffer object is allocated in GPU memory and can be bound to different targets (e.g., array buffer, element array buffer) for use in rendering operations. This method returns a handle to the newly created buffer object, which can be used in subsequent rendering operations.
     /// </summary>
@@ -68,7 +38,7 @@ public interface IRenderer : IDisposable
     /// Deletes the specified buffer object in the renderer, releasing any associated resources and memory. The buffer object is no longer valid after this operation, and any attempts to bind or use it will result in undefined behavior. This method is used to manage the lifecycle of buffer objects, ensuring that GPU resources are properly cleaned up when they are no longer needed.
     /// </summary>
     /// <param name="buffer">The handle to the buffer object to delete.</param>
-    public void DeleteBuffer(uint buffer);
+    public void DeleteBuffer(Buffer buffer);
     /// <summary>
     /// Binds the specified buffer object to the given target in the renderer, making it the current buffer for subsequent operations. The target specifies the type of data the buffer will hold (e.g., vertex data, index data), and binding the buffer allows for data uploads, attribute configuration, and rendering operations. This method is essential for managing buffer state and ensuring that the correct buffer is used during rendering.
     /// </summary>
@@ -250,6 +220,34 @@ public interface IRenderer : IDisposable
     #endregion
 
     #region Drawing Methods
+    /// <summary>
+    /// Sets the viewport for rendering, defining the rectangular area of the window where rendering will occur. The viewport is specified by its lower-left corner (x, y) and its width and height. This method configures the renderer to map normalized device coordinates to the specified viewport area, allowing for proper rendering of 3D objects within the defined region of the window.
+    /// </summary>
+    /// <param name="x">The X coordinate of the viewport's lower-left corner.</param>
+    /// <param name="y">The Y coordinate of the viewport's lower-left corner.</param>
+    /// <param name="width">The width of the viewport.</param>
+    /// <param name="height">The height of the viewport.</param>
+    public void SetViewport(int x, int y, int width, int height);
+    /// <summary>
+    /// Enables or disables depth testing in the renderer. When depth testing is enabled, the renderer compares the depth values of incoming fragments against the existing depth buffer to determine whether a fragment should be drawn or discarded. This is essential for correctly rendering 3D scenes with overlapping objects, ensuring that closer objects obscure those that are farther away. Disabling depth testing can be useful for rendering transparent objects or 2D overlays.
+    /// </summary>
+    /// <param name="enable">True to enable depth testing, false to disable it.</param>
+    public void SetEnableDepthTest(bool enable);
+    /// <summary>
+    /// Enables or disables writing to the depth buffer in the renderer. When depth writing is enabled, the depth values of incoming fragments are written to the depth buffer, allowing for proper occlusion of objects based on their distance from the camera. Disabling depth writing can be useful for rendering transparent objects or special effects where depth information should not be updated.
+    /// </summary>
+    /// <param name="enable">True to enable depth writing, false to disable it.</param>
+    public void SetDepthMask(bool enable);
+    /// <summary>
+    /// Enables or disables alpha blending in the renderer. When alpha blending is enabled, the renderer combines the color of incoming fragments with the color already in the framebuffer based on their alpha values, allowing for transparency effects. Disabling alpha blending results in opaque rendering, where incoming fragments completely overwrite existing colors. This method is essential for rendering scenes with transparent objects, such as glass or water.
+    /// </summary>
+    /// <param name="enable"></param>
+    public void SetAlphaBlending(bool enable);
+    /// <summary>
+    /// Enables or disables wireframe rendering mode in the renderer. When wireframe mode is enabled, the renderer draws only the edges of polygons, allowing for a clear view of the underlying geometry and structure of 3D models. Disabling wireframe mode results in solid rendering, where polygons are filled with their assigned colors or textures. This method is useful for debugging, visualizing mesh topology, and creating stylistic effects in 3D scenes.
+    /// </summary>
+    /// <param name="enable">True to enable wireframe mode, false to disable it.</param>
+    public void SetWireFrame(bool enable);
     /// <summary>
     /// Clears the color buffer of the renderer with the specified color, effectively resetting the framebuffer to a uniform color. This method is typically called at the beginning of a rendering frame to prepare the framebuffer for drawing new content, ensuring that any previous frame's data is removed and replaced with the specified clear color. The clear color can be used to set the background color of the scene or to create visual effects by blending with subsequent rendering operations.
     /// </summary>

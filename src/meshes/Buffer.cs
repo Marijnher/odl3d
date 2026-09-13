@@ -65,7 +65,7 @@ public class Buffer
     public void Dispose()
     {
         if (Disposed) return;
-        Renderer.DeleteBuffer(Handle);
+        Renderer.DeleteBuffer(this);
         Disposed = true;
     }
 }

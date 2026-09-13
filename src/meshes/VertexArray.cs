@@ -40,7 +40,7 @@ public class VertexArray : IDisposable
     /// <summary>
     /// Binds the vertex array object (VAO) for rendering, making it the current VAO. The VAO is bound using the renderer's <see cref="IRenderer.BindVertexArray"/> method, allowing subsequent rendering operations to use the state of the VAO for vertex attribute configuration and buffer bindings.
     /// </summary>
-    public void Bind() => Renderer.BindVertexArray(Handle);
+    public void Bind() => Renderer.BindVertexArray(this);
 
     /// <summary>
     /// Adds a vertex attribute to the vertex array object (VAO) for automatic stride calculation when unbinding. The attribute length is specified in terms of the number of components (e.g., 3 for a vec3 position attribute). The attribute is added to the internal list of attributes, which is used to calculate the stride and offset for each attribute when unbinding the VAO.
@@ -66,7 +66,7 @@ public class VertexArray : IDisposable
             offset += length;
         }
         attributes.Clear();
-        Renderer.BindVertexArray(0);
+        Renderer.BindVertexArray(null);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public class VertexArray : IDisposable
     public void Dispose()
     {
         if (Disposed) return;
-        Renderer.DeleteVertexArray(Handle);
+        Renderer.DeleteVertexArray(this);
         Disposed = true;
     }
 }

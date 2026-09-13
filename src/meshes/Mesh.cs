@@ -82,9 +82,9 @@ public partial class Mesh : IDisposable
         ebo = new Buffer(BufferTarget.ElementBuffer);
         ebo.SetData(indices);
 
-        vao.AddAttribute(3); // x y z
-        vao.AddAttribute(2); // u v
-        if (hasNormals) vao.AddAttribute(3); // nx ny nz
+        vao.AddAttribute(3); // location=0 x y z
+        vao.AddAttribute(2); // location=1 u v
+        if (hasNormals) vao.AddAttribute(3); // location=2 nx ny nz
 
         vao.Unbind(); 
     }

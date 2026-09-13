@@ -6,6 +6,12 @@ A .NET 3D graphics library with an abstract renderer stack and GLFW-based window
 
 odl3d is a C# graphics library designed to simplify 3D game development and graphics programming. It provides a unified API for handling 3D rendering, scene management, shaders, and asset management across Windows, Linux, and macOS.
 
+## Architecture
+
+Applications create a window and renderer, add drawable objects to 2D or 3D scenes, and render those scenes through the active backend.
+
+![architecture.png](architecture.png)
+
 ## Dependencies
 
 - **GLFW3** - Window management and native window/context creation

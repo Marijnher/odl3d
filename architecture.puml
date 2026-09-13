@@ -1,0 +1,78 @@
+@startuml odl3d
+title odl3d public API
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #4A5568
+skinparam package {
+  BackgroundColor #F7FAFC
+  BorderColor #718096
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #2D3748
+}
+
+package "Application" {
+  component "Game loop" as app
+}
+
+package "Scene API" {
+  component "Window" as window
+  component "Camera" as camera
+  component "Scene3D" as scene3d
+  component "Scene2D" as scene2d
+  component "Scene<Object3D>" as scene
+}
+
+package "Drawables and resources" {
+  component "Object3D" as object3d
+  component "Model" as model
+  component "Sprite2D / Sprite3D" as sprites
+  component "Text2D / Text3D" as text
+  component "Mesh" as mesh
+  component "Texture" as texture
+  component "ShaderProgram" as shader
+  component "Font" as font
+}
+
+package "Renderer abstraction" {
+  interface "IRenderer" as renderer
+  component "RenderFactory" as factory
+  component "OpenGL" as opengl
+}
+
+app --> factory : Create("opengl")
+app --> window : create / Render()
+window --> camera
+window o-- scene : manages
+
+scene3d --|> scene
+scene2d --|> scene
+scene3d --> camera : view
+scene o-- object3d : contains
+
+model --|> object3d
+sprites --|> object3d
+text --|> object3d
+object3d --> mesh
+object3d --> texture
+object3d --> shader
+text --> font
+
+factory --> renderer : active backend
+renderer <|.. opengl
+mesh --> renderer
+texture --> renderer
+shader --> renderer
+
+note right of app
+  Typical flow:
+  create renderer and window
+  create scenes and drawables
+  add drawables to scenes
+  update and render each frame
+end note
+
+@enduml
