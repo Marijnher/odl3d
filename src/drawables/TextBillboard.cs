@@ -49,7 +49,7 @@ public class TextBillboard : RasterizedText
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
     /// <param name="pixelsPerWorldUnit">How many rasterized font pixels map to one world unit.</param>
     /// <param name="atlas">An optional custom GlyphAtlas; defaults to the shared process-wide atlas.</param>
-    public TextBillboard(Scene<Object> scene, Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float pixelsPerWorldUnit = 256f, GlyphAtlas? atlas = null)
+    public TextBillboard(Scene<Object3D> scene, Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float pixelsPerWorldUnit = 256f, GlyphAtlas? atlas = null)
         : base(scene, font, content, style, align, atlas)
     {
         if (scene is not Scene3D) Console.WriteLine("Warning: TextBillboard is being added to a Scene that is not a Scene3D. This may cause rendering issues.");

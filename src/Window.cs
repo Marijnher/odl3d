@@ -14,6 +14,9 @@ public class Window : InputHost
     /// </summary>
     public IntPtr Handle { get; private set; }
 
+    /// <summary>
+    /// The renderer instance used to render the window's contents. The Renderer property provides access to the active renderer, allowing the Window to call renderer methods for rendering scenes, managing resources, and interacting with the rendering backend. This property is read-only and is initialized in the constructor.
+    /// </summary>
     protected IRenderer Renderer;
 
     /// <summary>
@@ -274,7 +277,7 @@ public class Window : InputHost
     /// Renders all 3D and 2D scenes in the window using the specified shader. This method clears the window's color and depth buffers, sets the viewport, and then draws each scene in the order they were added. The depth buffer is cleared between the 3D and 2D groups so 2D scenes are always in front of 3D scenes. Within the 3D group, opaque objects across all scenes are drawn before any scene's transparent objects, so transparent objects (e.g. soft shadow decals) always blend against fully-drawn opaque geometry regardless of which scene either belongs to.
     /// </summary>
     /// <param name="shader">The shader to use for rendering the scenes.</param>
-    public void Render(Shader shader)
+    public void Render(ShaderProgram shader)
     {
         Clear();
         Renderer.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
@@ -301,7 +304,7 @@ public class Window : InputHost
     /// <typeparam name="T">The type of the scene's objects, which must inherit from Object.</typeparam>
     /// <param name="scene">The generic scene to add to the window.</param>
     /// <exception cref="ArgumentException">Thrown when the scene type is not supported.</exception>
-    public void AddScene<T>(Scene<T> scene) where T : Object
+    public void AddScene<T>(Scene<T> scene) where T : Object3D
     {
         if (scene is Scene3D scene3D)
         {
@@ -320,7 +323,7 @@ public class Window : InputHost
     /// <typeparam name="T">The type of the scene's objects, which must inherit from Object.</typeparam>
     /// <param name="scene">The generic scene to remove from the window.</param>
     /// <exception cref="ArgumentException">Thrown when the scene type is not supported.</exception>
-    public void RemoveScene<T>(Scene<T> scene) where T : Object
+    public void RemoveScene<T>(Scene<T> scene) where T : Object3D
     {
         if (scene is Scene3D scene3D)
         {

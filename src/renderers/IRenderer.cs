@@ -170,25 +170,25 @@ public interface IRenderer : IDisposable
     /// Deletes the specified shader object in the renderer, releasing any associated GPU resources and memory. The shader object is no longer valid after this operation, and any attempts to bind or use it will result in undefined behavior. This method is used to manage the lifecycle of shader objects, ensuring that GPU resources are properly cleaned up when they are no longer needed.
     /// </summary>
     /// <param name="shader">The shader object to delete.</param>
-    public void DeleteShader(uint shader);
+    public void DeleteShader(Shader shader);
     /// <summary>
     /// Sets the source code for the specified shader object in the renderer, replacing its current source code with the provided shader code. The shader source code defines the behavior of the shader, including vertex transformations, fragment shading, and other programmable effects. This method allows for dynamic modification of shader behavior by providing new source code for compilation and execution.
     /// </summary>
     /// <param name="shader">The shader object for which to set source code.</param>
     /// <param name="source">The shader source code to set.</param>
-    public void SetShaderSource(uint shader, string source);
+    public void SetShaderSource(Shader shader, string source);
     /// <summary>
     /// Compiles the specified shader object in the renderer, translating its source code into executable GPU instructions. The compilation process checks for syntax errors, validates the shader code, and prepares it for execution during rendering. This method returns a boolean indicating whether the compilation was successful, allowing for error handling and debugging of shader code.
     /// </summary>
     /// <param name="shader">The shader object to compile.</param>
     /// <returns>A boolean indicating whether the compilation was successful.</returns>
-    public bool CompileShader(uint shader);
+    public bool CompileShader(Shader shader);
     /// <summary>
     /// Retrieves the compilation log for the specified shader object in the renderer, providing information about any errors, warnings, or messages generated during the compilation process. The shader log can be used for debugging and troubleshooting shader code, allowing developers to identify issues and improve shader performance. This method returns a string containing the compilation log for the specified shader.
     /// </summary>
     /// <param name="shader">The shader object for which to retrieve the compilation log.</param>
     /// <returns>A string containing the compilation log for the specified shader.</returns>
-    public string GetShaderLog(uint shader);
+    public string GetShaderLog(Shader shader);
     /// <summary>
     /// Creates a new shader program in the renderer, which can be used to link multiple shader objects together for rendering. The shader program encapsulates the combined behavior of vertex, fragment, and other shader stages, allowing for complex rendering effects. This method returns a handle to the newly created shader program, which can be used in subsequent rendering operations.
     /// </summary>
@@ -198,37 +198,37 @@ public interface IRenderer : IDisposable
     /// Deletes the specified shader program in the renderer, releasing any associated GPU resources and memory. The shader program is no longer valid after this operation, and any attempts to use it will result in undefined behavior. This method is used to manage the lifecycle of shader programs, ensuring that GPU resources are properly cleaned up when they are no longer needed.
     /// </summary>
     /// <param name="program">The shader program to delete.</param>
-    public void DeleteShaderProgram(uint program);
+    public void DeleteShaderProgram(ShaderProgram program);
     /// <summary>
     /// Attaches a shader object to the specified shader program in the renderer, allowing the shader to be linked and executed as part of the program. The shader program can consist of multiple shader stages (e.g., vertex, fragment), and attaching shaders enables the combination of their behavior for rendering. This method is essential for creating complex rendering effects by linking different shader objects together within a single program.
     /// </summary>
     /// <param name="program">The shader program to which to attach the shader.</param>
     /// <param name="shader">The shader object to attach.</param>
-    public void AttachShader(uint program, uint shader);
+    public void AttachShader(ShaderProgram program, Shader shader);
     /// <summary>
     /// Links the specified shader program in the renderer, combining the attached shader objects into a single executable program. The linking process resolves references between shader stages, validates the program, and prepares it for execution during rendering. This method returns a boolean indicating whether the linking was successful, allowing for error handling and debugging of shader programs.
     /// </summary>
     /// <param name="program">The shader program to link.</param>
     /// <returns>A boolean indicating whether the linking was successful.</returns>
-    public bool LinkShaderProgram(uint program);
+    public bool LinkShaderProgram(ShaderProgram program);
     /// <summary>
     /// Retrieves the linking log for the specified shader program in the renderer, providing information about any errors, warnings, or messages generated during the linking process. The program log can be used for debugging and troubleshooting shader programs, allowing developers to identify issues and improve rendering performance. This method returns a string containing the linking log for the specified shader program.
     /// </summary>
     /// <param name="program">The shader program for which to retrieve the linking log.</param>
     /// <returns>A string containing the linking log for the specified shader program.</returns>
-    public string GetShaderProgramLog(uint program);
+    public string GetShaderProgramLog(ShaderProgram program);
     /// <summary>
     /// Sets the specified shader program as the current program for rendering in the renderer. The shader program defines the combined behavior of vertex, fragment, and other shader stages, allowing for complex rendering effects. This method ensures that subsequent rendering operations use the specified shader program, enabling the execution of its attached shaders and their associated behavior during drawing.
     /// </summary>
     /// <param name="program">The shader program to use.</param>
-    public void UseShaderProgram(uint program);
+    public void UseShaderProgram(ShaderProgram program);
     /// <summary>
     /// Retrieves the location of a uniform variable within the specified shader program in the renderer. Uniform variables are used to pass data from the CPU to the GPU, allowing for dynamic control of shader behavior during rendering. This method returns an integer representing the location of the uniform variable, which can be used in subsequent calls to set its value.
     /// </summary>
     /// <param name="program">The shader program containing the uniform variable.</param>
     /// <param name="name">The name of the uniform variable.</param>
     /// <returns>An integer representing the location of the uniform variable.</returns>
-    public int GetUniformLocation(uint program, string name);
+    public int GetUniformLocation(ShaderProgram program, string name);
     /// <summary>
     /// Sets the value of a uniform variable in the currently active shader program in the renderer. Uniform variables are used to pass data from the CPU to the GPU, allowing for dynamic control of shader behavior during rendering. This method allows for setting various types of uniform data, such as matrices, integers, and colors, enabling flexible and customizable rendering effects based on application logic and user input.
     /// </summary>

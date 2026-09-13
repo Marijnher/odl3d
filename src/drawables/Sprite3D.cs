@@ -7,7 +7,7 @@ namespace odl3d;
 /// A 3D sprite is a simple quad mesh with a texture applied, used for billboarding or other 3D effects. Its
 /// Position.X identifies the left edge of the quad; Position.Y and Position.Z identify its center.
 /// </summary>
-public class Sprite3D : Object
+public class Sprite3D : Object3D
 {
     /// <summary>
     /// Creates a new Sprite3D with the given texture. The sprite uses a built-in quad mesh and can be positioned,
@@ -15,7 +15,7 @@ public class Sprite3D : Object
     /// </summary>
     /// <param name="scene">The scene to which this sprite belongs.</param>
     /// <param name="texture">The texture to use for the sprite.</param>
-    public Sprite3D(Scene<Object> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture) { }
+    public Sprite3D(Scene<Object3D> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture) { }
 
     /// <inheritdoc/>
     public override Matrix4x4 GetModelMatrix() =>

@@ -17,7 +17,7 @@ public abstract class AbstractInputManager : IDisposable
     /// <summary>
     /// Indicates whether the InputManager has been disposed and its resources released. After disposing, the InputManager should not be used again.
     /// </summary>
-    public bool Disposed { get; protected set; } = false;
+    public bool Disposed { get; protected set; }
 
     /// <summary>
     /// An event that is triggered when a key is pressed. Subscribers can register a callback to be notified when a key press occurs, allowing for custom input handling in the application.

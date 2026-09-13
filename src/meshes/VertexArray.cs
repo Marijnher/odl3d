@@ -9,6 +9,9 @@ namespace odl3d;
 /// </summary>
 public class VertexArray : IDisposable
 {
+    /// <summary>
+    /// The renderer instance used to create and manage this vertex array. The Renderer property provides access to the active renderer, allowing the VertexArray to call renderer methods for creating vertex arrays, binding them, enabling vertex attributes, and managing resources. This property is used internally by the VertexArray class to interact with the rendering backend.
+    /// </summary>
     protected IRenderer Renderer => RenderFactory.Renderer;
 
     /// <summary>

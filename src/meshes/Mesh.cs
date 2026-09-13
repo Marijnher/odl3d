@@ -7,6 +7,9 @@ namespace odl3d;
 /// </summary>
 public partial class Mesh : IDisposable
 {
+    /// <summary>
+    /// The renderer instance used to create and manage this mesh. The Renderer property provides access to the active renderer, allowing the Mesh to call renderer methods for creating buffers, binding vertex arrays, drawing elements, and managing resources. This property is used internally by the Mesh class to interact with the rendering backend.
+    /// </summary>
     protected IRenderer Renderer => RenderFactory.Renderer;
 
     /// <summary>
@@ -43,7 +46,7 @@ public partial class Mesh : IDisposable
     /// <summary>
     /// Indicates whether this mesh has been disposed and its resources released. After disposing, the mesh should not be used again.
     /// </summary>
-    public bool Disposed { get; private set; } = false;
+    public bool Disposed { get; private set; }
 
     /// <summary>
     /// Invoked when this mesh is disposed. Subscribers can use this event to perform cleanup or other actions when the mesh is no longer needed.

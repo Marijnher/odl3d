@@ -15,12 +15,12 @@ public enum RenderPass
 /// <summary>
 /// Represents a 3D object in the scene, consisting of a mesh and an optional texture, with properties for position, rotation, scale, and color. The object can be drawn using a shader and a view-projection matrix, and it manages its own GPU resources.
 /// </summary>
-public class Object : Drawable
+public class Object3D : Drawable
 {
     /// <summary>
     /// The Scene3D instance to which this Fobject belongs. The scene provides context for the object's position and scale in world space, as well as access to the camera and other scene properties.
     /// </summary>
-    public Scene<Object> Scene;
+    public Scene<Object3D> Scene;
 
     /// <summary>
     /// The position of this object in world space, relative to the scene's origin. The position is used to compute the model matrix for rendering, which transforms the object's local coordinates to world coordinates.
@@ -73,7 +73,7 @@ public class Object : Drawable
     /// <param name="scene">The scene to which this object belongs.</param>
     /// <param name="mesh">The mesh to use when drawing this object, or null to draw nothing.</param>
     /// <param name="texture">The texture to use when drawing this object, or null to draw without a texture.</param>
-    public Object(Scene<Object> scene, Mesh? mesh = null, Texture? texture = null) 
+    public Object3D(Scene<Object3D> scene, Mesh? mesh = null, Texture? texture = null) 
     {
         this.Scene = scene;
         this.Mesh = mesh;
@@ -81,7 +81,7 @@ public class Object : Drawable
         scene.Add(this);
     }
 
-    protected Object(Scene<Object> scene, Mesh? mesh, Texture? texture, bool addToScene) 
+    protected Object3D(Scene<Object3D> scene, Mesh? mesh, Texture? texture, bool addToScene) 
     {
         this.Scene = scene;
         this.Mesh = mesh;
@@ -89,7 +89,7 @@ public class Object : Drawable
         if (addToScene) scene.Add(this);
     }
 
-    ~Object()
+    ~Object3D()
     {
         if (!Disposed) Console.WriteLine("Warning: Object was not disposed before being finalized. This may cause a renderer resource leak.");
     }
@@ -133,7 +133,7 @@ public class Object : Drawable
     /// <param name="shader">The shader program to use for rendering this object.</param>
     /// <param name="viewProjection">The combined view and projection matrix, typically obtained from the camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; the object is skipped if it does not belong to this pass.</param>
-    public virtual void Draw(Shader shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
+    public virtual void Draw(ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
     {
         if (!Visible || Disposed || Mesh == null) return;
         if (pass == RenderPass.Transparent != IsTransparent) return;

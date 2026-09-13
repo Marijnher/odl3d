@@ -1,9 +1,9 @@
-namespace odl3d;
-
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Numerics;
+using odl3d;
+
+namespace odl3ddemo;
 
 class UIScene : Scene2D
 {
@@ -46,7 +46,7 @@ class UIScene : Scene2D
         foreach (Scene3D scene in Window.Scenes3D)
         {
             if (!scene.Visible) continue;
-            foreach (Object sceneObject in scene.Objects)
+            foreach (Object3D sceneObject in scene.Objects)
             {
                 if (sceneObject.Visible) vertexCount += sceneObject.VertexCount;
             }

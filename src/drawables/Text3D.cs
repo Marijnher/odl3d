@@ -90,7 +90,7 @@ public class Text3D : Text
     /// <param name="depth">Extrusion thickness along Z, in world units.</param>
     /// <param name="pixelsPerWorldUnit">How many font pixels map to one world unit.</param>
     /// <param name="smoothingAngle">Angle threshold in degrees for smoothing the side-wall normals.</param>
-    public Text3D(Scene<Object> scene, Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float depth = 0.05f, float pixelsPerWorldUnit = 256f, float smoothingAngle = 40f)
+    public Text3D(Scene<Object3D> scene, Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float depth = 0.05f, float pixelsPerWorldUnit = 256f, float smoothingAngle = 40f)
         : base(scene, font, content, style, align)
     {
         if (scene is not Scene3D) Console.WriteLine("Warning: Text3D is being added to a Scene that is not a Scene3D. This may cause rendering issues.");

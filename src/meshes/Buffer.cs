@@ -7,6 +7,9 @@ namespace odl3d;
 /// </summary>
 public class Buffer
 {
+    /// <summary>
+    /// The renderer instance used to create and manage this buffer. The Renderer property provides access to the active renderer, allowing the Buffer to call renderer methods for creating buffers, setting data, binding buffers, and managing resources. This property is used internally by the Buffer class to interact with the rendering backend.
+    /// </summary>
     protected IRenderer Renderer => RenderFactory.Renderer;
 
     /// <summary>

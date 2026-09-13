@@ -9,14 +9,14 @@ namespace odl3d;
 /// A 2D sprite that is drawn in pixel coordinates relative to the top-left of the viewport. The sprite's quad is scaled to match the dimensions of its texture, and its position is specified in pixel coordinates.
 /// The sprite is unaffected by any 3D camera and is drawn using an orthographic projection matrix based on the viewport rectangle of its Scene2D. A Window can display any number of Sprite2D instances at once, each in its own Scene2D with its own viewport.
 /// </summary>
-public class Sprite2D : Object
+public class Sprite2D : Object3D
 {
     /// <summary>
     /// Creates a new Sprite2D in the given Scene2D with an optional texture. The sprite's quad is scaled to match the dimensions of the texture, and its position is specified in pixel coordinates relative to the top-left of the viewport.
     /// </summary>
     /// <param name="scene">The Scene2D to which this sprite belongs.</param>
     /// <param name="texture">The optional texture to use for the sprite.</param>
-    public Sprite2D(Scene<Object> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture)
+    public Sprite2D(Scene<Object3D> scene, Texture? texture = null) : base(scene, Mesh.Quad, texture)
     {
         if (scene is not Scene2D) Console.WriteLine("Warning: Sprite2D is being added to a Scene that is not a Scene2D. This may cause rendering issues.");
         AutoDisposeMesh = false;

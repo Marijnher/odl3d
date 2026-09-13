@@ -1,8 +1,7 @@
 using System;
-using System.Drawing;
-using System.Numerics;
+using odl3d;
 
-namespace odl3d.Demo;
+namespace odl3ddemo;
 
 public static class Program
 {
@@ -65,7 +64,7 @@ void main()
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
-        Shader shader = new Shader(VertexSource, FragmentSource);
+        ShaderProgram shader = new ShaderProgram(VertexSource, FragmentSource);
 
         DemoScene demoScene1 = new DemoScene(window);
         UIScene uiScene = new UIScene(window);

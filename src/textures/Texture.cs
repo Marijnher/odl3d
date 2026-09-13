@@ -16,6 +16,9 @@ public class Texture : IDisposable
     public static MipmapFilter DefaultMipmapMode = MipmapFilter.None;
     public static AnisotropicFilter DefaultAnisotropicMode = AnisotropicFilter.None;
 
+    /// <summary>
+    /// The renderer instance used to create and manage this texture. The Renderer property provides access to the active renderer, allowing the Texture to call renderer methods for creating textures, uploading pixel data, setting texture parameters, and managing resources. This property is used internally by the Texture class to interact with the rendering backend.
+    /// </summary>
     protected IRenderer Renderer => RenderFactory.Renderer;
     
     /// <summary>
@@ -73,7 +76,7 @@ public class Texture : IDisposable
     /// <summary>
     /// Indicates whether this texture has been disposed and its resources released. After disposing, the texture should not be used again.
     /// </summary>
-    public bool Disposed { get; private set; } = false;
+    public bool Disposed { get; private set; }
 
     private bool? hasPartialAlpha;
 

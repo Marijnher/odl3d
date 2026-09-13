@@ -8,7 +8,7 @@ namespace odl3d;
 /// <summary>
 /// Represents a single part of the 3D model, with its own mesh, texture, and local transformation relative to the parent model.
 /// </summary>
-public class ModelPart : Object
+public class ModelPart : Object3D
 {
     /// <summary>
     /// The parent model to which this part belongs. The parent model provides the overall transformation and context for this part, allowing it to be positioned and rendered correctly within the scene.
@@ -28,7 +28,7 @@ public class ModelPart : Object
     /// <param name="mesh">The mesh for this part.</param>
     /// <param name="texture">The texture for this part.</param>
     /// <param name="localTransform">The local transformation matrix for this part.</param>
-    public ModelPart(Model parent, Scene<Object> scene, Mesh mesh, Texture? texture, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
+    public ModelPart(Model parent, Scene<Object3D> scene, Mesh mesh, Texture? texture, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
     {
         Parent = parent;
         LocalTransform = localTransform;
@@ -44,12 +44,12 @@ public class ModelPart : Object
 /// <summary>
 /// Represents a 3D model composed of multiple sub-objects, each with its own mesh and texture. Provides methods for loading models from DAE and OBJ files, and handles drawing and disposal of its sub-objects.
 /// </summary>
-public class Model : Object
+public class Model : Object3D
 {
     /// <summary>
     /// The list of sub-objects that make up this 3D model. Each sub-object has its own mesh and texture.
     /// </summary>
-    protected List<Object> Objects = new List<Object>();
+    protected List<Object3D> Objects = new List<Object3D>();
 
     /// <summary>
     /// The total number of vertices rendered by this model's mesh parts.
@@ -59,7 +59,7 @@ public class Model : Object
         get
         {
             int vertexCount = 0;
-            foreach (Object obj in Objects)
+            foreach (Object3D obj in Objects)
             {
                 if (obj.Visible) vertexCount += obj.VertexCount;
             }
@@ -73,14 +73,14 @@ public class Model : Object
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public Model(Scene<Object> scene, Mesh[] meshes, Texture?[] textures, Matrix4x4[]? localTransforms = null) : base(scene)
+    public Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Matrix4x4[]? localTransforms = null) : base(scene)
     {
         for (int i = 0; i < meshes.Length; i++)
         {
             Matrix4x4 localTransform = localTransforms != null && i < localTransforms.Length
                 ? localTransforms[i]
                 : Matrix4x4.Identity;
-            Object obj = new ModelPart(this, scene, meshes[i], textures[i], localTransform);
+            Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], localTransform);
             Objects.Add(obj);
         }
     }
@@ -92,7 +92,7 @@ public class Model : Object
     /// <param name="filename">The path to the DAE file to load.</param>
     /// <returns>A new Model instance representing the loaded 3D model.</returns>
     /// <exception cref="ArgumentException">Thrown if the filename is invalid or the DAE file cannot be loaded.</exception>
-    public static Model LoadDAE(Scene<Object> scene, string filename)
+    public static Model LoadDAE(Scene<Object3D> scene, string filename)
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
         if (daeFolder == null) throw new ArgumentException("Invalid filename: " + filename);
@@ -107,7 +107,7 @@ public class Model : Object
     /// <param name="objFilename">The path to the OBJ file to load.</param>
     /// <returns>A new Model instance representing the loaded 3D model.</returns>
     /// <exception cref="ArgumentException">Thrown if the filename is invalid or the OBJ file cannot be loaded.</exception>
-    public static Model LoadOBJ(Scene<Object> scene, string objFilename)
+    public static Model LoadOBJ(Scene<Object3D> scene, string objFilename)
     {
         string? objFolder = System.IO.Path.GetDirectoryName(objFilename);
         if (objFolder == null) throw new ArgumentException("Invalid filename: " + objFilename);
@@ -145,7 +145,7 @@ public class Model : Object
     /// <param name="shader">The shader to use for rendering the model.</param>
     /// <param name="viewProjection">The combined view-projection matrix for the current camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; sub-objects not belonging to this pass are skipped.</param>
-    public override void Draw(Shader shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
+    public override void Draw(ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
     {
         foreach (var obj in Objects)
         {

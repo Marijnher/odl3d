@@ -23,7 +23,7 @@ public abstract class RasterizedText : Text
     /// <param name="style">The initial Bold/Italic style.</param>
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
     /// <param name="atlas">An optional custom GlyphAtlas; defaults to the shared process-wide atlas.</param>
-    protected RasterizedText(Scene<Object> scene, Font font, string content, FontStyle style, TextAlign align, GlyphAtlas? atlas)
+    protected RasterizedText(Scene<Object3D> scene, Font font, string content, FontStyle style, TextAlign align, GlyphAtlas? atlas)
         : base(scene, font, content, style, align)
     {
         _atlas = atlas ?? GlyphAtlas.Shared;

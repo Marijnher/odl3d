@@ -15,47 +15,47 @@ public partial class OpenGL : IRenderer
         _ => throw new ArgumentOutOfRangeException(nameof(shaderType), "Unknown shader type")
     };
 
-    public void DeleteShader(uint shader) => glDeleteShader(shader);
+    public void DeleteShader(Shader shader) => glDeleteShader(shader.Handle);
 
-    public void SetShaderSource(uint shader, string source) => glShaderSource(shader, 1, [source], [source.Length]);
+    public void SetShaderSource(Shader shader, string source) => glShaderSource(shader.Handle, 1, [source], [source.Length]);
 
-    public bool CompileShader(uint shader)
+    public bool CompileShader(Shader shader)
     {
-        glCompileShader(shader);
-        glGetShaderiv(shader, GL_COMPILE_STATUS, out int success);
+        glCompileShader(shader.Handle);
+        glGetShaderiv(shader.Handle, GL_COMPILE_STATUS, out int success);
         return success == 1;
     }
 
-    public string GetShaderLog(uint shader)
+    public string GetShaderLog(Shader shader)
     {
         byte[] log = new byte[1024];
-        glGetShaderInfoLog(shader, log.Length, out int len, log);
+        glGetShaderInfoLog(shader.Handle, log.Length, out int len, log);
         return Encoding.ASCII.GetString(log, 0, len);
     }
 
     public uint CreateShaderProgram() => glCreateProgram();
 
-    public void DeleteShaderProgram(uint program) => glDeleteProgram(program);
+    public void DeleteShaderProgram(ShaderProgram program) => glDeleteProgram(program.Handle);
 
-    public void AttachShader(uint program, uint shader) => glAttachShader(program, shader);
+    public void AttachShader(ShaderProgram program, Shader shader) => glAttachShader(program.Handle, shader.Handle);
 
-    public bool LinkShaderProgram(uint program) 
+    public bool LinkShaderProgram(ShaderProgram program) 
     {
-        glLinkProgram(program);
-        glGetProgramiv(program, GL_LINK_STATUS, out int success);
+        glLinkProgram(program.Handle);
+        glGetProgramiv(program.Handle, GL_LINK_STATUS, out int success);
         return success == 1;
     }
 
-    public string GetShaderProgramLog(uint program)
+    public string GetShaderProgramLog(ShaderProgram program)
     {
         byte[] log = new byte[1024];
-        glGetProgramInfoLog(program, log.Length, out int len, log);
+        glGetProgramInfoLog(program.Handle, log.Length, out int len, log);
         return Encoding.ASCII.GetString(log, 0, len);
     }
 
-    public void UseShaderProgram(uint program) => glUseProgram(program);
+    public void UseShaderProgram(ShaderProgram program) => glUseProgram(program.Handle);
 
-    public int GetUniformLocation(uint program, string name) => glGetUniformLocation(program, name);
+    public int GetUniformLocation(ShaderProgram program, string name) => glGetUniformLocation(program.Handle, name);
 
     public void SetUniformMatrix(int location, Matrix4x4 matrix) 
     {

@@ -12,7 +12,7 @@ namespace odl3d;
 /// </list>
 /// Every property setter rebuilds immediately, so the text always matches its settings.
 /// </summary>
-public abstract class Text : Object
+public abstract class Text : Object3D
 {
     private Font _font;
     /// <summary>The font used to measure and build this text's glyphs.</summary>
@@ -71,7 +71,7 @@ public abstract class Text : Object
     /// <param name="content">The initial text to display. May contain line breaks.</param>
     /// <param name="style">The initial Bold/Italic style.</param>
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
-    protected Text(Scene<Object> scene, Font font, string content, FontStyle style, TextAlign align)
+    protected Text(Scene<Object3D> scene, Font font, string content, FontStyle style, TextAlign align)
         : base(scene, null, null)
     {
         _font = font;

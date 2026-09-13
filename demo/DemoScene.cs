@@ -1,7 +1,8 @@
 using System;
 using System.Numerics;
+using odl3d;
 
-namespace odl3d.Demo;
+namespace odl3ddemo;
 
 class DemoScene : Scene3D
 {
@@ -27,14 +28,14 @@ class DemoScene : Scene3D
             TextureColor = Color.Aqua // Applied to the texture, tinting it with an aqua color.
         };
 
-        Plane plane = new Plane(this, 0.5f, 0.5f, 0.1f)
+        Plane3D plane = new Plane3D(this, 0.5f, 0.5f, 0.1f)
         {
             Position = new Vector3(-1.5f, 1.5f, -3),
             Color = Color.Magenta
         };
 
         Mesh groundMesh = Mesh.CreatePlane(20f, 0.2f, 20f, 50f, 50f);
-        Object ground = new Object(this, groundMesh, new Texture("assets/grass.png"))
+        Object3D ground = new Object3D(this, groundMesh, new Texture("assets/grass.png"))
         {
             Position = new Vector3(0f, -1.5f, -5f)
         };

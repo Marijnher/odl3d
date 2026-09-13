@@ -7,7 +7,7 @@ namespace odl3d;
 /// <summary>
 /// A 2D scene containing a collection of Sprite2D instances and a viewport rectangle defining the area of the window in which the sprites will be rendered. The scene provides methods to add and remove sprites, and an implementation of the Draw method that renders all sprites in the scene using an orthographic projection matrix calculated from the viewport.
 /// </summary>
-public class Scene2D : Scene<Object>
+public class Scene2D : Scene<Object3D>
 {
     /// <summary>
     /// The viewport rectangle in pixel coordinates relative to the top-left of the window. Sprites are positioned within this rectangle, and the projection matrix is calculated based on this viewport.
@@ -55,7 +55,7 @@ public class Scene2D : Scene<Object>
     /// </summary>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(Shader shader, RenderPass renderPass = RenderPass.Opaque)
+    public override void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
         
