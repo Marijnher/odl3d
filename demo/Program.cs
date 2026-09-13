@@ -56,16 +56,16 @@ void main()
         int height = 600;
 
         GLFW.Load();
-        IRenderer renderer = RendererFactory.CreateRenderer("opengl");
+        RenderFactory.Create("opengl");
         
-        Window window = new Window(renderer, width, height, "odl3d");
+        Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window);
         window.SetCursorCapture(true);
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
-        Shader shader = new Shader(renderer, VertexSource, FragmentSource);
+        Shader shader = new Shader(VertexSource, FragmentSource);
 
         DemoScene demoScene1 = new DemoScene(window);
         UIScene uiScene = new UIScene(window);

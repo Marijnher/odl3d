@@ -5,19 +5,16 @@ using System.Text;
 namespace odl3d;
 
 /// <summary>
-/// A shader program consisting of a vertex shader and a fragment shader, compiled and linked into a single OpenGL program. The Shader class provides methods to compile the shaders from source code, link them into a program, set uniform variables, and use the program for rendering. It also implements IDisposable to allow for proper cleanup of OpenGL resources when the shader is no longer needed.
+/// A shader program consisting of a vertex shader and a fragment shader, compiled and linked into a single renderer program. The Shader class provides methods to compile the shaders from source code, link them into a program, set uniform variables, and use the program for rendering. It also implements IDisposable to allow for proper cleanup of renderer resources when the shader is no longer needed.
 /// </summary>
 public class Shader : IDisposable
 {
     /// <summary>
-    /// The OpenGL handle of the shader program; 0 if not yet created. The handle is assigned when the shader is compiled and linked, and it can be used to bind the program for rendering or to set uniform variables. The handle should be deleted when the shader is disposed to free OpenGL resources.
+    /// The renderer handle of the shader program; 0 if not yet created. The handle is assigned when the shader is compiled and linked, and it can be used to bind the program for rendering or to set uniform variables. The handle should be deleted when the shader is disposed to free renderer resources.
     /// </summary>
     public uint Handle { get; private set; }
 
-    /// <summary>
-    /// The renderer responsible for executing the shader program. This property is set when the shader is created and is used to bind the shader for rendering and to set uniform variables.
-    /// </summary>
-    public IRenderer Renderer { get; private set; }
+    protected IRenderer Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// Indicates whether this shader has been disposed and its resources released. After disposing, the shader should not be used again. The Disposed property is set to true when Dispose() is called, and it can be checked to prevent multiple disposals or usage of a disposed shader.
@@ -35,10 +32,8 @@ public class Shader : IDisposable
     /// <param name="vertexSource">The source code of the vertex shader.</param>
     /// <param name="fragmentSource">The source code of the fragment shader.</param>
     /// <exception cref="ShaderException">Thrown if the vertex or fragment shader fails to compile, or if the shader program fails to link.</exception>
-    public Shader(IRenderer renderer,string vertexSource, string fragmentSource)
+    public Shader(string vertexSource, string fragmentSource)
     {
-        Renderer = renderer;
-
         uint vertex = Compile(ShaderType.Vertex, vertexSource);
         uint fragment = Compile(ShaderType.Fragment, fragmentSource);
 
@@ -59,7 +54,7 @@ public class Shader : IDisposable
 
     ~Shader()
     {
-        if (!Disposed) Console.WriteLine("Warning: Shader was not disposed before being finalized. This may cause a GL resource leak.");
+        if (!Disposed) Console.WriteLine("Warning: Shader was not disposed before being finalized. This may cause a renderer resource leak.");
     }
 
     /// <summary>
@@ -121,7 +116,7 @@ public class Shader : IDisposable
     }
 
     /// <summary>
-    /// Disposes of the shader, releasing its OpenGL resources. After calling this method, the shader should not be used again. If the shader has already been disposed, this method does nothing. This method should be called when the shader is no longer needed to free GPU resources.
+    /// Disposes of the shader, releasing its renderer resources. After calling this method, the shader should not be used again. If the shader has already been disposed, this method does nothing. This method should be called when the shader is no longer needed to free GPU resources.
     /// </summary>
     public void Dispose()
     {
@@ -133,7 +128,7 @@ public class Shader : IDisposable
 }
 
 /// <summary>
-/// An exception that is thrown when a shader fails to compile or link. This exception can be used to indicate errors in shader source code or issues with the OpenGL shader compilation and linking process. The message of the exception typically contains the error log from the shader compiler or linker, providing details about what went wrong.
+/// An exception that is thrown when a shader fails to compile or link. This exception can be used to indicate errors in shader source code or issues in the underlying renderer's shader compilation and linking process. The message of the exception typically contains the error log from the shader compiler or linker, providing details about what went wrong.
 /// </summary>
 class ShaderException : Exception
 {

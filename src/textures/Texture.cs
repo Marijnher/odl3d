@@ -5,7 +5,7 @@ using decodl;
 namespace odl3d;
 
 /// <summary>
-/// A single concept for both CPU-side pixel data and its uploaded GL handle;
+/// A single concept for both CPU-side pixel data and its uploaded renderer handle;
 /// there is no separate "bitmap" type — patterns are drawn directly into a Texture.
 /// </summary>
 public class Texture : IDisposable
@@ -16,7 +16,7 @@ public class Texture : IDisposable
     public static MipmapFilter DefaultMipmapMode = MipmapFilter.None;
     public static AnisotropicFilter DefaultAnisotropicMode = AnisotropicFilter.None;
 
-    private IRenderer? Renderer;
+    protected IRenderer Renderer => RenderFactory.Renderer;
     
     /// <summary>
     /// Width of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).
@@ -34,12 +34,12 @@ public class Texture : IDisposable
     public byte[] Pixels { get; private set; }
 
     /// <summary>
-    /// The GL handle of the texture; 0 if not yet uploaded. Upload() must be called to create the GL texture and copy the pixel data to it.
+    /// The renderer handle of the texture; 0 if not yet uploaded. Upload() must be called to create the renderer texture and copy the pixel data to it.
     /// </summary>
     public uint Handle { get; private set; }
 
     /// <summary>
-    /// True if the pixel data has been uploaded to GL; false if Upload() has not yet been called or if the texture has been modified since the last upload.
+    /// True if the pixel data has been uploaded to the active renderer; false if Upload() has not yet been called or if the texture has been modified since the last upload.
     /// </summary>
     public bool Uploaded { get; private set; } = false;
 
@@ -129,7 +129,7 @@ public class Texture : IDisposable
 
     ~Texture()
     {
-        if (!Disposed) Console.WriteLine("Warning: Texture was not disposed before being finalized. This may cause a GL resource leak.");
+        if (!Disposed) Console.WriteLine("Warning: Texture was not disposed before being finalized. This may cause a renderer resource leak.");
     }
 
     /// <summary>
@@ -238,7 +238,7 @@ public class Texture : IDisposable
     }
 
     /// <summary>
-    /// Sets the pixel at the specified (x, y) coordinates to the given RGBA color. The pixel data is modified in the CPU-side buffer; Upload() must be called to update the GL texture with the new pixel data.
+    /// Sets the pixel at the specified (x, y) coordinates to the given RGBA color. The pixel data is modified in the CPU-side buffer; Upload() must be called to update the renderer texture with the new pixel data.
     /// </summary>
     /// <param name="x">X-coordinate of the pixel.</param>
     /// <param name="y">Y-coordinate of the pixel.</param>
@@ -259,11 +259,10 @@ public class Texture : IDisposable
     }
 
     /// <summary>
-    /// Uploads the pixel data to the GPU, creating a GL texture if necessary. If the texture has already been uploaded and has not been modified since the last upload, this method does nothing. After calling this method, the texture can be bound and used for rendering.
+    /// Uploads the pixel data to the GPU, creating the renderer texture if necessary. If the texture has already been uploaded and has not been modified since the last upload, this method does nothing. After calling this method, the texture can be bound and used for rendering.
     /// </summary>
-    public void Upload(IRenderer renderer)
+    public void Upload()
     {
-        Renderer = renderer;
         if (Handle == 0) Handle = Renderer.CreateTexture();
         Renderer.BindTexture(this);
         Renderer.SetTextureMinFilter(FilterMode, Mipmap);
@@ -277,7 +276,7 @@ public class Texture : IDisposable
     }
 
     /// <summary>
-    /// Disposes of the texture, releasing its GL handle and pixel buffer. After calling this method, the texture should not be used again. If the texture has already been disposed, this method does nothing.
+    /// Disposes of the texture, releasing its renderer handle and pixel buffer. After calling this method, the texture should not be used again. If the texture has already been disposed, this method does nothing.
     /// </summary>
     public void Dispose()
     {

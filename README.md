@@ -1,6 +1,6 @@
 # ODL3D - 3D Graphics Library
 
-A .NET 3D graphics library built on OpenGL and GLFW for cross-platform game development and graphics applications.
+A .NET 3D graphics library with an abstract renderer stack and GLFW-based windowing for cross-platform game development and graphics applications.
 
 ## Overview
 
@@ -9,7 +9,7 @@ ODL3D is a C# graphics library designed to simplify 3D game development and grap
 ## Key Features
 
 - **3D mesh rendering** with OBJ model loading
-- **OpenGL shader support** (GLSL vertex and fragment shaders)
+- **Renderer-agnostic shader support**
 - **3D camera and perspective** management
 - **Sprite3D objects** for billboard rendering
 - **Scene management** (2D and 3D scenes)
@@ -20,14 +20,14 @@ ODL3D is a C# graphics library designed to simplify 3D game development and grap
 
 ## Dependencies
 
-- **GLFW3** - Window management and OpenGL context creation
-- **OpenGL** - 3D graphics API
+- **GLFW3** - Window management and native window/context creation
+- **Renderer backends** - Swap in the renderer implementation you need for your app
 
 ## Building
 
 ### Prerequisites
 - .NET 10.0 SDK or later
-- Platform-specific native libraries (GLFW3, OpenGL)
+- Platform-specific native libraries required by the selected renderer backend (for example GLFW3)
 
 ### Build Commands
 
@@ -48,7 +48,7 @@ Copyright © 2026 Marijn Herrebout
 ## Getting Started
 
 1. Clone the repository
-2. Ensure all native dependencies are installed and available (GLFW3, OpenGL)
+2. Ensure the native dependencies for your selected renderer/backend are installed and available (for example GLFW3)
 3. Build the project:
    ```powershell
    dotnet build odl3d/odl3d.csproj

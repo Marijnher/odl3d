@@ -54,7 +54,8 @@ public class Scene2D : Scene<Object>
     /// Draws all sprites in the scene using the given shader. The projection matrix is calculated based on the scene's viewport, and each sprite is drawn in pixel coordinates relative to the top-left of the viewport.
     /// </summary>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
-    public override void Draw(Shader shader)
+    /// <param name="renderPass">The render pass to use for rendering the scene.</param>
+    public override void Draw(Shader shader, RenderPass renderPass = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
         
@@ -64,20 +65,10 @@ public class Scene2D : Scene<Object>
         int vpY = (int) ((Viewport.Y + Position.Y) * scaleY);
         int vpWidth = (int) (Viewport.Width * scaleX);
         int vpHeight = (int) (Viewport.Height * scaleY);
-        GL.glViewport(vpX, Window.FramebufferHeight - vpY - vpHeight, vpWidth, vpHeight);
+        Renderer.SetViewport(vpX, Window.FramebufferHeight - vpY - vpHeight, vpWidth, vpHeight);
         Matrix4x4 projection = GetProjectionMatrix();
-        // Two passes (like Scene3D) so sprites with genuine partial alpha (e.g. anti-aliased Text) still
-        // render; a single Opaque-only pass would skip them entirely since IsTransparent would be true.
-        DrawObjects(shader, projection, RenderPass.Opaque);
-        GL.glDepthMask(GL.GL_FALSE);
-        DrawObjects(shader, projection, RenderPass.Transparent);
-        GL.glDepthMask(GL.GL_TRUE);
-    }
-
-    private void DrawObjects(Shader shader, Matrix4x4 projection, RenderPass pass)
-    {
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
-            Objects[i].Draw(shader, projection, pass);
+            Objects[i].Draw(shader, projection, renderPass);
     }
 }

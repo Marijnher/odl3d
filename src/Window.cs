@@ -5,7 +5,7 @@ using System.Numerics;
 namespace odl3d;
 
 /// <summary>
-/// Wraps a GLFW window and its OpenGL context; the sole windowing/input entry point for odl3d.
+/// Wraps a GLFW window and its renderer-backed context; the primary windowing/input entry point for odl3d.
 /// </summary>
 public class Window : InputHost
 {
@@ -14,10 +14,7 @@ public class Window : InputHost
     /// </summary>
     public IntPtr Handle { get; private set; }
 
-    /// <summary>
-    /// The renderer responsible for drawing the window's contents. This is typically an instance of a class implementing the IRenderer interface, such as an OpenGL renderer.
-    /// </summary>
-    public IRenderer Renderer;
+    protected IRenderer Renderer;
 
     /// <summary>
     /// The current width of the window in pixels.
@@ -30,12 +27,12 @@ public class Window : InputHost
     public int Height { get; private set; }
 
     /// <summary>
-    /// The current OpenGL framebuffer width in pixels. This can differ from Width on high-DPI displays.
+    /// The current framebuffer width in pixels. This can differ from Width on high-DPI displays.
     /// </summary>
     public int FramebufferWidth { get; private set; }
 
     /// <summary>
-    /// The current OpenGL framebuffer height in pixels. This can differ from Height on high-DPI displays.
+    /// The current framebuffer height in pixels. This can differ from Height on high-DPI displays.
     /// </summary>
     public int FramebufferHeight { get; private set; }
 
@@ -80,14 +77,14 @@ public class Window : InputHost
     private double? previousTime;
 
     /// <summary>
-    /// Creates a new window with the specified width, height, and title. The window is centered on the primary monitor and its OpenGL context is made current. The cursor is hidden and locked to the window so mouse movement can drive camera look.
+    /// Creates a new window with the specified width, height, and title. The window is centered on the primary monitor and its renderer context is made current. The cursor is hidden and locked to the window so mouse movement can drive camera look.
     /// <param name="width">Window width in pixels.</param>
     /// <param name="height">Window height in pixels.</param>
     /// <param name="title">Window title.</param>
     /// </summary>
-    public Window(IRenderer renderer, int width, int height, string title)
+    public Window(int width, int height, string title)
     {
-        Renderer = renderer;
+        Renderer = RenderFactory.Renderer;
         Width = width;
         Height = height;
 
@@ -283,16 +280,18 @@ public class Window : InputHost
         Renderer.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
         // Clear depth buffer
         Renderer.ClearDepthBuffer();
-        foreach (Scene3D scene in Scenes3D) scene.DrawPass(shader, RenderPass.Opaque);
+        foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Opaque);
         // Draw transparent objects after opaque ones without writing to the depth buffer
         Renderer.SetDepthMask(false);
-        foreach (Scene3D scene in Scenes3D) scene.DrawPass(shader, RenderPass.Transparent);
+        foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Transparent);
         Renderer.SetDepthMask(true);
         // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
         Renderer.ClearDepthBuffer();
         foreach (Scene2D scene in Scenes2D)
         {
-            scene.Draw(shader);
+            scene.Draw(shader, RenderPass.Opaque);
+            // Depth mask is not important for 2D scenes so we don't need to disable it.
+            scene.Draw(shader, RenderPass.Transparent);
         }
     }
 
@@ -335,7 +334,7 @@ public class Window : InputHost
     }
 
     /// <summary>
-    /// Disposes of the window and its OpenGL context, releasing any associated resources. After calling this method, the window should not be used again.
+    /// Disposes of the window and its renderer context, releasing any associated resources. After calling this method, the window should not be used again.
     /// </summary>
     public override void Dispose()
     {

@@ -17,6 +17,20 @@ public interface IRenderer : IDisposable
 
     public void SetWireFrame(bool enable);
 
+    #region Buffer Methods
+    public uint CreateVertexArray();
+    public void DeleteVertexArray(uint vao);
+    public void BindVertexArray(uint vao);
+    public uint CreateBuffer();
+    public void DeleteBuffer(uint buffer);
+    public void BindBuffer(BufferTarget target, uint buffer);
+    public void SetBufferData(BufferTarget target, uint buffer, float[] data, BufferHint hint);
+    public void SetBufferData(BufferTarget target, uint buffer, uint[] data, BufferHint hint);
+    public void EnableVertexAttribute(int index);
+    public void AddVertexAttribute(int index, int size, int stride, int offset);
+    public void DrawElements(int count);
+    #endregion
+
     #region Texture Methods
     public uint CreateTexture();
     public void DeleteTexture(Texture texture);

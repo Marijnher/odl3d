@@ -8,15 +8,15 @@ public enum TextureWrap
     /// <summary>
     /// Repeats the texture when sampling outside the [0, 1] UV coordinate range.
     /// </summary>
-    Repeat = (int) GL.GL_REPEAT,
+    Repeat,
 
     /// <summary>
     /// Clamps the texture coordinates to the edge of the texture, effectively stretching the edge pixels when sampling outside the [0, 1] UV coordinate range.
     /// </summary>
-    Clamp  = (int) GL.GL_CLAMP_TO_EDGE,
+    Clamp,
 
     /// <summary>
     /// Mirrors the texture when sampling outside the [0, 1] UV coordinate range.
     /// </summary>
-    Mirror = (int) GL.GL_MIRRORED_REPEAT
+    Mirror
 }

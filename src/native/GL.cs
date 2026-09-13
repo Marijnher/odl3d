@@ -23,6 +23,8 @@ internal static class GL
     public const uint GL_ARRAY_BUFFER = 0x8892;
     public const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
     public const uint GL_STATIC_DRAW = 0x88E4;
+    public const uint GL_DYNAMIC_DRAW = 0x88E8;
+    public const uint GL_STREAM_DRAW = 0x88E0;
     public const uint GL_FLOAT = 0x1406;
     public const uint GL_UNSIGNED_INT = 0x1405;
     public const uint GL_UNSIGNED_BYTE = 0x1401;
@@ -38,10 +40,10 @@ internal static class GL
     public const int GL_LINEAR = 0x2601;
     public const uint GL_TEXTURE_WRAP_S = 0x2802;
     public const uint GL_TEXTURE_WRAP_T = 0x2803;
-    public const uint GL_CLAMP_TO_EDGE = 0x812F;
+    public const int GL_CLAMP_TO_EDGE = 0x812F;
     public const int GL_RGBA = 0x1908;
-    public const uint GL_REPEAT = 0x2901;
-    public const uint GL_MIRRORED_REPEAT = 0x8370;
+    public const int GL_REPEAT = 0x2901;
+    public const int GL_MIRRORED_REPEAT = 0x8370;
     public const uint GL_TEXTURE0 = 0x84C0;
     public const uint GL_FRONT_AND_BACK = 0x0408;
     public const uint GL_LINE = 0x1B01;

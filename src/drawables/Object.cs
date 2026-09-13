@@ -18,14 +18,11 @@ public enum RenderPass
 public class Object : Drawable
 {
     /// <summary>
-    /// The Scene3D instance to which this object belongs. The scene provides context for the object's position and scale in world space, as well as access to the camera and other scene properties.
+    /// The Scene3D instance to which this Fobject belongs. The scene provides context for the object's position and scale in world space, as well as access to the camera and other scene properties.
     /// </summary>
     public Scene<Object> Scene;
 
-    /// <summary>
-    /// The renderer responsible for drawing this object.
-    /// </summary>
-    public IRenderer Renderer => Scene.Renderer;
+    protected IRenderer Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// The texture to use when drawing this object, or null to draw without a texture.
@@ -91,7 +88,7 @@ public class Object : Drawable
 
     ~Object()
     {
-        if (!Disposed) Console.WriteLine("Warning: Object was not disposed before being finalized. This may cause a GL resource leak.");
+        if (!Disposed) Console.WriteLine("Warning: Object was not disposed before being finalized. This may cause a renderer resource leak.");
     }
 
     /// <summary>
@@ -136,7 +133,7 @@ public class Object : Drawable
     public virtual void Draw(Shader shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
     {
         if (!Visible || Disposed || Mesh == null) return;
-        if ((pass == RenderPass.Transparent) != IsTransparent) return;
+        if (pass == RenderPass.Transparent != IsTransparent) return;
         Matrix4x4 model = GetModelMatrix();
 
         shader.Use();
@@ -149,7 +146,7 @@ public class Object : Drawable
         shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
         if (Mesh.HasNormals) shader.SetMatrix("uModel", model);
 
-        if (Texture != null && !Texture.Uploaded) Texture.Upload(Renderer);
+        if (Texture != null && !Texture.Uploaded) Texture.Upload();
         Renderer.BindTexture(Texture);
 
         Mesh.Draw();

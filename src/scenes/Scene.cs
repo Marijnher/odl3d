@@ -11,14 +11,11 @@ namespace odl3d;
 public abstract class Scene<T> : Drawable where T : Object
 {
     /// <summary>
-    /// The window associated with the scene, used to determine the rendering context and other properties. This property is set in the constructor and is read-only for subclasses. The window provides access to the OpenGL context, input handling, and other features necessary for rendering the scene's objects.
+    /// The window associated with the scene, used to determine the rendering context and other properties. This property is set in the constructor and is read-only for subclasses. The window provides access to the active renderer context, input handling, and other features necessary for rendering the scene's objects.
     /// </summary>
     public Window Window { get; }
 
-    /// <summary>
-    /// The renderer responsible for drawing the scene's objects. This property is derived from the associated window and is read-only for subclasses.
-    /// </summary>
-    public IRenderer Renderer => Window.Renderer;
+    protected IRenderer Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// The camera used to render the scene. The camera's view and projection matrices are combined to create the view-projection matrix used for rendering the objects in the scene. The camera can be configured with position, orientation, field of view, aspect ratio, and other properties to control how the scene is viewed. This property is read-only for subclasses and is derived from the associated window.
@@ -36,7 +33,7 @@ public abstract class Scene<T> : Drawable where T : Object
 
     ~Scene()
     {
-        if (!Disposed) Console.WriteLine("Warning: Scene was not disposed before being finalized. This may cause a GL resource leak.");
+        if (!Disposed) Console.WriteLine("Warning: Scene was not disposed before being finalized. This may cause a renderer resource leak.");
     }
 
     /// <summary>
@@ -77,7 +74,8 @@ public abstract class Scene<T> : Drawable where T : Object
     /// Draws the scene using the specified shader. This method must be implemented by subclasses to define how the objects in the scene are rendered. The shader parameter provides the shader program to use for rendering, and the implementation should handle setting up any necessary matrices or state before drawing the objects.
     /// </summary>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
-    public abstract void Draw(Shader shader);
+    /// <param name="renderPass">The render pass to use for rendering the scene.</param>
+    public abstract void Draw(Shader shader, RenderPass renderPass = RenderPass.Opaque);
 
     /// <summary>
     /// Updates all objects in the scene by calling their Update methods. This should be called once per frame to ensure that the scene and its objects are updated correctly.
