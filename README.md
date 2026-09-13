@@ -1,4 +1,4 @@
-# odl3d - 3D Graphics Library
+# odl3d - Object Display Layer 3D
 
 A .NET 3D graphics library with an abstract renderer stack and GLFW-based windowing for cross-platform game development and graphics applications.
 
@@ -29,7 +29,7 @@ dotnet build -c Release
 
 ## License
 
-MIT License - See [LICENSE](odl2d/LICENSE) file for details.
+MIT License - See [LICENSE](LICENSE) file for details.
 
 Copyright © 2026 Marijn Herrebout
 
