@@ -19,12 +19,6 @@ Applications create a window and renderer, add drawable objects to 2D or 3D scen
 
 ## Building
 
-### Prerequisites
-- GLFW3
-- Freetype
-
-### Build Commands
-
 ```powershell
 # Build odl3d
 dotnet build
