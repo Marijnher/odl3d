@@ -10,6 +10,22 @@ namespace odl3d.Renderers;
 /// </summary>
 public partial class OpenGL : IRenderer
 {
+    public void ConfigureWindow()
+    {
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
+        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
+        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
+    }
+
+    public void AttachWindow(IntPtr window) { }
+
+    public void SetVSync(bool enabled) => GLFW.glfwSwapInterval(enabled ? 1 : 0);
+
+    public void SetDrawableSize(int width, int height) { }
+
+    public void Present(IntPtr window) => GLFW.glfwSwapBuffers(window);
+
     /// <summary>
     /// Initializes the OpenGL renderer, setting up the necessary OpenGL context and state for rendering. This method is called to prepare the renderer for use, ensuring that the OpenGL functions are available and that the rendering context is properly configured. The Initialize method should be called before any rendering operations are performed, allowing the renderer to set up its internal state and resources.
     /// </summary>

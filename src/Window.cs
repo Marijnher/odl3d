@@ -91,6 +91,8 @@ public class Window : InputHost
         Width = width;
         Height = height;
 
+        Renderer.ConfigureWindow();
+
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
         Handle = GLFW.glfwCreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
         if (Handle == IntPtr.Zero)
@@ -99,9 +101,9 @@ public class Window : InputHost
             throw new Exception("Failed to create a GLFW window.");
         }
         GLFW.glfwMakeContextCurrent(Handle);
-        GLFW.glfwSwapInterval(0);
-
         Renderer.Initialize();
+        Renderer.AttachWindow(Handle);
+        Renderer.SetVSync(false);
         UpdateFramebufferSize();
         Renderer.SetEnableDepthTest(true);
         Renderer.SetAlphaBlending(true);
@@ -216,6 +218,7 @@ public class Window : InputHost
         if (width <= 0 || height <= 0) return;
         FramebufferWidth = width;
         FramebufferHeight = height;
+        Renderer.SetDrawableSize(width, height);
         Renderer.SetViewport(0, 0, width, height);
     }
 
@@ -240,7 +243,10 @@ public class Window : InputHost
     /// <summary>
     /// Swaps the front and back buffers, displaying the rendered scene to the window. This should be called after Render().
     /// </summary>
-    public void SwapBuffers() => GLFW.glfwSwapBuffers(Handle);
+    public void SwapBuffers()
+    {
+        Renderer.Present(Handle);
+    }
 
     /// <summary>
     /// Marks the window to close, which will cause ShouldClose to return true. The window is not immediately destroyed; it is up to the application to check ShouldClose and call Dispose() when appropriate.

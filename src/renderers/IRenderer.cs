@@ -9,6 +9,32 @@ namespace odl3d;
 public interface IRenderer : IDisposable
 {
     /// <summary>
+    /// Configures the windowing hints required by this renderer before a native
+    /// window is created.
+    /// </summary>
+    public void ConfigureWindow();
+
+    /// <summary>
+    /// Attaches the renderer to the created native window.
+    /// </summary>
+    public void AttachWindow(IntPtr window);
+
+    /// <summary>
+    /// Configures presentation synchronization for the renderer.
+    /// </summary>
+    public void SetVSync(bool enabled);
+
+    /// <summary>
+    /// Updates the drawable or framebuffer dimensions after a window resize.
+    /// </summary>
+    public void SetDrawableSize(int width, int height);
+
+    /// <summary>
+    /// Presents the rendered frame for the native window.
+    /// </summary>
+    public void Present(IntPtr window);
+
+    /// <summary>
     /// Initializes the renderer, setting up any necessary graphics context, resources, and state for rendering. This method should be called before any rendering operations are performed, and it prepares the renderer to handle drawing commands, buffer management, and shader compilation.
     /// </summary>
     public void Initialize();

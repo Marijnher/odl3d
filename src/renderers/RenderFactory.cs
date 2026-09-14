@@ -22,11 +22,17 @@ public static class RenderFactory
     public static IRenderer Create(string id) => _instance = id switch
     {
         "opengl" => CreateOpenGLRenderer(),
+        "metal" => CreateMetalRenderer(),
         _ => throw new RenderException($"Unknown renderer id: {id}")
     };
 
     private static IRenderer CreateOpenGLRenderer()
     {
         return new Renderers.OpenGL();
+    }
+
+    private static IRenderer CreateMetalRenderer()
+    {
+        return new Renderers.Metal();
     }
 }

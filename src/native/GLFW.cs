@@ -18,6 +18,9 @@ internal static class GLFW
     public const int GLFW_OPENGL_FORWARD_COMPAT = 0x00022006;
     public const int GLFW_OPENGL_PROFILE = 0x00022008;
     public const int GLFW_OPENGL_CORE_PROFILE = 0x00032001;
+    public const int GLFW_CLIENT_API = 0x00022001;
+    public const int GLFW_NO_API = 0;
+    public const int GLFW_NATIVE_COCOA = 0;
     public const int GLFW_RELEASE = 0;
     public const int GLFW_PRESS = 1;
     public const int GLFW_REPEAT = 2;
@@ -67,6 +70,8 @@ internal static class GLFW
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate IntPtr d_glfwGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string procname);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate IntPtr d_glfwGetCocoaWindow(IntPtr window);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_glfwGetKey(IntPtr window, int key);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_glfwGetCursorPos(IntPtr window, out double xpos, out double ypos);
@@ -105,6 +110,7 @@ internal static class GLFW
     public static d_glfwWindowShouldClose glfwWindowShouldClose;
     public static d_glfwSetWindowShouldClose glfwSetWindowShouldClose;
     public static d_glfwGetProcAddress glfwGetProcAddress;
+    public static d_glfwGetCocoaWindow glfwGetCocoaWindow;
     public static d_glfwGetKey glfwGetKey;
     public static d_glfwGetCursorPos glfwGetCursorPos;
     public static d_glfwSetInputMode glfwSetInputMode;
@@ -159,17 +165,14 @@ internal static class GLFW
         glfwWindowShouldClose = GetFunction<d_glfwWindowShouldClose>("glfwWindowShouldClose");
         glfwSetWindowShouldClose = GetFunction<d_glfwSetWindowShouldClose>("glfwSetWindowShouldClose");
         glfwGetProcAddress = GetFunction<d_glfwGetProcAddress>("glfwGetProcAddress");
+        if (OperatingSystem.IsMacOS())
+            glfwGetCocoaWindow = GetFunction<d_glfwGetCocoaWindow>("glfwGetCocoaWindow");
         glfwSetKeyCallback = GetFunction<d_glfwSetKeyCallback>("glfwSetKeyCallback");
         glfwSetMouseButtonCallback = GetFunction<d_glfwSetMouseButtonCallback>("glfwSetMouseButtonCallback");
         glfwSetCursorPosCallback = GetFunction<d_glfwSetCursorPosCallback>("glfwSetCursorPosCallback");
         
         if (glfwInit() == GLFW_FALSE)
             throw new RenderException("Failed to initialize GLFW.");
-            
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         
         Loaded = true;
     }
