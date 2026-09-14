@@ -25,8 +25,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Reference Include="decodl">
-            <HintPath>decodl.dll</HintPath>
+        <Reference Include="bin/decodl">
+            <HintPath>bin/decodl.dll</HintPath>
         </Reference>
     </ItemGroup>
 
