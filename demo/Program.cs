@@ -1,5 +1,6 @@
 using System;
 using odl3d;
+using odl3d.Renderers;
 
 namespace odl3ddemo;
 
@@ -121,6 +122,20 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
 
     public static void Main(string[] args)
     {
+        MetalNew.Load();
+        MetalNew.Device device = MetalNew.GetDefaultDevice();
+        Console.WriteLine(device.Name);
+        Console.WriteLine(device.Description);
+        Console.WriteLine(device.RegistryID);
+
+        MetalNew.CommandQueue queue = device.NewCommandQueue();
+        Console.WriteLine($"Queue: {queue.Handle}");
+        Console.WriteLine($"Label: {queue.Label}");
+        queue.Label = "Hello";
+        Console.WriteLine($"Label: {queue.Label}");
+
+        return;
+
         int width = 800;
         int height = 600;
 
