@@ -44,7 +44,6 @@ public class Buffer
     /// <param name="hint">The buffer hint specifying how the data will be used.</param>
     public void SetData(float[] data, BufferHint hint = BufferHint.Static)
     {
-        Renderer.BindBuffer(BufferTarget, Handle);
         Renderer.SetBufferData(BufferTarget, Handle, data, hint);
     }
 
@@ -55,7 +54,6 @@ public class Buffer
     /// <param name="hint">The buffer hint specifying how the data will be used.</param>
     public void SetData(uint[] data, BufferHint hint = BufferHint.Static)
     {
-        Renderer.BindBuffer(BufferTarget, Handle);
         Renderer.SetBufferData(BufferTarget, Handle, data, hint);
     }
 

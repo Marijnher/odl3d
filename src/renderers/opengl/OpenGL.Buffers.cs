@@ -49,11 +49,17 @@ public partial class OpenGL : IRenderer
 
     public void BindBuffer(BufferTarget target, uint buffer) => glBindBuffer(GetGLBufferTarget(target), buffer);
 
-    public void SetBufferData(BufferTarget target, uint buffer, float[] data, BufferHint hint) =>
+    public void SetBufferData(BufferTarget target, uint buffer, float[] data, BufferHint hint)
+    {
+        BindBuffer(target, buffer);
         glBufferDataFloat(GetGLBufferTarget(target), data.Length * sizeof(float), data, GetGLBufferHint(hint));
+    }
 
-    public void SetBufferData(BufferTarget target, uint buffer, uint[] data, BufferHint hint) =>
+    public void SetBufferData(BufferTarget target, uint buffer, uint[] data, BufferHint hint)
+    {
+        BindBuffer(target, buffer);
         glBufferDataUInt(GetGLBufferTarget(target), data.Length * sizeof(uint), data, GetGLBufferHint(hint));
+    }
 
     public void EnableVertexAttribute(int index) => glEnableVertexAttribArray((uint) index);
 

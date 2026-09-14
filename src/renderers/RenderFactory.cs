@@ -19,12 +19,15 @@ public static class RenderFactory
     /// <param name="id">The identifier of the renderer to create.</param>
     /// <returns>The created renderer instance.</returns>
     /// <exception cref="RenderException">Thrown when the specified renderer identifier is not supported.</exception>
-    public static IRenderer Create(string id) => _instance = id switch
+    public static IRenderer Create(string id)
     {
-        "opengl" => CreateOpenGLRenderer(),
-        "metal" => CreateMetalRenderer(),
-        _ => throw new RenderException($"Unknown renderer id: {id}")
-    };
+        return _instance = id switch
+        {
+            "opengl" => CreateOpenGLRenderer(),
+            "metal" => CreateMetalRenderer(),
+            _ => throw new RenderException($"Unknown renderer id: {id}")
+        };
+    }
 
     private static IRenderer CreateOpenGLRenderer()
     {

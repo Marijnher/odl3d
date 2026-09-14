@@ -18,6 +18,7 @@ public class Window : InputHost
     /// The renderer instance used to render the window's contents. The Renderer property provides access to the active renderer, allowing the Window to call renderer methods for rendering scenes, managing resources, and interacting with the rendering backend. This property is read-only and is initialized in the constructor.
     /// </summary>
     protected IRenderer Renderer;
+    private IRenderFrame? currentFrame;
 
     /// <summary>
     /// The current width of the window in pixels.
@@ -105,10 +106,6 @@ public class Window : InputHost
         Renderer.AttachWindow(Handle);
         Renderer.SetVSync(false);
         UpdateFramebufferSize();
-        Renderer.SetEnableDepthTest(true);
-        Renderer.SetAlphaBlending(true);
-
-
         // Default non-moveable camera
         Camera = new Camera(this);
         Center();
@@ -153,7 +150,6 @@ public class Window : InputHost
     public void SetWireFrame(bool enabled)
     {
         Wireframe = enabled;
-        Renderer.SetWireFrame(enabled);
     }
 
     /// <summary>
@@ -219,7 +215,6 @@ public class Window : InputHost
         FramebufferWidth = width;
         FramebufferHeight = height;
         Renderer.SetDrawableSize(width, height);
-        Renderer.SetViewport(0, 0, width, height);
     }
 
     /// <summary>
@@ -245,7 +240,9 @@ public class Window : InputHost
     /// </summary>
     public void SwapBuffers()
     {
-        Renderer.Present(Handle);
+        if (currentFrame == null) return;
+        Renderer.Present(currentFrame, Handle);
+        currentFrame = null;
     }
 
     /// <summary>
@@ -272,11 +269,11 @@ public class Window : InputHost
     /// <summary>
     /// Clears the window's color and depth buffers using the BackgroundColor property. This should be called at the start of each frame before rendering any scenes.
     /// </summary>
-    public void Clear()
+    public void Clear(IRenderCommandEncoder commands)
     {
-        Renderer.ClearColor(BackgroundColor);
-        Renderer.ClearColorBuffer();
-        Renderer.ClearDepthBuffer();
+        commands.ClearColor(BackgroundColor);
+        commands.ClearColorBuffer();
+        commands.ClearDepthBuffer();
     }
 
     /// <summary>
@@ -285,23 +282,32 @@ public class Window : InputHost
     /// <param name="shader">The shader to use for rendering the scenes.</param>
     public void Render(ShaderProgram shader)
     {
-        Clear();
-        Renderer.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
+        IRenderFrame frame = Renderer.BeginFrame(BackgroundColor);
+        currentFrame = frame;
+        IRenderCommandEncoder commands = frame.BeginRenderPass();
+        commands.SetDepthTest(true);
+        commands.SetBlend(true);
+        commands.SetWireframe(Wireframe);
+        commands.ClearColor(BackgroundColor);
+        commands.ClearColorBuffer();
+        commands.ClearDepthBuffer();
+        commands.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
         // Clear depth buffer
-        Renderer.ClearDepthBuffer();
-        foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Opaque);
+        commands.ClearDepthBuffer();
+        foreach (Scene3D scene in Scenes3D) scene.Draw(commands, shader, RenderPass.Opaque);
         // Draw transparent objects after opaque ones without writing to the depth buffer
-        Renderer.SetDepthMask(false);
-        foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Transparent);
-        Renderer.SetDepthMask(true);
+        commands.SetDepthWrite(false);
+        foreach (Scene3D scene in Scenes3D) scene.Draw(commands, shader, RenderPass.Transparent);
+        commands.SetDepthWrite(true);
         // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
-        Renderer.ClearDepthBuffer();
+        commands.ClearDepthBuffer();
         foreach (Scene2D scene in Scenes2D)
         {
-            scene.Draw(shader, RenderPass.Opaque);
+            scene.Draw(commands, shader, RenderPass.Opaque);
             // Depth mask is not important for 2D scenes so we don't need to disable it.
-            scene.Draw(shader, RenderPass.Transparent);
+            scene.Draw(commands, shader, RenderPass.Transparent);
         }
+        frame.EndRenderPass(commands);
     }
 
     /// <summary>

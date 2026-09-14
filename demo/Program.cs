@@ -125,7 +125,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         int height = 600;
 
         GLFW.Load();
-        RenderFactory.Create("opengl");
+        RenderFactory.Create("metal");
         
         Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);

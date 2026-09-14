@@ -74,19 +74,18 @@ public partial class Mesh : IDisposable
         VertexCount = vertices.Length / floatsPerVertex;
 
         vao = new VertexArray();
-        vao.Bind();
-
         vbo = new Buffer(BufferTarget.ArrayBuffer);
         vbo.SetData(vertices);
 
         ebo = new Buffer(BufferTarget.ElementBuffer);
         ebo.SetData(indices);
 
-        vao.AddAttribute(3); // location=0 x y z
-        vao.AddAttribute(2); // location=1 u v
-        if (hasNormals) vao.AddAttribute(3); // location=2 nx ny nz
-
-        vao.Unbind(); 
+        Renderer.ConfigureVertexArray(vao.Handle, vbo.Handle, ebo.Handle);
+        int stride = floatsPerVertex * sizeof(float);
+        Renderer.ConfigureVertexAttribute(vao.Handle, vbo.Handle, 0, 3, stride, 0);
+        Renderer.ConfigureVertexAttribute(vao.Handle, vbo.Handle, 1, 2, stride, 3 * sizeof(float));
+        if (hasNormals)
+            Renderer.ConfigureVertexAttribute(vao.Handle, vbo.Handle, 2, 3, stride, 5 * sizeof(float));
     }
 
     ~Mesh()
@@ -97,10 +96,10 @@ public partial class Mesh : IDisposable
     /// <summary>
     /// Draws the mesh using the currently bound shader and texture. The mesh's vertex and index buffers are bound, and a draw call is issued to render the mesh as triangles. The mesh should be drawn after setting up the appropriate shader program and binding any required textures.
     /// </summary>
-    public void Draw()
+    public void Draw(IRenderCommandEncoder commands)
     {
-        vao.Bind();
-        Renderer.DrawElements(_indexCount);
+        vao.Bind(commands);
+        commands.DrawIndexed(_indexCount);
     }
 
     /// <summary>

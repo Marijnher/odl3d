@@ -10,29 +10,18 @@ namespace odl3d.Renderers;
 ///
 /// Metal is loaded dynamically so this assembly remains buildable and loadable on
 /// Windows and Linux. The renderer creates a CAMetalLayer for GLFW's Cocoa window
-/// and owns the current drawable until <see cref="Present"/> is called.
+/// and creates frame-local command encoders for each acquired drawable.
 /// </summary>
 public sealed class Metal : IRenderer
 {
     private IntPtr device;
     private IntPtr commandQueue;
     private IntPtr layer;
-    private IntPtr drawable;
-    private IntPtr commandBuffer;
-    private IntPtr encoder;
     private IntPtr depthTexture;
     private int depthWidth;
     private int depthHeight;
     private bool initialized;
     private bool windowAttached;
-    private bool depthTestEnabled;
-    private bool depthWriteEnabled = true;
-    private bool alphaBlendingEnabled;
-    private bool wireframeEnabled;
-    private int viewportX;
-    private int viewportY;
-    private int viewportWidth;
-    private int viewportHeight;
     private uint nextHandle = 1;
     private readonly Dictionary<uint, IntPtr> resources = new();
     private readonly Dictionary<uint, (BufferTarget Target, int Size)> buffers = new();
@@ -45,15 +34,7 @@ public sealed class Metal : IRenderer
     private readonly Dictionary<uint, ShaderType> shaderTypes = new();
     private readonly Dictionary<uint, List<uint>> programs = new();
     private readonly Dictionary<uint, (IntPtr Vertex, IntPtr Fragment, IntPtr Pipeline)> pipelines = new();
-    private readonly Dictionary<int, string> uniforms = new();
-    private readonly Dictionary<int, object> uniformValues = new();
-    private readonly Dictionary<string, object> namedUniformValues = new(StringComparer.Ordinal);
-    private uint boundVao;
-    private uint boundArrayBuffer;
-    private uint boundIndexBuffer;
-    private uint boundTexture;
-    private uint activeProgram;
-    private int nextUniform = 1;
+    private readonly Dictionary<(bool DepthTest, bool DepthWrite), IntPtr> depthStates = new();
 
     public void ConfigureWindow()
     {
@@ -366,13 +347,6 @@ public sealed class Metal : IRenderer
             Send(resource, "release");
     }
 
-    private void RequireWindowAndFrame()
-    {
-        RequireWindow();
-        if (encoder == IntPtr.Zero)
-            throw new RenderException("Metal drawing requires an active frame. Call Window.Render before drawing.");
-    }
-
     public void Initialize()
     {
         if (initialized) return;
@@ -442,16 +416,14 @@ public sealed class Metal : IRenderer
     }
 
     /// <summary>Begins a frame by acquiring the current drawable and clearing it.</summary>
-    public void BeginFrame(Color color)
+    public IRenderFrame BeginFrame(Color color)
     {
         RequireWindow();
-        if (encoder != IntPtr.Zero) return;
-
-        drawable = Send(layer, "nextDrawable");
+        IntPtr drawable = Send(layer, "nextDrawable");
         if (drawable == IntPtr.Zero)
             throw new RenderException("Metal did not provide a drawable for the current frame.");
 
-        commandBuffer = Send(commandQueue, "commandBuffer");
+        IntPtr commandBuffer = Send(commandQueue, "commandBuffer");
         IntPtr descriptor = Send(Class("MTLRenderPassDescriptor"), "renderPassDescriptor");
         IntPtr attachments = Send(descriptor, "colorAttachments");
         IntPtr attachment = SendResult(attachments, "objectAtIndexedSubscript:", 0);
@@ -472,6 +444,7 @@ public sealed class Metal : IRenderer
             depthWidth = drawableWidth;
             depthHeight = drawableHeight;
         }
+
         IntPtr depthAttachment = Send(descriptor, "depthAttachment");
         Send(depthAttachment, "setTexture:", depthTexture);
         Send(depthAttachment, "setLoadAction:", (nuint)2);
@@ -484,31 +457,203 @@ public sealed class Metal : IRenderer
             color.G / 255d,
             color.B / 255d,
             color.A / 255d);
-        encoder = SendObjectResultValue(commandBuffer, "renderCommandEncoderWithDescriptor:", descriptor);
+        IntPtr encoder = SendObjectResultValue(commandBuffer, "renderCommandEncoderWithDescriptor:", descriptor);
         if (encoder == IntPtr.Zero)
             throw new RenderException("Metal could not create a render command encoder.");
-        if (viewportWidth > 0 && viewportHeight > 0)
-            SetViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        return new Frame(this, drawable, commandBuffer, encoder);
     }
 
-    /// <summary>Ends the current command encoder, presents its drawable, and commits the command buffer.</summary>
-    public void Present()
+    private sealed class CommandEncoder : IRenderCommandEncoder
     {
-        RequireWindow();
-        if (encoder == IntPtr.Zero) return;
-        Send(encoder, "endEncoding");
-        Send(commandBuffer, "presentDrawable:", drawable);
-        Send(commandBuffer, "commit");
-        encoder = IntPtr.Zero;
-        commandBuffer = IntPtr.Zero;
-        drawable = IntPtr.Zero;
+        private readonly Metal renderer;
+        private readonly IntPtr nativeEncoder;
+        private uint boundVao;
+        private uint boundTexture;
+        private uint activeProgram;
+        private bool depthTestEnabled = true;
+        private bool depthWriteEnabled = true;
+        private bool wireframeEnabled;
+        private RenderObjectConstants constants;
+        private bool hasConstants;
+        private IntPtr appliedPipeline;
+        private IntPtr appliedDepthState;
+        private bool appliedWireframe;
+        private bool hasAppliedWireframe;
+
+        public CommandEncoder(Metal renderer, IntPtr nativeEncoder)
+        {
+            this.renderer = renderer;
+            this.nativeEncoder = nativeEncoder;
+        }
+
+        public void BindPipeline(ShaderProgram program)
+        {
+            if (!renderer.pipelines.ContainsKey(program.Handle))
+                throw new RenderException("The Metal shader pipeline is not available.");
+            activeProgram = program.Handle;
+        }
+
+        public void BindVertexArray(VertexArray? vertexArray) =>
+            boundVao = vertexArray?.Handle ?? 0;
+
+        public void BindTexture(int slot, Texture? texture) =>
+            boundTexture = texture?.Handle ?? 0;
+
+        public void SetObjectConstants(in RenderObjectConstants value)
+        {
+            constants = value;
+            hasConstants = true;
+        }
+
+        public void SetViewport(int x, int y, int width, int height) =>
+            SendViewportValue(nativeEncoder, "setViewport:", new Viewport
+            {
+                OriginX = x, OriginY = y, Width = width, Height = height, ZNear = 0, ZFar = 1
+            });
+
+        public void SetDepthTest(bool enabled) => depthTestEnabled = enabled;
+        public void SetDepthWrite(bool enabled) => depthWriteEnabled = enabled;
+        public void SetBlend(bool enabled) { }
+        public void SetWireframe(bool enabled) => wireframeEnabled = enabled;
+        public void ClearColor(Color color) { }
+        public void ClearColorBuffer() { }
+        public void ClearDepthBuffer() { }
+
+        public void DrawIndexed(int count)
+        {
+            if (activeProgram == 0 || boundVao == 0)
+                throw new RenderException("Metal draw requires a shader pipeline and vertex array.");
+            if (!renderer.vaoIndexBuffers.TryGetValue(boundVao, out uint indexHandle) ||
+                !renderer.vaoVertexBuffers.TryGetValue(boundVao, out uint vertexHandle))
+                throw new RenderException("Metal vertex array is not configured.");
+            if (!renderer.pipelines.TryGetValue(activeProgram, out var pipeline))
+                throw new RenderException("Metal shader pipeline is not available.");
+            if (!renderer.buffers.TryGetValue(indexHandle, out var index) || index.Size < count * sizeof(uint))
+                throw new RenderException("Metal index buffer is smaller than the requested draw count.");
+
+            IntPtr depthState = renderer.DepthState(depthTestEnabled, depthWriteEnabled);
+            if (depthState == IntPtr.Zero)
+                throw new RenderException("Metal could not create a depth-stencil state.");
+            if (appliedPipeline != pipeline.Pipeline)
+            {
+                SendPipelineStateValue(nativeEncoder, "setRenderPipelineState:", pipeline.Pipeline);
+                appliedPipeline = pipeline.Pipeline;
+            }
+            if (appliedDepthState != depthState)
+            {
+                Send(nativeEncoder, "setDepthStencilState:", depthState);
+                appliedDepthState = depthState;
+            }
+            if (!hasAppliedWireframe || appliedWireframe != wireframeEnabled)
+            {
+                Send(nativeEncoder, "setTriangleFillMode:", (nuint)(wireframeEnabled ? 1 : 0));
+                appliedWireframe = wireframeEnabled;
+                hasAppliedWireframe = true;
+            }
+            SendBufferAtIndex(nativeEncoder, "setVertexBuffer:offset:atIndex:", renderer.Resource(vertexHandle), 0, 0);
+
+            if (!hasConstants)
+                throw new RenderException("Metal draw requires object constants.");
+            MetalUniforms values = new()
+            {
+                Mvp = constants.Mvp,
+                Model = constants.Model,
+                Color = ToVector(constants.Color),
+                TextureColor = ToVector(constants.TextureColor),
+                UseTexture = constants.UseTexture,
+                Lit = constants.Lit,
+                FloatsPerVertex = renderer.GetVertexFloatsPerVertex(boundVao)
+            };
+            SetConstants(values);
+
+            if (constants.UseTexture != 0)
+            {
+                if (boundTexture == 0 || renderer.Resource(boundTexture) == IntPtr.Zero ||
+                    !renderer.samplers.TryGetValue(boundTexture, out IntPtr sampler))
+                    throw new RenderException("A textured draw requires an uploaded texture and sampler.");
+                SendTextureAtIndex(nativeEncoder, "setFragmentTexture:atIndex:", renderer.Resource(boundTexture), 0);
+                SendSamplerTextureValue(nativeEncoder, "setFragmentSamplerState:atIndex:", sampler, 0);
+            }
+            SendIndexed(nativeEncoder, "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:",
+                3, (nuint)count, 1, renderer.Resource(indexHandle), 0);
+        }
+
+        private unsafe void SetConstants(MetalUniforms values)
+        {
+            MetalUniforms* memory = stackalloc MetalUniforms[1];
+            *memory = values;
+            IntPtr address = (IntPtr)memory;
+            nuint size = (nuint)sizeof(MetalUniforms);
+            SendBytesAtIndex(nativeEncoder, "setVertexBytes:length:atIndex:", address, size, 1);
+            SendBytesAtIndex(nativeEncoder, "setFragmentBytes:length:atIndex:", address, size, 1);
+        }
+
+        private static Vector4 ToVector(Color color) =>
+            new(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
     }
 
-    public void Present(IntPtr window) => Present();
+    public void Present(IRenderFrame frame, IntPtr window)
+    {
+        frame.Dispose();
+    }
+
+    public void ConfigureVertexAttribute(uint vao, uint vertexBuffer, int index, int size, int stride, int offset)
+    {
+        if (!vertexLayouts.TryGetValue(vao, out var layout))
+            throw new RenderException("Invalid Metal vertex array.");
+        bool exists = false;
+        foreach (var attribute in layout)
+            if (attribute.Index == index) exists = true;
+        if (!exists)
+            layout.Add((index, size, stride, offset));
+        vaoVertexBuffers[vao] = vertexBuffer;
+    }
+
+    public void ConfigureVertexArray(uint vao, uint vertexBuffer, uint indexBuffer)
+    {
+        vaoVertexBuffers[vao] = vertexBuffer;
+        vaoIndexBuffers[vao] = indexBuffer;
+    }
+
+    public void SetTextureParameters(uint texture, TextureFilter minFilter, MipmapFilter mipmap,
+        TextureFilter magFilter, TextureWrap wrapH, TextureWrap wrapV, AnisotropicFilter anisotropic)
+    {
+        if (!textures.TryGetValue(texture, out TextureState? state))
+            throw new RenderException("Invalid Metal texture handle.");
+        state.MinFilter = minFilter;
+        state.Mipmap = mipmap;
+        state.MagFilter = magFilter;
+        state.WrapH = wrapH;
+        state.WrapV = wrapV;
+        state.Anisotropic = anisotropic;
+        RefreshSampler(texture);
+    }
+
+    private sealed class Frame : IRenderFrame
+    {
+        private readonly Metal renderer;
+        private readonly IntPtr drawable;
+        private readonly IntPtr commandBuffer;
+        private readonly IntPtr encoder;
+        public Frame(Metal renderer, IntPtr drawable, IntPtr commandBuffer, IntPtr encoder)
+        {
+            this.renderer = renderer;
+            this.drawable = drawable;
+            this.commandBuffer = commandBuffer;
+            this.encoder = encoder;
+        }
+        public IRenderCommandEncoder BeginRenderPass() => new CommandEncoder(renderer, encoder);
+        public void EndRenderPass(IRenderCommandEncoder encoder) { }
+        public void Dispose()
+        {
+            Send(this.encoder, "endEncoding");
+            Send(commandBuffer, "presentDrawable:", drawable);
+            Send(commandBuffer, "commit");
+        }
+    }
 
     public void Dispose()
     {
-        PresentIfPossible();
         if (depthTexture != IntPtr.Zero) Send(depthTexture, "release");
         foreach (IntPtr sampler in samplers.Values)
             if (sampler != IntPtr.Zero) Send(sampler, "release");
@@ -521,17 +666,15 @@ public sealed class Metal : IRenderer
             if (pipeline.Fragment != IntPtr.Zero) Send(pipeline.Fragment, "release");
         }
         pipelines.Clear();
+        foreach (IntPtr depthState in depthStates.Values)
+            if (depthState != IntPtr.Zero) Send(depthState, "release");
+        depthStates.Clear();
         if (commandQueue != IntPtr.Zero) Send(commandQueue, "release");
         if (layer != IntPtr.Zero) Send(layer, "release");
         device = commandQueue = layer = IntPtr.Zero;
         depthTexture = IntPtr.Zero;
         depthWidth = depthHeight = 0;
         initialized = windowAttached = false;
-    }
-
-    private void PresentIfPossible()
-    {
-        if (windowAttached && encoder != IntPtr.Zero) Present();
     }
 
     private void RequireInitialized()
@@ -543,6 +686,20 @@ public sealed class Metal : IRenderer
     {
         RequireInitialized();
         if (!windowAttached) throw new RenderException("Metal renderer is not attached to a GLFW window.");
+    }
+
+    private IntPtr DepthState(bool depthTest, bool depthWrite)
+    {
+        if (depthStates.TryGetValue((depthTest, depthWrite), out IntPtr state))
+            return state;
+        IntPtr descriptor = Send(Class("MTLDepthStencilDescriptor"), "new");
+        Send(descriptor, "setDepthCompareFunction:", (nuint)(depthTest ? 1 : 0));
+        Send(descriptor, "setDepthWriteEnabled:", depthWrite);
+        state = SendObjectResultValue(device, "newDepthStencilStateWithDescriptor:", descriptor);
+        Send(descriptor, "release");
+        if (state != IntPtr.Zero)
+            depthStates[(depthTest, depthWrite)] = state;
+        return state;
     }
 
     public uint CreateVertexArray()
@@ -560,24 +717,6 @@ public sealed class Metal : IRenderer
         DeleteHandle(vao.Handle);
     }
 
-    public void BindVertexArray(VertexArray? vao)
-    {
-        if (vao == null)
-        {
-            if (boundVao != 0)
-            {
-                vaoIndexBuffers[boundVao] = boundIndexBuffer;
-                vaoVertexBuffers[boundVao] = boundArrayBuffer;
-            }
-            boundVao = 0;
-            return;
-        }
-
-        boundVao = vao.Handle;
-        vaoIndexBuffers.TryGetValue(boundVao, out boundIndexBuffer);
-        vaoVertexBuffers.TryGetValue(boundVao, out boundArrayBuffer);
-    }
-
     public uint CreateBuffer()
     {
         RequireInitialized();
@@ -588,15 +727,6 @@ public sealed class Metal : IRenderer
     {
         buffers.Remove(buffer.Handle);
         DeleteHandle(buffer.Handle);
-    }
-
-    public void BindBuffer(BufferTarget target, uint buffer)
-    {
-        Resource(buffer);
-        if (target == BufferTarget.ArrayBuffer) boundArrayBuffer = buffer;
-        else if (target == BufferTarget.ElementBuffer) boundIndexBuffer = buffer;
-        else throw new ArgumentOutOfRangeException(nameof(target));
-        buffers[buffer] = (target, buffers.TryGetValue(buffer, out var old) ? old.Size : 0);
     }
 
     public void SetBufferData(BufferTarget target, uint buffer, float[] data, BufferHint hint)
@@ -616,7 +746,6 @@ public sealed class Metal : IRenderer
     private void UploadBuffer(BufferTarget target, uint handle, byte[] data)
     {
         RequireInitialized();
-        BindBuffer(target, handle);
         IntPtr old = Resource(handle);
         if (old != IntPtr.Zero) Send(old, "release");
         IntPtr buffer = SendBuffer(device, "newBufferWithLength:options:", (nuint)data.Length, 0);
@@ -625,19 +754,6 @@ public sealed class Metal : IRenderer
         Marshal.Copy(data, 0, contents, data.Length);
         resources[handle] = buffer;
         buffers[handle] = (target, data.Length);
-    }
-
-    public void EnableVertexAttribute(int index)
-    {
-        if (boundVao == 0) throw new RenderException("No Metal vertex array is bound.");
-        if (!vertexLayouts.TryGetValue(boundVao, out _)) throw new RenderException("Invalid Metal vertex array.");
-    }
-
-    public void AddVertexAttribute(int index, int size, int stride, int offset)
-    {
-        if (boundVao == 0 || !vertexLayouts.TryGetValue(boundVao, out var layout))
-            throw new RenderException("No Metal vertex array is bound.");
-        layout.Add((index, size, stride, offset));
     }
 
     public uint CreateTexture()
@@ -654,46 +770,13 @@ public sealed class Metal : IRenderer
             Send(sampler, "release");
         textures.Remove(texture.Handle);
         DeleteHandle(texture.Handle);
-        if (boundTexture == texture.Handle) boundTexture = 0;
-    }
-    public void BindTexture(Texture? texture) => boundTexture = texture?.Handle ?? 0;
-    public void SetTextureMinFilter(TextureFilter filterMode, MipmapFilter mipmapFilter)
-    {
-        RequireTextureState(out TextureState state);
-        state.MinFilter = filterMode;
-        state.Mipmap = mipmapFilter;
-        RefreshSampler();
-    }
-    public void SetTextureMagFilter(TextureFilter filterMode)
-    {
-        RequireTextureState(out TextureState state);
-        state.MagFilter = filterMode;
-        RefreshSampler();
-    }
-    public void SetTextureWrapModeH(TextureWrap wrapModeH)
-    {
-        RequireTextureState(out TextureState state);
-        state.WrapH = wrapModeH;
-        RefreshSampler();
-    }
-    public void SetTextureWrapModeV(TextureWrap wrapModeV)
-    {
-        RequireTextureState(out TextureState state);
-        state.WrapV = wrapModeV;
-        RefreshSampler();
-    }
-    public void SetTextureAnisotropicFilter(AnisotropicFilter anisotropicFilter)
-    {
-        RequireTextureState(out TextureState state);
-        state.Anisotropic = anisotropicFilter;
-        RefreshSampler();
     }
 
     public void UploadTexture(Texture texture)
     {
         RequireInitialized();
-        if (boundTexture == 0) throw new RenderException("No Metal texture is bound.");
-        if (!textures.TryGetValue(boundTexture, out TextureState? state))
+        uint handle = texture.Handle;
+        if (handle == 0 || !textures.TryGetValue(handle, out TextureState? state))
             throw new RenderException("Invalid Metal texture handle.");
 
         IntPtr descriptor = NewTexture2DDescriptor(Class("MTLTextureDescriptor"), 70,
@@ -707,9 +790,9 @@ public sealed class Metal : IRenderer
         if (metalTexture == IntPtr.Zero)
             throw new RenderException("Metal could not allocate the texture.");
 
-        if (Resource(boundTexture) != IntPtr.Zero)
-            Send(Resource(boundTexture), "release");
-        resources[boundTexture] = metalTexture;
+        if (Resource(handle) != IntPtr.Zero)
+            Send(Resource(handle), "release");
+        resources[handle] = metalTexture;
         state.Width = texture.Width;
         state.Height = texture.Height;
         IntPtr pixels = Marshal.AllocHGlobal(texture.Pixels.Length);
@@ -724,35 +807,27 @@ public sealed class Metal : IRenderer
         {
             Marshal.FreeHGlobal(pixels);
         }
-        RefreshSampler();
+        RefreshSampler(handle);
     }
 
-    public void GenerateMipmaps()
+    public void GenerateMipmaps(uint handle)
     {
-        RequireTextureState(out TextureState state);
-        if (state.Mipmap == MipmapFilter.None || boundTexture == 0) return;
-        IntPtr texture = Resource(boundTexture);
+        if (!textures.TryGetValue(handle, out TextureState? state))
+            throw new RenderException("Invalid Metal texture handle.");
+        if (state.Mipmap == MipmapFilter.None) return;
+        IntPtr texture = Resource(handle);
         IntPtr buffer = Send(commandQueue, "commandBuffer");
         IntPtr blit = Send(buffer, "blitCommandEncoder");
         Send(blit, "generateMipmapsForTexture:", texture);
         Send(blit, "endEncoding");
         Send(buffer, "commit");
-        Send(buffer, "waitUntilCompleted");
     }
 
-    private void RequireTextureState(out TextureState state)
+    private void RefreshSampler(uint handle)
     {
-        RequireInitialized();
-        if (boundTexture == 0 || !textures.TryGetValue(boundTexture, out state!))
-            throw new RenderException("No valid Metal texture is bound.");
-    }
-
-    private void RefreshSampler()
-    {
-        if (boundTexture == 0 || !textures.TryGetValue(boundTexture, out TextureState? state) ||
-            Resource(boundTexture) == IntPtr.Zero)
+        if (!textures.TryGetValue(handle, out TextureState? state) || Resource(handle) == IntPtr.Zero)
             return;
-        if (samplers.Remove(boundTexture, out IntPtr oldSampler) && oldSampler != IntPtr.Zero)
+        if (samplers.Remove(handle, out IntPtr oldSampler) && oldSampler != IntPtr.Zero)
             Send(oldSampler, "release");
 
         IntPtr descriptor = Send(Class("MTLSamplerDescriptor"), "new");
@@ -766,7 +841,7 @@ public sealed class Metal : IRenderer
         Send(descriptor, "release");
         if (sampler == IntPtr.Zero)
             throw new RenderException("Metal could not create a texture sampler.");
-        samplers[boundTexture] = sampler;
+        samplers[handle] = sampler;
     }
 
     private static int AddressMode(TextureWrap wrap) => wrap switch
@@ -871,16 +946,13 @@ public sealed class Metal : IRenderer
         IntPtr color = SendResult(colors, "objectAtIndexedSubscript:", 0);
         Send(color, "setPixelFormat:", (nuint)80); // MTLPixelFormatBGRA8Unorm
         Send(descriptor, "setDepthAttachmentPixelFormat:", (nuint)252); // MTLPixelFormatDepth32Float
-        Send(color, "setBlendingEnabled:", alphaBlendingEnabled);
-        if (alphaBlendingEnabled)
-        {
-            Send(color, "setRgbBlendOperation:", (nuint)0); // add
-            Send(color, "setAlphaBlendOperation:", (nuint)0); // add
-            Send(color, "setSourceRGBBlendFactor:", (nuint)4); // source alpha
-            Send(color, "setDestinationRGBBlendFactor:", (nuint)5); // one minus source alpha
-            Send(color, "setSourceAlphaBlendFactor:", (nuint)1); // one
-            Send(color, "setDestinationAlphaBlendFactor:", (nuint)5); // one minus source alpha
-        }
+        Send(color, "setBlendingEnabled:", true);
+        Send(color, "setRgbBlendOperation:", (nuint)0); // add
+        Send(color, "setAlphaBlendOperation:", (nuint)0); // add
+        Send(color, "setSourceRGBBlendFactor:", (nuint)4); // source alpha
+        Send(color, "setDestinationRGBBlendFactor:", (nuint)5); // one minus source alpha
+        Send(color, "setSourceAlphaBlendFactor:", (nuint)1); // one
+        Send(color, "setDestinationAlphaBlendFactor:", (nuint)5); // one minus source alpha
 
         IntPtr pipeline = SendPipelineValue(device, "newRenderPipelineStateWithDescriptor:error:", descriptor, out IntPtr pipelineError);
         if (pipeline == IntPtr.Zero)
@@ -896,161 +968,9 @@ public sealed class Metal : IRenderer
         ? string.Empty
         : "Metal pipeline has not been created.";
 
-    public void UseShaderProgram(ShaderProgram program)
+    private int GetVertexFloatsPerVertex(uint vao)
     {
-        if (!pipelines.ContainsKey(program.Handle))
-            throw new RenderException("The Metal shader program is not linked.");
-        activeProgram = program.Handle;
-    }
-
-    public int GetUniformLocation(ShaderProgram program, string name)
-    {
-        if (activeProgram != program.Handle && !programs.ContainsKey(program.Handle))
-            throw new RenderException("Invalid Metal shader program.");
-        int location = nextUniform++;
-        uniforms[location] = name;
-        return location;
-    }
-
-    public void SetUniformMatrix(int location, Matrix4x4 data)
-    {
-        uniformValues[location] = data;
-        if (uniforms.TryGetValue(location, out string? name)) namedUniformValues[name] = data;
-    }
-
-    public void SetUniformInt(int location, int data)
-    {
-        uniformValues[location] = data;
-        if (uniforms.TryGetValue(location, out string? name)) namedUniformValues[name] = data;
-    }
-
-    public void SetUniformColor(int location, Color color)
-    {
-        uniformValues[location] = color;
-        if (uniforms.TryGetValue(location, out string? name)) namedUniformValues[name] = color;
-    }
-
-    public void SetViewport(int x, int y, int width, int height)
-    {
-        RequireWindow();
-        if (width <= 0 || height <= 0) throw new ArgumentOutOfRangeException(nameof(width));
-        viewportX = x;
-        viewportY = y;
-        viewportWidth = width;
-        viewportHeight = height;
-        if (encoder != IntPtr.Zero)
-            SendViewportValue(encoder, "setViewport:", new Viewport
-            {
-                OriginX = x, OriginY = y, Width = width, Height = height, ZNear = 0, ZFar = 1
-            });
-    }
-
-    public void SetEnableDepthTest(bool enable)
-    {
-        RequireWindow();
-        depthTestEnabled = enable;
-    }
-
-    public void SetDepthMask(bool enable)
-    {
-        RequireWindow();
-        depthWriteEnabled = enable;
-    }
-
-    public void SetAlphaBlending(bool enable)
-    {
-        RequireWindow();
-        alphaBlendingEnabled = enable;
-    }
-
-    public void SetWireFrame(bool enable)
-    {
-        RequireWindow();
-        wireframeEnabled = enable;
-    }
-    public void ClearColor(Color color) => BeginFrame(color);
-    public void ClearColorBuffer() { }
-    public void ClearDepthBuffer() => RequireWindow();
-
-    public void DrawElements(int count)
-    {
-        RequireWindowAndFrame();
-        if (activeProgram == 0 || boundVao == 0 || boundIndexBuffer == 0)
-            throw new RenderException("Metal draw requires a shader program, vertex array, and index buffer.");
-        if (!buffers.TryGetValue(boundIndexBuffer, out var index) || index.Size < count * sizeof(uint))
-            throw new RenderException("Metal index buffer is smaller than the requested draw count.");
-        if (!pipelines.TryGetValue(activeProgram, out var pipeline))
-            throw new RenderException("Metal shader pipeline is not available.");
-
-        SendPipelineStateValue(encoder, "setRenderPipelineState:", pipeline.Pipeline);
-        Send(encoder, "setTriangleFillMode:", (nuint)(wireframeEnabled ? 1 : 0));
-        IntPtr depthDescriptor = Send(Class("MTLDepthStencilDescriptor"), "new");
-        Send(depthDescriptor, "setDepthCompareFunction:", (nuint)(depthTestEnabled ? 1 : 0));
-        Send(depthDescriptor, "setDepthWriteEnabled:", depthWriteEnabled);
-        IntPtr depthState = SendObjectResultValue(device, "newDepthStencilStateWithDescriptor:", depthDescriptor);
-        Send(depthDescriptor, "release");
-        if (depthState == IntPtr.Zero)
-            throw new RenderException("Metal could not create a depth-stencil state.");
-        Send(encoder, "setDepthStencilState:", depthState);
-        Send(depthState, "release");
-        SendBufferAtIndex(encoder, "setVertexBuffer:offset:atIndex:", Resource(boundArrayBuffer), 0, 0);
-
-        MetalUniforms uniforms = new()
-        {
-            Mvp = GetUniform<Matrix4x4>("uMVP"),
-            Model = GetUniform<Matrix4x4>("uModel"),
-            Color = ToVector(GetUniformOrDefault("uColor", new Color(255, 255, 255, 255))),
-            TextureColor = ToVector(GetUniformOrDefault("texColor", new Color(255, 255, 255, 255))),
-            UseTexture = GetUniformOrDefault("uUseTexture", 0),
-            Lit = GetUniformOrDefault("uLit", 0),
-            FloatsPerVertex = GetVertexFloatsPerVertex()
-        };
-        IntPtr uniformMemory = Marshal.AllocHGlobal(Marshal.SizeOf<MetalUniforms>());
-        try
-        {
-            Marshal.StructureToPtr(uniforms, uniformMemory, false);
-            SendBytesAtIndex(encoder, "setVertexBytes:length:atIndex:", uniformMemory,
-                (nuint)Marshal.SizeOf<MetalUniforms>(), 1);
-            SendBytesAtIndex(encoder, "setFragmentBytes:length:atIndex:", uniformMemory,
-                (nuint)Marshal.SizeOf<MetalUniforms>(), 1);
-        }
-        finally
-        {
-            Marshal.FreeHGlobal(uniformMemory);
-        }
-
-        if (GetUniformOrDefault("uUseTexture", 0) != 0)
-        {
-            if (boundTexture == 0 || Resource(boundTexture) == IntPtr.Zero ||
-                !samplers.TryGetValue(boundTexture, out IntPtr sampler))
-                throw new RenderException("A textured draw requires an uploaded texture and sampler.");
-            SendTextureAtIndex(encoder, "setFragmentTexture:atIndex:", Resource(boundTexture), 0);
-            SendSamplerTextureValue(encoder, "setFragmentSamplerState:atIndex:", sampler, 0);
-        }
-
-        SendIndexed(encoder, "drawIndexedPrimitives:indexCount:indexType:indexBuffer:indexBufferOffset:",
-            3, (nuint)count, 1, Resource(boundIndexBuffer), 0);
-    }
-
-    private T GetUniform<T>(string name) where T : struct
-    {
-        if (namedUniformValues.TryGetValue(name, out object? value) && value is T typed)
-            return typed;
-        return default;
-    }
-
-    private int GetUniformOrDefault(string name, int fallback) =>
-        namedUniformValues.TryGetValue(name, out object? value) && value is int integer ? integer : fallback;
-
-    private Color GetUniformOrDefault(string name, Color fallback) =>
-        namedUniformValues.TryGetValue(name, out object? value) && value is Color color ? color : fallback;
-
-    private static Vector4 ToVector(Color color) =>
-        new(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
-
-    private int GetVertexFloatsPerVertex()
-    {
-        if (boundVao != 0 && vertexLayouts.TryGetValue(boundVao, out var layout))
+        if (vao != 0 && vertexLayouts.TryGetValue(vao, out var layout))
             return layout.Count > 2 ? 8 : 5;
         return 5;
     }

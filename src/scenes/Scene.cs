@@ -78,7 +78,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// </summary>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public abstract void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque);
+    public abstract void Draw(IRenderCommandEncoder commands, ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque);
 
     /// <summary>
     /// Updates all objects in the scene by calling their Update methods. This should be called once per frame to ensure that the scene and its objects are updated correctly.

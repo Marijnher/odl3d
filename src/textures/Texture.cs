@@ -267,14 +267,9 @@ public class Texture : IDisposable
     public void Upload()
     {
         if (Handle == 0) Handle = Renderer.CreateTexture();
-        Renderer.BindTexture(this);
-        Renderer.SetTextureMinFilter(FilterMode, Mipmap);
-        Renderer.SetTextureMagFilter(FilterMode);
-        Renderer.SetTextureAnisotropicFilter(AnisotropicFilter);
-        Renderer.SetTextureWrapModeH(WrapModeH);
-        Renderer.SetTextureWrapModeV(WrapModeV);
+        Renderer.SetTextureParameters(Handle, FilterMode, Mipmap, FilterMode, WrapModeH, WrapModeV, AnisotropicFilter);
         Renderer.UploadTexture(this);
-        if (Mipmap != MipmapFilter.None) Renderer.GenerateMipmaps();
+        if (Mipmap != MipmapFilter.None) Renderer.GenerateMipmaps(Handle);
         Uploaded = true;
     }
 

@@ -145,7 +145,7 @@ public class Model : Object3D
     /// <param name="shader">The shader to use for rendering the model.</param>
     /// <param name="viewProjection">The combined view-projection matrix for the current camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; sub-objects not belonging to this pass are skipped.</param>
-    public override void Draw(ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
+    public override void Draw(IRenderCommandEncoder commands, ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
     {
         foreach (var obj in Objects)
         {
@@ -153,7 +153,7 @@ public class Model : Object3D
             if (Texture != null) obj.Texture = Texture;
             obj.Color = Color;
             obj.TextureColor = TextureColor;
-            obj.Draw(shader, viewProjection, pass);
+            obj.Draw(commands, shader, viewProjection, pass);
         }
     }
 

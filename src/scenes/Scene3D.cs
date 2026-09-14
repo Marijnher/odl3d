@@ -22,12 +22,11 @@ public class Scene3D : Scene<Object3D>
     /// </summary>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
+    public override void Draw(IRenderCommandEncoder commands, ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
         Matrix4x4 viewProjection = Camera.GetViewMatrix() * Camera.GetProjectionMatrix();
         foreach (Object3D sceneObject in Objects)
-            sceneObject.Draw(shader, viewProjection, renderPass);
+            sceneObject.Draw(commands, shader, viewProjection, renderPass);
     }
 }
-

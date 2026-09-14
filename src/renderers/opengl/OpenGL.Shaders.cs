@@ -8,6 +8,26 @@ namespace odl3d.Renderers;
 
 public partial class OpenGL : IRenderer
 {
+    private void UseObjectConstants(in RenderObjectConstants constants)
+    {
+        SetUniformMatrix(GetUniformLocationForCurrent("uMVP"), constants.Mvp);
+        SetUniformMatrix(GetUniformLocationForCurrent("uModel"), constants.Model);
+        SetUniformInt(GetUniformLocationForCurrent("uUseTexture"), constants.UseTexture);
+        SetUniformInt(GetUniformLocationForCurrent("uLit"), constants.Lit);
+        SetUniformColor(GetUniformLocationForCurrent("uColor"), constants.Color);
+        SetUniformColor(GetUniformLocationForCurrent("texColor"), constants.TextureColor);
+    }
+
+    private int GetUniformLocationForCurrent(string name)
+    {
+        var key = (currentProgram, name);
+        if (!uniformLocations.TryGetValue(key, out int location))
+        {
+            location = glGetUniformLocation(currentProgram, name);
+            uniformLocations[key] = location;
+        }
+        return location;
+    }
     public uint CreateShader(ShaderType shaderType) => shaderType switch
     {
         ShaderType.Vertex => glCreateShader(GL_VERTEX_SHADER),
@@ -53,7 +73,11 @@ public partial class OpenGL : IRenderer
         return Encoding.ASCII.GetString(log, 0, len);
     }
 
-    public void UseShaderProgram(ShaderProgram program) => glUseProgram(program.Handle);
+    public void UseShaderProgram(ShaderProgram program)
+    {
+        currentProgram = program.Handle;
+        glUseProgram(program.Handle);
+    }
 
     public int GetUniformLocation(ShaderProgram program, string name) => glGetUniformLocation(program.Handle, name);
 

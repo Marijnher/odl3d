@@ -133,26 +133,26 @@ public class Object3D : Drawable
     /// <param name="shader">The shader program to use for rendering this object.</param>
     /// <param name="viewProjection">The combined view and projection matrix, typically obtained from the camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; the object is skipped if it does not belong to this pass.</param>
-    public virtual void Draw(ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
+    public virtual void Draw(IRenderCommandEncoder commands, ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
     {
         if (!Visible || Disposed || Mesh == null) return;
         if (pass == RenderPass.Transparent != IsTransparent) return;
         Matrix4x4 model = GetModelMatrix();
 
-        shader.Use();
-        shader.SetMatrix("uMVP", model * viewProjection);
-        shader.SetInt("uTexture", 0);
-        shader.SetInt("uUseTexture", Texture == null ? 0 : 1);
-        shader.SetColor("uColor", Color);
-        shader.SetColor("texColor", TextureColor);
-        // Lighting uniforms are only meaningful for meshes that carry normals; shaders without them ignore these.
-        shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
-        if (Mesh.HasNormals) shader.SetMatrix("uModel", model);
+        shader.Use(commands);
+        RenderObjectConstants constants = new(
+            model * viewProjection,
+            model,
+            Color,
+            TextureColor,
+            Texture == null ? 0 : 1,
+            Mesh.HasNormals ? 1 : 0);
+        commands.SetObjectConstants(in constants);
 
         if (Texture != null && !Texture.Uploaded) Texture.Upload();
-        Renderer.BindTexture(Texture);
+        commands.BindTexture(0, Texture);
 
-        Mesh.Draw();
+        Mesh.Draw(commands);
     }
 
     /// <summary>

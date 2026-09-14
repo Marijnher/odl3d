@@ -54,7 +54,7 @@ public class Scene2D : Scene<Object3D>
     /// </summary>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
+    public override void Draw(IRenderCommandEncoder commands, ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
         
@@ -64,10 +64,10 @@ public class Scene2D : Scene<Object3D>
         int vpY = (int) ((Viewport.Y + Position.Y) * scaleY);
         int vpWidth = (int) (Viewport.Width * scaleX);
         int vpHeight = (int) (Viewport.Height * scaleY);
-        Renderer.SetViewport(vpX, Window.FramebufferHeight - vpY - vpHeight, vpWidth, vpHeight);
+        commands.SetViewport(vpX, Window.FramebufferHeight - vpY - vpHeight, vpWidth, vpHeight);
         Matrix4x4 projection = GetProjectionMatrix();
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
-            Objects[i].Draw(shader, projection, renderPass);
+            Objects[i].Draw(commands, shader, projection, renderPass);
     }
 }

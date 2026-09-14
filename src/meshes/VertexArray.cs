@@ -40,7 +40,7 @@ public class VertexArray : IDisposable
     /// <summary>
     /// Binds the vertex array object (VAO) for rendering, making it the current VAO. The VAO is bound using the renderer's <see cref="IRenderer.BindVertexArray"/> method, allowing subsequent rendering operations to use the state of the VAO for vertex attribute configuration and buffer bindings.
     /// </summary>
-    public void Bind() => Renderer.BindVertexArray(this);
+    public void Bind(IRenderCommandEncoder commands) => commands.BindVertexArray(this);
 
     /// <summary>
     /// Adds a vertex attribute to the vertex array object (VAO) for automatic stride calculation when unbinding. The attribute length is specified in terms of the number of components (e.g., 3 for a vec3 position attribute). The attribute is added to the internal list of attributes, which is used to calculate the stride and offset for each attribute when unbinding the VAO.
@@ -54,19 +54,18 @@ public class VertexArray : IDisposable
     /// <summary>
     /// Unbinds the vertex array object (VAO) and automatically calculates the stride and offset for each vertex attribute based on the queued attributes. The stride is calculated as the sum of the sizes of all attributes, and the offset for each attribute is calculated based on its position in the list of attributes. The VAO is unbound using the renderer's <see cref="IRenderer.BindVertexArray"/> method, and the internal list of attributes is cleared after unbinding.
     /// </summary>
-    public void Unbind()
+    public void Unbind(IRenderCommandEncoder commands)
     {
         int stride = attributes.Sum() * sizeof(float);
         int offset = 0;
         for (int i = 0; i < attributes.Count; i++)
         {
             int length = attributes[i];
-            Renderer.EnableVertexAttribute(i);
-            Renderer.AddVertexAttribute(i, length, stride, offset);
+            Renderer.ConfigureVertexAttribute(Handle, 0, i, length, stride, offset);
             offset += length;
         }
         attributes.Clear();
-        Renderer.BindVertexArray(null);
+        commands.BindVertexArray(null);
     }
 
     /// <summary>
