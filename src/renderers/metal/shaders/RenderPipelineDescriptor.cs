@@ -11,7 +11,7 @@ public static partial class Metal
         public RenderPipelineColorAttachmentArray ColorAttachments =>
             Get<RenderPipelineColorAttachmentArray>("colorAttachments");
 
-        public RenderPipelineDescriptor(IntPtr handle) : base(handle) { }
+        private RenderPipelineDescriptor(IntPtr handle) : base(handle, true) { }
 
         public static RenderPipelineDescriptor Create() =>
             new RenderPipelineDescriptor(SendRaw(ClassPointer, "new"));

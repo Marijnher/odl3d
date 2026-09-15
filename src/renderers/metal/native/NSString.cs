@@ -17,7 +17,8 @@ public static partial class Metal
 
         public static NSString Create(string value)
         {
-            // TODO: Investigate if this is a memory leak
+            // stringWithUTF8String: returns an autoreleased NSString; only the
+            // temporary UTF-8 allocation is owned here.
             IntPtr utf8 = Marshal.StringToCoTaskMemUTF8(value);
             try
             {

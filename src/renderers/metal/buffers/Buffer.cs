@@ -8,6 +8,6 @@ public static partial class Metal
     {
         public uint Length => GetUInt32("length");
 
-        public Buffer(IntPtr handle) : base(handle) { }
+        public Buffer(IntPtr handle) : base(handle, true) { }
     }
 }

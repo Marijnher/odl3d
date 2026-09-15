@@ -12,7 +12,7 @@ public static partial class Metal
             set => Send("setLabel:" , value);
         }
 
-        public CommandQueue(IntPtr handle) : base(handle) { }
+        public CommandQueue(IntPtr handle, bool ownsNativeObject = false) : base(handle, ownsNativeObject) { }
 
         public CommandBuffer CreateCommandBuffer() => Get<CommandBuffer>("commandBuffer");
     }

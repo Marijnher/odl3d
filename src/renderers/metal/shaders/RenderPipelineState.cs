@@ -6,6 +6,6 @@ public static partial class Metal
 {
     public sealed class RenderPipelineState : ObjCObject
     {
-        public RenderPipelineState(IntPtr handle) : base(handle) { }
+        public RenderPipelineState(IntPtr handle) : base(handle, true) { }
     }
 }

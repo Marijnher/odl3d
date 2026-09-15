@@ -8,7 +8,7 @@ public static partial class Metal
     {
         private static IntPtr ClassPointer => Class("MTLTextureDescriptor");
 
-        public TextureDescriptor(IntPtr handle) : base(handle) { }
+        private TextureDescriptor(IntPtr handle) : base(handle) { }
 
         public static TextureDescriptor Create(uint width, uint height)
         {

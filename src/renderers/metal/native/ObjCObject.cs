@@ -1,19 +1,32 @@
 using System;
+using System.Reflection;
 
 namespace odl3d.Renderers;
 
 public static partial class Metal
 {
-    public class ObjCObject
+    public class ObjCObject : IDisposable
     {
         public IntPtr Handle { get; protected set; }
+        private readonly bool ownsNativeObject;
 
-        public ObjCObject(IntPtr handle)
+        public ObjCObject(IntPtr handle, bool ownsNativeObject = false)
         {
             Handle = handle == IntPtr.Zero
                 ? throw new ArgumentException("The Objective-C object cannot be null.", nameof(handle))
                 : handle;
+            this.ownsNativeObject = ownsNativeObject;
         }
+
+        public void Dispose()
+        {
+            if (!ownsNativeObject || Handle == IntPtr.Zero) return;
+            Send("release");
+            Handle = IntPtr.Zero;
+            GC.SuppressFinalize(this);
+        }
+
+        ~ObjCObject() => Dispose();
 
         protected static IntPtr Class(string name) => obcj_getClass(name);
 
@@ -120,7 +133,12 @@ public static partial class Metal
 
         protected T Convert<T>(IntPtr objc) where T : ObjCObject 
         {
-            T? obj = (T?) Activator.CreateInstance(typeof(T), objc);
+            T? obj = (T?) Activator.CreateInstance(
+                typeof(T),
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                binder: null,
+                args: [objc],
+                culture: null);
             if (obj is null) throw new RenderException("Could not convert object.");
             return obj;
         }

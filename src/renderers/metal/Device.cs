@@ -7,7 +7,7 @@ public static partial class Metal
 {
     public sealed class Device : ObjCObject
     {
-        public Device(IntPtr handle) : base(handle) { }
+        public Device(IntPtr handle, bool ownsNativeObject = false) : base(handle, ownsNativeObject) { }
 
         public static Device Default
         {
@@ -16,7 +16,7 @@ public static partial class Metal
                 IntPtr device = MTLCreateSystemDefaultDevice();
                 if (device == IntPtr.Zero)
                     throw new RenderException("Metal did not provide a system default device.");
-                return new Device(device);
+                return new Device(device, true);
             }
         }
 
@@ -24,7 +24,8 @@ public static partial class Metal
         public string Description => GetString("description");
         public ulong RegistryID => GetUInt64("registryID");
 
-        public CommandQueue NewCommandQueue() => Get<CommandQueue>("newCommandQueue");
+        public CommandQueue NewCommandQueue() =>
+            new CommandQueue(GetRaw("newCommandQueue"), true);
 
         public RenderPassDescriptor NewRenderPassDescriptor() => RenderPassDescriptor.Create();
 
@@ -67,7 +68,6 @@ public static partial class Metal
             GCHandle pinned = GCHandle.Alloc(image.Pixels, GCHandleType.Pinned);
             try
             {
-                // TODO: Investigate memory leak potential
                 texture.Upload(pinned.AddrOfPinnedObject(), (nuint) (image.Width * 4), (uint) image.Width, (uint) image.Height);
             }
             finally
@@ -103,7 +103,6 @@ public static partial class Metal
             GCHandle pinned = GCHandle.Alloc(data, GCHandleType.Pinned);
             try
             {
-                // TODO: Investigate memory leak potential
                 IntPtr handle = Send("newBufferWithBytes:length:options:",
                     pinned.AddrOfPinnedObject(), (nuint) (data.Length * sizeof(float)), 0);
                 if (handle == IntPtr.Zero)
@@ -138,11 +137,13 @@ public static partial class Metal
 
         public RenderPipelineState CreatePipeline(string source)
         {
-            Library library = CompileLibrary(source);
+            using Library library = CompileLibrary(source);
 
-            var descriptor = RenderPipelineDescriptor.Create();
-            descriptor.SetVertexFunction(library.NewFunctionWithName("triangle_vertex"));
-            descriptor.SetFragmentFunction(library.NewFunctionWithName("triangle_fragment"));
+            using var descriptor = RenderPipelineDescriptor.Create();
+            using ObjCObject vertexFunction = library.NewFunctionWithName("triangle_vertex");
+            using ObjCObject fragmentFunction = library.NewFunctionWithName("triangle_fragment");
+            descriptor.SetVertexFunction(vertexFunction);
+            descriptor.SetFragmentFunction(fragmentFunction);
 
             var colorAttachment = descriptor.ColorAttachments[0];
             colorAttachment.SetPixelFormat(80); // BGRA8Unorm
