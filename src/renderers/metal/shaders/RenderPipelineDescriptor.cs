@@ -21,5 +21,8 @@ public static partial class Metal
 
         public void SetFragmentFunction(ObjCObject fragmentFunction) =>
             Send("setFragmentFunction:", fragmentFunction);
+
+        public void SetDepthAttachmentPixelFormat(nuint pixelFormat) =>
+            Send("setDepthAttachmentPixelFormat:", pixelFormat);
     }
 }

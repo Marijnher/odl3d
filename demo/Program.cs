@@ -142,11 +142,15 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         using Metal.CommandQueue queue = device.NewCommandQueue();
         using Metal.RenderPipelineState texturedPipeline = device.CreateTexturedPipeline();
         using Metal.RenderPipelineState solidPipeline = device.CreateSolidTrianglePipeline();
+        using Metal.DepthStencilState depthState = device.CreateDepthStencilState(
+            Metal.CompareFunction.LessEqual,
+            depthWriteEnabled: true);
         using Metal.Texture grassTexture = device.CreateTexture(new Texture("assets/grass.png"));
+        using Metal.Texture depthTexture = device.CreateDepthTexture((uint)windowWidth, (uint)windowHeight);
         using Metal.Buffer vertexBuffer1 = device.CreateBuffer(
         [
              0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
-             0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
+             0.5f,  0.0f, 0.5f,    1.0f, 0.0f,
              0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
              0.0f,  0.5f, 0.0f,    0.0f, 1.0f
         ]);
@@ -173,10 +177,16 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             colAtch0.SetLoadAction(Metal.LoadAction.Clear);
             colAtch0.SetStoreAction(Metal.StoreAction.Store);
             colAtch0.SetClearColor(1, 0, 0, 1);
+            Metal.RenderPassDepthAttachment depthAttachment = pass.DepthAttachment;
+            depthAttachment.SetTexture(depthTexture);
+            depthAttachment.SetLoadAction(Metal.LoadAction.Clear);
+            depthAttachment.SetStoreAction(Metal.StoreAction.DontCare);
+            depthAttachment.SetClearDepth(1.0);
 
             Metal.CommandBuffer cmdBuf = queue.CreateCommandBuffer();
 
             Metal.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
+            encoder.SetDepthStencilState(depthState);
             encoder.SetRenderPipelineState(texturedPipeline);
 
             encoder.SetVertexBuffer(vertexBuffer1);

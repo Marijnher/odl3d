@@ -57,15 +57,6 @@ public static partial class Metal
             return new NSString(result).Value;
         }
 
-        protected IntPtr Send(string selectorName, nuint value) =>
-            objc_msgSendUInt64(Handle, GetSelector(selectorName), value);
-
-        protected void Send(string selectorName, nuint arg1, nuint arg2, nuint arg3) =>
-            objc_msgSendThreeUInt64(Handle, GetSelector(selectorName), arg1, arg2, arg3);
-
-        protected IntPtr Send(string selectorName, double red, double green, double blue, double alpha) =>
-            objc_msgSendFourDoubles(Handle, GetSelector(selectorName), red, green, blue, alpha);
-
         protected static IntPtr SendRaw(IntPtr receiver, IntPtr selector, IntPtr arg) =>
             objc_msgSendPtr(receiver, selector, arg);
 
@@ -81,13 +72,6 @@ public static partial class Metal
         protected static IntPtr SendRaw(IntPtr receiver, string selectorName, nuint arg1, nuint arg2, nuint arg3, byte byte1) =>
             objc_msgSendThreeUInt64Byte(receiver, GetSelector(selectorName), arg1, arg2, arg3, byte1);
 
-        protected void SendRaw(IntPtr receiver, string selectorName, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) =>
-            objc_msgSendRegion(receiver, GetSelector(selectorName),
-                new() { Width = width, Height = height, Depth = 1 }, 0, bytes, bytesPerRow);
-
-        protected static void SendUInt(IntPtr receiver, IntPtr selector, nuint value) =>
-            objc_msgSendUInt64(receiver, selector, value);
-
         protected IntPtr Send(string selectorName) =>
             objc_msgSend(Handle, GetSelector(selectorName));
         protected T Send<T>(string selectorName) where T : ObjCObject =>
@@ -96,6 +80,26 @@ public static partial class Metal
         protected IntPtr Send(string selectorName, IntPtr value) =>
             objc_msgSendPtr(Handle, GetSelector(selectorName), value);
         protected T Send<T>(string selectorName, IntPtr value) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, value));
+
+        protected IntPtr Send(string selectorName, nuint value) =>
+            objc_msgSendUInt64(Handle, GetSelector(selectorName), value);
+        protected T Send<T>(string selectorName, nuint value) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, value));
+
+        protected IntPtr Send(string selectorName, nuint arg1, nuint arg2, nuint arg3) =>
+            objc_msgSendThreeUInt64(Handle, GetSelector(selectorName), arg1, arg2, arg3);
+        protected T Send<T>(string selectorName, nuint arg1, nuint arg2, nuint arg3) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, arg1, arg2, arg3));
+
+        protected IntPtr Send(string selectorName, double red, double green, double blue, double alpha) =>
+            objc_msgSendFourDoubles(Handle, GetSelector(selectorName), red, green, blue, alpha);
+        protected T Send<T>(string selectorName, double red, double green, double blue, double alpha) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, red, green, blue, alpha));
+
+        protected IntPtr Send(string selectorName, double value) =>
+            objc_msgSendDouble(Handle, GetSelector(selectorName), value);
+        protected T Send<T>(string selectorName, double value) where T : ObjCObject =>
             Convert<T>(Send(selectorName, value));
 
         protected IntPtr Send(string selectorName, ObjCObject obj) =>
@@ -122,6 +126,12 @@ public static partial class Metal
             objc_msgSendPtrUInt64UInt64(Handle, GetSelector(selectorName), arg1, arg2, arg3);
         protected T Send<T>(string selectorName, IntPtr arg1, nuint arg2, nuint arg3) where T : ObjCObject =>
             Convert<T>(Send(selectorName, arg1, arg2, arg3));
+
+        protected IntPtr Send(string selectorName, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) =>
+            objc_msgSendRegion(Handle, GetSelector(selectorName),
+                new() { Width = width, Height = height, Depth = 1 }, 0, bytes, bytesPerRow);
+        protected T Send<T>(string selectorName, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, bytes, bytesPerRow, width, height));
 
         protected IntPtr Send(string selectorName, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset) =>
             objc_msgSendThreeUInt64PtrUInt64(Handle, GetSelector(selectorName), primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset);

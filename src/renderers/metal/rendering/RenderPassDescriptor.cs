@@ -15,18 +15,8 @@ public static partial class Metal
 
         public RenderPassColorAttachmentArray ColorAttachments =>
             Get<RenderPassColorAttachmentArray>("colorAttachments");
-    }
 
-    public enum LoadAction : ulong
-    {
-        DontCare = 0,
-        Load = 1,
-        Clear = 2
-    }
-
-    public enum StoreAction : ulong
-    {
-        DontCare = 0,
-        Store = 1
+        public RenderPassDepthAttachment DepthAttachment =>
+            Get<RenderPassDepthAttachment>("depthAttachment");
     }
 }

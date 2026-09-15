@@ -29,6 +29,19 @@ public static partial class Metal
 
         public RenderPassDescriptor NewRenderPassDescriptor() => RenderPassDescriptor.Create();
 
+        public DepthStencilState CreateDepthStencilState(CompareFunction depthCompareFunction = CompareFunction.LessEqual, bool depthWriteEnabled = true)
+        {
+            using DepthStencilDescriptor descriptor = DepthStencilDescriptor.Create();
+            descriptor.SetDepthCompareFunction(depthCompareFunction);
+            descriptor.SetDepthWriteEnabled(depthWriteEnabled);
+
+            IntPtr handle = Send("newDepthStencilStateWithDescriptor:", descriptor);
+            if (handle == IntPtr.Zero)
+                throw new RenderException("Metal could not create the depth stencil state.");
+
+            return new DepthStencilState(handle);
+        }
+
         public RenderPipelineState CreateTexturedPipeline() => CreatePipeline("""
                 #include <metal_stdlib>
                 using namespace metal;
@@ -43,11 +56,14 @@ public static partial class Metal
                     device const float* vertices [[buffer(0)]]) {
                     VertexOut out;
                     uint offset = vertexId * 5;
-                    out.position = float4(
+                    float3 position = float3(
                         vertices[offset],
                         vertices[offset + 1],
-                        vertices[offset + 2],
-                        1.0);
+                        vertices[offset + 2]);
+                    constexpr float cameraDistance = 2.0;
+                    constexpr float focalLength = 1.0;
+                    float perspective = focalLength / (cameraDistance - position.z);
+                    out.position = float4(position.xy * perspective, position.z, 1.0);
                     out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
                     return out;
                 }
@@ -77,6 +93,15 @@ public static partial class Metal
             return texture;
         }
 
+        public Texture CreateDepthTexture(uint width, uint height)
+        {
+            using TextureDescriptor descriptor = TextureDescriptor.CreateDepth(width, height);
+            IntPtr handle = Send("newTextureWithDescriptor:", descriptor);
+            if (handle == IntPtr.Zero)
+                throw new RenderException("Metal could not create the depth texture.");
+            return new Texture(handle);
+        }
+
         public RenderPipelineState CreateSolidTrianglePipeline() => CreatePipeline("""
             #include <metal_stdlib>
             using namespace metal;
@@ -85,8 +110,12 @@ public static partial class Metal
                 device const float* vertices [[buffer(0)]]) {
                 VertexOut out;
                 uint offset = vertexId * 5;
-                out.position = float4(vertices[offset], vertices[offset + 1],
-                    vertices[offset + 2], 1.0);
+                float3 position = float3(vertices[offset], vertices[offset + 1],
+                    vertices[offset + 2]);
+                constexpr float cameraDistance = 2.0;
+                constexpr float focalLength = 1.0;
+                float perspective = focalLength / (cameraDistance - position.z);
+                out.position = float4(position.xy * perspective, position.z, 1.0);
                 out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
                 return out;
             }
@@ -144,6 +173,7 @@ public static partial class Metal
             using ObjCObject fragmentFunction = library.NewFunctionWithName("triangle_fragment");
             descriptor.SetVertexFunction(vertexFunction);
             descriptor.SetFragmentFunction(fragmentFunction);
+            descriptor.SetDepthAttachmentPixelFormat(252); // Depth32Float
 
             var colorAttachment = descriptor.ColorAttachments[0];
             colorAttachment.SetPixelFormat(80); // BGRA8Unorm
@@ -155,7 +185,7 @@ public static partial class Metal
 
         public Library CompileLibrary(string source)
         {
-            NSString nsSource = NSString.Create(source);
+            using NSString nsSource = NSString.Create(source);
             IntPtr handle = Send("newLibraryWithSource:options:error:", nsSource.Handle, 0, out IntPtr error);
             ThrowIfError(handle, error, "Metal shader library compilation failed");
             return new Library(handle);

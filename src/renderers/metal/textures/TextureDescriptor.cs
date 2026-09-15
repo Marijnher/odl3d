@@ -22,5 +22,17 @@ public static partial class Metal
             return new TextureDescriptor(handle);
         }
 
+        public static TextureDescriptor CreateDepth(uint width, uint height)
+        {
+            IntPtr handle = SendRaw(
+                ClassPointer,
+                "texture2DDescriptorWithPixelFormat:width:height:mipmapped:",
+                252, width, height, 0
+            );
+            if (handle == IntPtr.Zero)
+                throw new RenderException("Metal could not create the depth texture.");
+            return new TextureDescriptor(handle);
+        }
+
     }
 }

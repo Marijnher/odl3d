@@ -13,6 +13,7 @@ public static partial class Metal
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendPtr(IntPtr receiver, IntPtr selector, IntPtr arg);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendPtrUInt64(IntPtr receiver, IntPtr selector, IntPtr ptr1, nuint value);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendFourDoubles(IntPtr receiver, IntPtr selector, double red, double green, double blue, double alpha);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendDouble(IntPtr receiver, IntPtr selector, double value);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendThreeUInt64(IntPtr receiver, IntPtr selector, nuint primitiveType, nuint vertexStart, nuint vertexCount);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendPtrOutPtr(IntPtr receiver, IntPtr selector, IntPtr source, out IntPtr error);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendPtrPtrOutPtr(IntPtr receiver, IntPtr selector, IntPtr source, IntPtr options, out IntPtr error);
@@ -32,6 +33,7 @@ public static partial class Metal
     private static d_objc_msgSendPtr objc_msgSendPtr;
     private static d_objc_msgSendPtrUInt64 objc_msgSendPtrUInt64;
     private static d_objc_msgSendFourDoubles objc_msgSendFourDoubles;
+    private static d_objc_msgSendDouble objc_msgSendDouble;
     private static d_objc_msgSendThreeUInt64 objc_msgSendThreeUInt64;
     private static d_objc_msgSendPtrOutPtr objc_msgSendPtrOutPtr;
     private static d_objc_msgSendPtrPtrOutPtr objc_msgSendPtrPtrOutPtr;
@@ -68,6 +70,7 @@ public static partial class Metal
         objc_msgSendPtr = GetFunction<d_objc_msgSendPtr>(_objc, "objc_msgSend");
         objc_msgSendPtrUInt64 = GetFunction<d_objc_msgSendPtrUInt64>(_objc, "objc_msgSend");
         objc_msgSendFourDoubles = GetFunction<d_objc_msgSendFourDoubles>(_objc, "objc_msgSend");
+        objc_msgSendDouble = GetFunction<d_objc_msgSendDouble>(_objc, "objc_msgSend");
         objc_msgSendThreeUInt64 = GetFunction<d_objc_msgSendThreeUInt64>(_objc, "objc_msgSend");
         objc_msgSendPtrOutPtr = GetFunction<d_objc_msgSendPtrOutPtr>(_objc, "objc_msgSend");
         objc_msgSendPtrPtrOutPtr = GetFunction<d_objc_msgSendPtrPtrOutPtr>(_objc, "objc_msgSend");

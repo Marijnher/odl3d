@@ -9,6 +9,6 @@ public static partial class Metal
         public Texture(IntPtr handle) : base(handle, true) { }
 
         public void Upload(IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) =>
-            SendRaw(Handle, "replaceRegion:mipmapLevel:withBytes:bytesPerRow:", bytes, bytesPerRow, width, height);
+            Send("replaceRegion:mipmapLevel:withBytes:bytesPerRow:", bytes, bytesPerRow, width, height);
     }
 }
