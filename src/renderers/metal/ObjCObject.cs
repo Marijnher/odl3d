@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace odl3d.Renderers;
 
-public static partial class MetalNew
+public static partial class Metal
 {
     public class ObjCObject
     {

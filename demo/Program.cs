@@ -123,8 +123,8 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
     public static void Main(string[] args)
     {
         GLFW.Load();
-        MetalNew.Load();
-        MetalNew.Device device = MetalNew.GetDefaultDevice();
+        Metal.Load();
+        Metal.Device device = Metal.GetDefaultDevice();
         Console.WriteLine(device.Name);
         Console.WriteLine(device.Description);
         Console.WriteLine(device.RegistryID);
@@ -138,9 +138,9 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         }
         GLFW.glfwMakeContextCurrent(windowHandle);
 
-        MetalNew.MetalLayer layer = MetalNew.MetalLayer.AttachToWindow(device, windowHandle);
+        Metal.MetalLayer layer = Metal.MetalLayer.AttachToWindow(device, windowHandle);
 
-        MetalNew.CommandQueue queue = device.NewCommandQueue();
+        Metal.CommandQueue queue = device.NewCommandQueue();
         Console.WriteLine($"Queue: {queue.Handle}");
         Console.WriteLine($"Label: {queue.Label}");
         queue.Label = "Hello";
@@ -149,20 +149,19 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         while (GLFW.glfwWindowShouldClose(windowHandle) == 0)
         {
             GLFW.glfwPollEvents();
+
+            Metal.Drawable drawable = layer.NextDrawable();
             
-
-            MetalNew.Drawable drawable = layer.NextDrawable();
-
-            MetalNew.RenderPassDescriptor pass = device.NewRenderPassDescriptor();
-            MetalNew.RenderPassColorAttachment colAtch0 = pass.ColorAttachments[0];
+            Metal.RenderPassDescriptor pass = device.NewRenderPassDescriptor();
+            Metal.RenderPassColorAttachment colAtch0 = pass.ColorAttachments[0];
             colAtch0.SetTexture(drawable.Texture);
-            colAtch0.SetLoadAction(MetalNew.LoadAction.Clear);
-            colAtch0.SetStoreAction(MetalNew.StoreAction.Store);
+            colAtch0.SetLoadAction(Metal.LoadAction.Clear);
+            colAtch0.SetStoreAction(Metal.StoreAction.Store);
             colAtch0.SetClearColor(1, 0, 0, 1);
 
-            MetalNew.CommandBuffer cmdBuf = queue.CreateCommandBuffer();
+            Metal.CommandBuffer cmdBuf = queue.CreateCommandBuffer();
 
-            MetalNew.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
+            Metal.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
             //encoder.DrawPrimitives(MetalNew.PrimitiveType.Triangle, 0, 3);
             encoder.EndEncoding();
 
@@ -185,7 +184,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
-        bool metal = RenderFactory.Renderer is odl3d.Renderers.Metal;
+        bool metal = RenderFactory.Renderer is odl3d.Renderers.MetalOld;
         ShaderProgram shader = new ShaderProgram(
             metal ? MetalVertexSource : VertexSource,
             metal ? MetalFragmentSource : FragmentSource);

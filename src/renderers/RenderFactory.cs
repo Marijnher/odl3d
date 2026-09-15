@@ -33,6 +33,6 @@ public static class RenderFactory
 
     private static IRenderer CreateMetalRenderer()
     {
-        return new Renderers.Metal();
+        return new Renderers.MetalOld();
     }
 }

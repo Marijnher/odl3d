@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace odl3d.Renderers;
 
-public static partial class MetalNew
+public static partial class Metal
 {
     public sealed class NSString : ObjCObject
     {
