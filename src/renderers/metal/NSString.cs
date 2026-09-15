@@ -21,7 +21,7 @@ public static partial class MetalNew
             IntPtr utf8 = Marshal.StringToCoTaskMemUTF8(value);
             try
             {
-                return new NSString(Send(ClassPointer, "stringWithUTF8String:", utf8));
+                return new NSString(SendRaw(ClassPointer, "stringWithUTF8String:", utf8));
             }
             finally
             {

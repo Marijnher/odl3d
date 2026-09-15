@@ -122,11 +122,23 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
 
     public static void Main(string[] args)
     {
+        GLFW.Load();
         MetalNew.Load();
         MetalNew.Device device = MetalNew.GetDefaultDevice();
         Console.WriteLine(device.Name);
         Console.WriteLine(device.Description);
         Console.WriteLine(device.RegistryID);
+
+        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
+        nint windowHandle = GLFW.glfwCreateWindow(400, 400, "Metal", IntPtr.Zero, IntPtr.Zero);
+        if (windowHandle == IntPtr.Zero)
+        {
+            GLFW.glfwTerminate();
+            throw new Exception("Failed to create a GLFW window.");
+        }
+        GLFW.glfwMakeContextCurrent(windowHandle);
+
+        MetalNew.MetalLayer layer = MetalNew.MetalLayer.AttachToWindow(device, windowHandle);
 
         MetalNew.CommandQueue queue = device.NewCommandQueue();
         Console.WriteLine($"Queue: {queue.Handle}");
@@ -134,8 +146,29 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         queue.Label = "Hello";
         Console.WriteLine($"Label: {queue.Label}");
 
-        MetalNew.CommandBuffer cmdBuf = queue.CommandBuffer;
-        Console.WriteLine($"Command Buffer: {cmdBuf.Handle}");
+        while (GLFW.glfwWindowShouldClose(windowHandle) == 0)
+        {
+            GLFW.glfwPollEvents();
+            
+
+            MetalNew.Drawable drawable = layer.NextDrawable();
+
+            MetalNew.RenderPassDescriptor pass = device.NewRenderPassDescriptor();
+            MetalNew.RenderPassColorAttachment colAtch0 = pass.ColorAttachments[0];
+            colAtch0.SetTexture(drawable.Texture);
+            colAtch0.SetLoadAction(MetalNew.LoadAction.Clear);
+            colAtch0.SetStoreAction(MetalNew.StoreAction.Store);
+            colAtch0.SetClearColor(1, 0, 0, 1);
+
+            MetalNew.CommandBuffer cmdBuf = queue.CreateCommandBuffer();
+
+            MetalNew.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
+            //encoder.DrawPrimitives(MetalNew.PrimitiveType.Triangle, 0, 3);
+            encoder.EndEncoding();
+
+            cmdBuf.PresentDrawable(drawable);
+            cmdBuf.Commit();
+        }
 
         return;
 

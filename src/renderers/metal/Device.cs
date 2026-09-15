@@ -13,5 +13,7 @@ public static partial class MetalNew
         public ulong RegistryID => GetUInt64("registryID");
 
         public CommandQueue NewCommandQueue() => Get<CommandQueue>("newCommandQueue");
+
+        public RenderPassDescriptor NewRenderPassDescriptor() => RenderPassDescriptor.Create();
     }
 }

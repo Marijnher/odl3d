@@ -15,7 +15,15 @@ public static partial class MetalNew
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate ulong d_objc_msgSendUInt64(IntPtr receiver, IntPtr selector);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate IntPtr d_objc_msgSendUInt64Arg(IntPtr receiver, IntPtr selector, nuint value);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate IntPtr d_objc_msgSendArg(IntPtr receiver, IntPtr selector, IntPtr arg);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate IntPtr d_objc_msgSendColor(IntPtr receiver, IntPtr selector,
+        double red, double green, double blue, double alpha);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate IntPtr d_objc_msgSendDraw(IntPtr receiver, IntPtr selector,
+        nuint primitiveType, nuint vertexStart, nuint vertexCount);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate IntPtr d_MTLCreateSystemDefaultDevice();
 
@@ -24,7 +32,10 @@ public static partial class MetalNew
     private static d_objc_getClass obcj_getClass;
     private static d_objc_msgSend objc_msgSend;
     private static d_objc_msgSendUInt64 objc_msgSendUInt64;
+    private static d_objc_msgSendUInt64Arg objc_msgSendUInt64Arg;
     private static d_objc_msgSendArg objc_msgSendArg;
+    private static d_objc_msgSendColor objc_msgSendColor;
+    private static d_objc_msgSendDraw objc_msgSendDraw;
     private static d_MTLCreateSystemDefaultDevice MTLCreateSystemDefaultDevice;
 #pragma warning restore CS8618
 
@@ -49,11 +60,16 @@ public static partial class MetalNew
         obcj_getClass = GetFunction<d_objc_getClass>(_objc, "objc_getClass");
         objc_msgSend = GetFunction<d_objc_msgSend>(_objc, "objc_msgSend");
         objc_msgSendUInt64 = GetFunction<d_objc_msgSendUInt64>(_objc, "objc_msgSend");
+        objc_msgSendUInt64Arg = GetFunction<d_objc_msgSendUInt64Arg>(_objc, "objc_msgSend");
         objc_msgSendArg = GetFunction<d_objc_msgSendArg>(_objc, "objc_msgSend");
+        objc_msgSendColor = GetFunction<d_objc_msgSendColor>(_objc, "objc_msgSend");
+        objc_msgSendDraw = GetFunction<d_objc_msgSendDraw>(_objc, "objc_msgSend");
         MTLCreateSystemDefaultDevice = GetFunction<d_MTLCreateSystemDefaultDevice>(_metal, "MTLCreateSystemDefaultDevice");
 
         Loaded = true;
     }
+
+    internal static IntPtr Class(string name) => obcj_getClass(name);
 
     private static IntPtr GetSelector(string name)
     {

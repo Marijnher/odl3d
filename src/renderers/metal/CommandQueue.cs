@@ -9,10 +9,11 @@ public static partial class MetalNew
         public string? Label
         {
             get => GetStringOrNull("label");
-            set => SendString("setLabel:" , value);
+            set => Send("setLabel:" , value);
         }
-        public CommandBuffer CommandBuffer => Get<CommandBuffer>("commandBuffer");
 
         public CommandQueue(IntPtr handle) : base(handle) { }
+
+        public CommandBuffer CreateCommandBuffer() => Get<CommandBuffer>("commandBuffer");
     }
 }
