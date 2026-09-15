@@ -11,6 +11,7 @@ public static partial class MetalNew
             get => GetStringOrNull("label");
             set => SendString("setLabel:" , value);
         }
+        public CommandBuffer CommandBuffer => Get<CommandBuffer>("commandBuffer");
 
         public CommandQueue(IntPtr handle) : base(handle) { }
     }

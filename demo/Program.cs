@@ -134,6 +134,9 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         queue.Label = "Hello";
         Console.WriteLine($"Label: {queue.Label}");
 
+        MetalNew.CommandBuffer cmdBuf = queue.CommandBuffer;
+        Console.WriteLine($"Command Buffer: {cmdBuf.Handle}");
+
         return;
 
         int width = 800;

@@ -10,6 +10,7 @@
 *.dll.config
 *.cache
 *.suo
+*.DS_Store
 
 # OS generated files
 .DS_Store?
