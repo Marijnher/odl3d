@@ -24,6 +24,12 @@ public static partial class Metal
 
         public void EndEncoding() => Send("endEncoding");
 
+        public void SetViewport(double x, double y, double width, double height) =>
+            Send("setViewport:", new MTLViewport { OriginX = x, OriginY = y, Width = width, Height = height, Zfar = 1.0, Znear = 0.0});
+
+        public void SetScissorRect(nuint x, nuint y, nuint width, nuint height) =>
+            Send("setScissorRect:", new MTLScissorRect { X = x, Y = y, Width = width, Height = height });
+
         public void SetRenderPipelineState(RenderPipelineState pipeline) =>
             Send("setRenderPipelineState:", pipeline);
 

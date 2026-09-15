@@ -133,6 +133,16 @@ public static partial class Metal
         protected T Send<T>(string selectorName, IntPtr ptr1, nuint nuint1) where T : ObjCObject =>
             Convert<T>(Send(selectorName, ptr1, nuint1));
 
+        protected IntPtr Send(string selectorName, MTLViewport viewport) =>
+            objc_msgSendViewport(Handle, GetSelector(selectorName), viewport);
+        protected T Send<T>(string selectorName, MTLViewport viewport) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, viewport));
+
+        protected IntPtr Send(string selectorName, MTLScissorRect scissorRect) =>
+            objc_msgSendScissorRect(Handle, GetSelector(selectorName), scissorRect);
+        protected T Send<T>(string selectorName, MTLScissorRect scissorRect) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, scissorRect));
+
         protected T Convert<T>(IntPtr objc) where T : ObjCObject 
         {
             T? obj = (T?) Activator.CreateInstance(

@@ -128,7 +128,9 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         Console.WriteLine(device.Name);
 
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
-        nint windowHandle = GLFW.glfwCreateWindow(400, 400, "Metal", IntPtr.Zero, IntPtr.Zero);
+        int windowWidth = 400;
+        int windowHeight = 400;
+        nint windowHandle = GLFW.glfwCreateWindow(windowWidth, windowHeight, "Metal", IntPtr.Zero, IntPtr.Zero);
         if (windowHandle == IntPtr.Zero)
         {
             GLFW.glfwTerminate();
