@@ -29,6 +29,9 @@ public static partial class Metal
 
         public void SetVertexBuffer(Buffer buffer, nuint offset = 0, nuint index = 0) =>
             Send("setVertexBuffer:offset:atIndex:", buffer.Handle, offset, index);
+
+        public void SetFragmentTexture(Texture texture, nuint index = 0) =>
+            Send("setFragmentTexture:atIndex:", texture.Handle, index);
     }
 
     public enum PrimitiveType : ulong

@@ -28,7 +28,7 @@ public static partial class Metal
 
         public RenderPassDescriptor NewRenderPassDescriptor() => RenderPassDescriptor.Create();
 
-        public RenderPipelineState CreateBasicTrianglePipeline() => CreatePipeline("""
+        public RenderPipelineState CreateTexturedPipeline() => CreatePipeline("""
                 #include <metal_stdlib>
                 using namespace metal;
 
@@ -51,11 +51,49 @@ public static partial class Metal
                     return out;
                 }
 
-                fragment float4 triangle_fragment(VertexOut in [[stage_in]]) {
-                    return float4(in.uv, 1.0, 1.0);
+                fragment float4 triangle_fragment(VertexOut in [[stage_in]],
+                    texture2d<float> colorTexture [[texture(0)]]) {
+                    constexpr sampler samplerState(filter::linear, address::repeat);
+                    return colorTexture.sample(samplerState, in.uv);
                 }
                 """
             );
+
+        public Texture CreateTexture(odl3d.Texture image)
+        {
+            var descriptor = TextureDescriptor.Create((uint) image.Width, (uint) image.Height);
+            Texture texture = Send<Texture>("newTextureWithDescriptor:", descriptor);
+
+            GCHandle pinned = GCHandle.Alloc(image.Pixels, GCHandleType.Pinned);
+            try
+            {
+                // TODO: Investigate memory leak potential
+                texture.Upload(pinned.AddrOfPinnedObject(), (nuint) (image.Width * 4), (uint) image.Width, (uint) image.Height);
+            }
+            finally
+            {
+                pinned.Free();
+            }
+            return texture;
+        }
+
+        public RenderPipelineState CreateSolidTrianglePipeline() => CreatePipeline("""
+            #include <metal_stdlib>
+            using namespace metal;
+            struct VertexOut { float4 position [[position]]; float2 uv; };
+            vertex VertexOut triangle_vertex(uint vertexId [[vertex_id]],
+                device const float* vertices [[buffer(0)]]) {
+                VertexOut out;
+                uint offset = vertexId * 5;
+                out.position = float4(vertices[offset], vertices[offset + 1],
+                    vertices[offset + 2], 1.0);
+                out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
+                return out;
+            }
+            fragment float4 triangle_fragment(VertexOut in [[stage_in]]) {
+                return float4(0.1, 0.8, 0.3, 1.0);
+            }
+            """);
 
         public Buffer CreateBuffer(float[] data)
         {

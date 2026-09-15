@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 
 namespace odl3d.Renderers;
 
@@ -15,6 +14,8 @@ public static partial class Metal
                 ? throw new ArgumentException("The Objective-C object cannot be null.", nameof(handle))
                 : handle;
         }
+
+        protected static IntPtr Class(string name) => obcj_getClass(name);
 
         protected IntPtr GetRaw(string selectorName) =>
             objc_msgSend(Handle, GetSelector(selectorName));
@@ -62,6 +63,13 @@ public static partial class Metal
         protected static IntPtr SendRaw(IntPtr receiver, string selectorName, IntPtr arg) =>
             objc_msgSendPtr(receiver, GetSelector(selectorName), arg);
 
+        protected static IntPtr SendRaw(IntPtr receiver, string selectorName, nuint arg1, nuint arg2, nuint arg3, byte byte1) =>
+            objc_msgSendThreeUInt64Byte(receiver, GetSelector(selectorName), arg1, arg2, arg3, byte1);
+
+        protected void SendRaw(IntPtr receiver, string selectorName, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) =>
+            objc_msgSendRegion(receiver, GetSelector(selectorName),
+                new() { Width = width, Height = height, Depth = 1 }, 0, bytes, bytesPerRow);
+
         protected static void SendUInt(IntPtr receiver, IntPtr selector, nuint value) =>
             objc_msgSendUInt64(receiver, selector, value);
 
@@ -104,6 +112,11 @@ public static partial class Metal
             objc_msgSendThreeUInt64PtrUInt64(Handle, GetSelector(selectorName), primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset);
         protected T Send<T>(string selectorName, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset) where T : ObjCObject =>
             Convert<T>(Send(selectorName, primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset));
+
+        protected IntPtr Send(string selectorName, IntPtr ptr1, nuint nuint1) =>
+            objc_msgSendPtrUInt64(Handle, GetSelector(selectorName), ptr1, nuint1);
+        protected T Send<T>(string selectorName, IntPtr ptr1, nuint nuint1) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, ptr1, nuint1));
 
         protected T Convert<T>(IntPtr objc) where T : ObjCObject 
         {

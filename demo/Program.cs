@@ -126,8 +126,6 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         Metal.Load();
         Metal.Device device = Metal.Device.Default;
         Console.WriteLine(device.Name);
-        Console.WriteLine(device.Description);
-        Console.WriteLine(device.RegistryID);
 
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
         nint windowHandle = GLFW.glfwCreateWindow(400, 400, "Metal", IntPtr.Zero, IntPtr.Zero);
@@ -141,27 +139,28 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         Metal.MetalLayer layer = Metal.MetalLayer.AttachToWindow(device, windowHandle);
 
         Metal.CommandQueue queue = device.NewCommandQueue();
-        Metal.RenderPipelineState pipeline = device.CreateBasicTrianglePipeline();
-        Metal.Buffer vertexBuffer = device.CreateBuffer(
+        Metal.RenderPipelineState texturedPipeline = device.CreateTexturedPipeline();
+        Metal.RenderPipelineState solidPipeline = device.CreateSolidTrianglePipeline();
+        Metal.Texture grassTexture = device.CreateTexture(new Texture("assets/grass.png"));
+        Metal.Buffer vertexBuffer1 = device.CreateBuffer(
         [
              0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
              0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
              0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
              0.0f,  0.5f, 0.0f,    0.0f, 1.0f
         ]);
-        Metal.Buffer indexBuffer = device.CreateIndexBuffer(
+        Metal.Buffer indexBuffer1 = device.CreateIndexBuffer(
             [0, 1, 2, 2, 3, 0]
         );
-        Metal.Buffer smallerVertexBuffer = device.CreateBuffer(
+        Metal.Buffer vertexBuffer2 = device.CreateBuffer(
         [
              0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
             -0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
             -0.5f, -0.5f, 0.0f,    1.0f, 1.0f
         ]);
-        Console.WriteLine($"Queue: {queue.Handle}");
-        Console.WriteLine($"Label: {queue.Label}");
-        queue.Label = "Hello";
-        Console.WriteLine($"Label: {queue.Label}");
+        Metal.Buffer indexBuffer2 = device.CreateIndexBuffer(
+            [0, 1, 2]
+        );
 
         while (GLFW.glfwWindowShouldClose(windowHandle) == 0)
         {
@@ -179,11 +178,16 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             Metal.CommandBuffer cmdBuf = queue.CreateCommandBuffer();
 
             Metal.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
-            encoder.SetRenderPipelineState(pipeline);
-            encoder.SetVertexBuffer(vertexBuffer);
-            encoder.DrawIndexedPrimitives(indexBuffer);
-            encoder.SetVertexBuffer(smallerVertexBuffer);
-            encoder.DrawPrimitives(Metal.PrimitiveType.Triangle, 0, 3);
+            encoder.SetRenderPipelineState(texturedPipeline);
+
+            encoder.SetVertexBuffer(vertexBuffer1);
+            encoder.SetFragmentTexture(grassTexture);
+            encoder.DrawIndexedPrimitives(indexBuffer1);
+
+            encoder.SetRenderPipelineState(solidPipeline);
+            encoder.SetVertexBuffer(vertexBuffer2);
+            encoder.DrawIndexedPrimitives(indexBuffer2);
+            
             encoder.EndEncoding();
 
             cmdBuf.Present(drawable);
