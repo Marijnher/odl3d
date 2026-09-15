@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace odl3d.Renderers;
 
@@ -31,12 +32,9 @@ public static partial class Metal
                 #include <metal_stdlib>
                 using namespace metal;
 
-                vertex float4 triangle_vertex(uint vertexId [[vertex_id]]) {
-                    constexpr float2 positions[] = {
-                        float2(0.0, 0.75),
-                        float2(-0.75, -0.75),
-                        float2(0.75, -0.75)
-                    };
+                vertex float4 triangle_vertex(
+                    uint vertexId [[vertex_id]],
+                    device const float2* positions [[buffer(0)]]) {
                     return float4(positions[vertexId], 0.0, 1.0);
                 }
 
@@ -45,6 +43,27 @@ public static partial class Metal
                 }
                 """
             );
+
+        public Buffer CreateBuffer(float[] data)
+        {
+            if (data is null || data.Length == 0)
+                throw new ArgumentException("The buffer data cannot be empty.", nameof(data));
+
+            GCHandle pinned = GCHandle.Alloc(data, GCHandleType.Pinned);
+            try
+            {
+                // TODO: Investigate memory leak potential
+                IntPtr handle = Send("newBufferWithBytes:length:options:",
+                    pinned.AddrOfPinnedObject(), (nuint) (data.Length * sizeof(float)), 0);
+                if (handle == IntPtr.Zero)
+                    throw new RenderException("Metal could not create the vertex buffer.");
+                return new Buffer(handle);
+            }
+            finally
+            {
+                pinned.Free();
+            }
+        }
 
         public RenderPipelineState CreatePipeline(string source)
         {

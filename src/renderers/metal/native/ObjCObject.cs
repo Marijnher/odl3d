@@ -92,6 +92,11 @@ public static partial class Metal
         protected T Send<T>(string selectorName, IntPtr arg1, IntPtr arg2, out IntPtr arg3) where T : ObjCObject =>
             Convert<T>(Send(selectorName, arg1, arg2, out arg3));
 
+        protected IntPtr Send(string selectorName, IntPtr arg1, nuint arg2, nuint arg3) =>
+            objc_msgSendPtrUInt64UInt64(Handle, GetSelector(selectorName), arg1, arg2, arg3);
+        protected T Send<T>(string selectorName, IntPtr arg1, nuint arg2, nuint arg3) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, arg1, arg2, arg3));
+
         protected T Convert<T>(IntPtr objc) where T : ObjCObject 
         {
             T? obj = (T?) Activator.CreateInstance(typeof(T), objc);

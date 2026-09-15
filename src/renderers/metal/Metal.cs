@@ -29,6 +29,9 @@ public static partial class Metal
     private delegate IntPtr d_objc_msgSendPtrPtrOutPtr(IntPtr receiver, IntPtr selector,
         IntPtr source, IntPtr options, out IntPtr error);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate IntPtr d_objc_msgSendPtrUInt64UInt64(
+        IntPtr receiver, IntPtr selector, IntPtr ptr, nuint nuint1, nuint nuint2);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate IntPtr d_MTLCreateSystemDefaultDevice();
 
 #pragma warning disable CS8618
@@ -41,6 +44,7 @@ public static partial class Metal
     private static d_objc_msgSendThreeUInt64 objc_msgSendThreeUInt64;
     private static d_objc_msgSendPtrOutPtr objc_msgSendPtrOutPtr;
     private static d_objc_msgSendPtrPtrOutPtr objc_msgSendPtrPtrOutPtr;
+    private static d_objc_msgSendPtrUInt64UInt64 objc_msgSendPtrUInt64UInt64;
     private static d_MTLCreateSystemDefaultDevice MTLCreateSystemDefaultDevice;
 #pragma warning restore CS8618
 
@@ -70,6 +74,7 @@ public static partial class Metal
         objc_msgSendThreeUInt64 = GetFunction<d_objc_msgSendThreeUInt64>(_objc, "objc_msgSend");
         objc_msgSendPtrOutPtr = GetFunction<d_objc_msgSendPtrOutPtr>(_objc, "objc_msgSend");
         objc_msgSendPtrPtrOutPtr = GetFunction<d_objc_msgSendPtrPtrOutPtr>(_objc, "objc_msgSend");
+        objc_msgSendPtrUInt64UInt64 = GetFunction<d_objc_msgSendPtrUInt64UInt64>(_objc, "objc_msgSend");
         MTLCreateSystemDefaultDevice = GetFunction<d_MTLCreateSystemDefaultDevice>(_metal, "MTLCreateSystemDefaultDevice");
 
         Loaded = true;

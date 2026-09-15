@@ -142,6 +142,12 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
 
         Metal.CommandQueue queue = device.NewCommandQueue();
         Metal.RenderPipelineState pipeline = device.CreateBasicTrianglePipeline();
+        Metal.Buffer vertexBuffer = device.CreateBuffer(
+        [
+             0.0f,  0.75f,
+            -0.75f, -0.75f,
+             0.75f, -0.75f
+        ]);
         Console.WriteLine($"Queue: {queue.Handle}");
         Console.WriteLine($"Label: {queue.Label}");
         queue.Label = "Hello";
@@ -164,10 +170,11 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
 
             Metal.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
             encoder.SetRenderPipelineState(pipeline);
+            encoder.SetVertexBuffer(vertexBuffer);
             encoder.DrawPrimitives(Metal.PrimitiveType.Triangle, 0, 3);
             encoder.EndEncoding();
 
-            cmdBuf.PresentDrawable(drawable);
+            cmdBuf.Present(drawable);
             cmdBuf.Commit();
         }
 

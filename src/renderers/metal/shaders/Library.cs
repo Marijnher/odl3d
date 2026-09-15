@@ -5,7 +5,7 @@ namespace odl3d.Renderers;
 
 public static partial class Metal
 {
-    public class Library : ObjCObject
+    public sealed class Library : ObjCObject
     {
         public Library(IntPtr handle) : base(handle) { }
 

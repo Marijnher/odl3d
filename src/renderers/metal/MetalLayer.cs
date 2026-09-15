@@ -5,7 +5,6 @@ namespace odl3d.Renderers;
 
 public static partial class Metal
 {
-    /// <summary>Owns a CAMetalLayer and supplies the drawable presented by a frame.</summary>
     public sealed class MetalLayer : ObjCObject
     {
         private static IntPtr ClassPointer => Class("CAMetalLayer");

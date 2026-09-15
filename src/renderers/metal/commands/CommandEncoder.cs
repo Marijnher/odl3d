@@ -16,6 +16,9 @@ public static partial class Metal
 
         public void SetRenderPipelineState(RenderPipelineState pipeline) =>
             Send("setRenderPipelineState:", pipeline);
+
+        public void SetVertexBuffer(Buffer buffer, nuint offset = 0, nuint index = 0) =>
+            Send("setVertexBuffer:offset:atIndex:", buffer.Handle, offset, index);
     }
 
     public enum PrimitiveType : ulong

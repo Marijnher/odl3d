@@ -4,7 +4,7 @@ namespace odl3d.Renderers;
 
 public static partial class Metal
 {
-    public class CommandBuffer : ObjCObject
+    public sealed class CommandBuffer : ObjCObject
     {
         public CommandBuffer(IntPtr handle) : base(handle) { }
 
@@ -13,10 +13,8 @@ public static partial class Metal
 
         public CommandEncoder RenderCommandEncoder(RenderPassDescriptor descriptor) =>
             CreateRenderCommandEncoder(descriptor);
-
-        public void PresentDrawable(Drawable drawable) => Send("presentDrawable:", drawable);
-
-        public void Present(Drawable drawable) => PresentDrawable(drawable);
+        
+        public void Present(Drawable drawable) => Send("presentDrawable:", drawable);
 
         public void Commit() => Send("commit");
     }

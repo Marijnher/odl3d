@@ -4,7 +4,7 @@ namespace odl3d.Renderers;
 
 public static partial class Metal
 {
-    public class ContentView : ObjCObject
+    public sealed class ContentView : ObjCObject
     {
         public ContentView(IntPtr handle) : base(handle) { }
 
