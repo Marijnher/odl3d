@@ -12,7 +12,7 @@ public class VertexArray : IDisposable
     /// <summary>
     /// The renderer instance used to create and manage this vertex array. The Renderer property provides access to the active renderer, allowing the VertexArray to call renderer methods for creating vertex arrays, binding them, enabling vertex attributes, and managing resources. This property is used internally by the VertexArray class to interact with the rendering backend.
     /// </summary>
-    protected IRenderer Renderer => RenderFactory.Renderer;
+    protected IRendererOld Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// The renderer-backed vertex array object (VAO) handle for this vertex array; contains the state of the vertex attributes and buffer bindings. The VAO is used to encapsulate the vertex attribute configuration and buffer bindings for rendering.
@@ -30,7 +30,7 @@ public class VertexArray : IDisposable
     private List<int> attributes = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="VertexArray"/> class, creating a new vertex array object (VAO). The VAO is created using the renderer's <see cref="IRenderer.CreateVertexArray"/> method, and its handle is stored in the <see cref="Handle"/> property. The VAO is used to encapsulate the state of vertex attributes and buffer bindings for efficient rendering of meshes.
+    /// Initializes a new instance of the <see cref="VertexArray"/> class, creating a new vertex array object (VAO). The VAO is created using the renderer's <see cref="IRendererOld.CreateVertexArray"/> method, and its handle is stored in the <see cref="Handle"/> property. The VAO is used to encapsulate the state of vertex attributes and buffer bindings for efficient rendering of meshes.
     /// </summary>
     public VertexArray()
     {
@@ -38,7 +38,7 @@ public class VertexArray : IDisposable
     }
 
     /// <summary>
-    /// Binds the vertex array object (VAO) for rendering, making it the current VAO. The VAO is bound using the renderer's <see cref="IRenderer.BindVertexArray"/> method, allowing subsequent rendering operations to use the state of the VAO for vertex attribute configuration and buffer bindings.
+    /// Binds the vertex array object (VAO) for rendering, making it the current VAO. The VAO is bound using the renderer's <see cref="IRendererOld.BindVertexArray"/> method, allowing subsequent rendering operations to use the state of the VAO for vertex attribute configuration and buffer bindings.
     /// </summary>
     public void Bind() => Renderer.BindVertexArray(this);
 
@@ -52,7 +52,7 @@ public class VertexArray : IDisposable
     }
 
     /// <summary>
-    /// Unbinds the vertex array object (VAO) and automatically calculates the stride and offset for each vertex attribute based on the queued attributes. The stride is calculated as the sum of the sizes of all attributes, and the offset for each attribute is calculated based on its position in the list of attributes. The VAO is unbound using the renderer's <see cref="IRenderer.BindVertexArray"/> method, and the internal list of attributes is cleared after unbinding.
+    /// Unbinds the vertex array object (VAO) and automatically calculates the stride and offset for each vertex attribute based on the queued attributes. The stride is calculated as the sum of the sizes of all attributes, and the offset for each attribute is calculated based on its position in the list of attributes. The VAO is unbound using the renderer's <see cref="IRendererOld.BindVertexArray"/> method, and the internal list of attributes is cleared after unbinding.
     /// </summary>
     public void Unbind()
     {
@@ -70,7 +70,7 @@ public class VertexArray : IDisposable
     }
 
     /// <summary>
-    /// Disposes of the vertex array object (VAO) and releases its resources. The VAO is deleted using the renderer's <see cref="IRenderer.DeleteVertexArray"/> method, and the <see cref="Disposed"/> property is set to true to indicate that the VAO has been disposed. Once disposed, the VAO handle is no longer valid and should not be used for rendering.
+    /// Disposes of the vertex array object (VAO) and releases its resources. The VAO is deleted using the renderer's <see cref="IRendererOld.DeleteVertexArray"/> method, and the <see cref="Disposed"/> property is set to true to indicate that the VAO has been disposed. Once disposed, the VAO handle is no longer valid and should not be used for rendering.
     /// </summary>
     public void Dispose()
     {

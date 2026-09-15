@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 using odl3d;
-using odl3d.Renderers;
+using odl3d.Renderer;
 
 namespace odl3ddemo;
 
@@ -123,7 +123,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
 
     public static void Main(string[] args)
     {
-        GLFW.Load();
+        /*GLFW.Load();
         Metal.Load();
         using Metal.Device device = Metal.Device.Default;
         Console.WriteLine(device.Name);
@@ -272,7 +272,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             cmdBuf.Commit();
         }
 
-        return;
+        return;*/
 
         int width = 800;
         int height = 600;
@@ -287,7 +287,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
-        bool metal = RenderFactory.Renderer is odl3d.Renderers.MetalOld;
+        bool metal = RenderFactory.Renderer is odl3d.Renderer.MetalOld;
         ShaderProgram shader = new ShaderProgram(
             metal ? MetalVertexSource : VertexSource,
             metal ? MetalFragmentSource : FragmentSource);

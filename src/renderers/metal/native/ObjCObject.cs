@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace odl3d.Renderers;
+namespace odl3d.Renderer;
 
 public static partial class Metal
 {

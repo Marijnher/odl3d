@@ -6,7 +6,7 @@ namespace odl3d;
 /// <summary>
 /// Defines the interface for a renderer, which provides methods for creating and managing graphics resources, rendering operations, and shader programs. The IRenderer interface abstracts the underlying graphics API (e.g., OpenGL, DirectX) and allows for flexible rendering implementations. It includes methods for initializing the renderer, creating and deleting buffers, textures, and shaders, binding resources, setting data, and performing draw calls. Implementations of this interface are responsible for handling the specifics of the graphics API while providing a consistent interface for rendering operations.
 /// </summary>
-public interface IRenderer : IDisposable
+public interface IRendererOld : IDisposable
 {
     /// <summary>
     /// Configures the windowing hints required by this renderer before a native
@@ -123,27 +123,27 @@ public interface IRenderer : IDisposable
     /// </summary>
     /// <param name="filterMode">The filtering mode to set.</param>
     /// <param name="mipmapFilter">The mipmap filtering mode to set.</param>
-    public void SetTextureMinFilter(TextureFilter filterMode, MipmapFilter mipmapFilter);
+    public void SetTextureMinFilter(Renderer.TextureFilter filterMode, Renderer.MipmapFilter mipmapFilter);
     /// <summary>
     /// Sets the magnification filtering mode for the specified texture object in the renderer. The magnification filter determines how the texture is sampled when it is displayed larger than its original size, affecting the visual quality of the texture when viewed up close. This method allows for fine-tuning of texture appearance during magnification, enabling effects such as bilinear or trilinear filtering for smoother results.
     /// </summary>
     /// <param name="filterMode">The magnification filtering mode to set.</param>
-    public void SetTextureMagFilter(TextureFilter filterMode);
+    public void SetTextureMagFilter(Renderer.TextureFilter filterMode);
     /// <summary>
     /// Sets the horizontal wrapping mode for the specified texture object in the renderer. The wrapping mode determines how texture coordinates outside the [0, 1] range are handled along the horizontal axis (U direction). This method allows for fine-tuning of texture behavior, enabling effects such as repeating, clamping, or mirroring of textures when they are applied to 3D surfaces.
     /// </summary>
     /// <param name="wrapModeH">The horizontal wrapping mode to set.</param>
-    public void SetTextureWrapModeH(TextureWrap wrapModeH);
+    public void SetTextureWrapModeH(Renderer.TextureWrap wrapModeH);
     /// <summary>
     /// Sets the vertical wrapping mode for the specified texture object in the renderer. The wrapping mode determines how texture coordinates outside the [0, 1] range are handled along the vertical axis (V direction). This method allows for fine-tuning of texture behavior, enabling effects such as repeating, clamping, or mirroring of textures when they are applied to 3D surfaces.
     /// </summary>
     /// <param name="wrapModeV">The vertical wrapping mode to set.</param>
-    public void SetTextureWrapModeV(TextureWrap wrapModeV);
+    public void SetTextureWrapModeV(Renderer.TextureWrap wrapModeV);
     /// <summary>
     /// Sets the anisotropic filtering level for the specified texture object in the renderer. Anisotropic filtering improves the quality of textures viewed at oblique angles, reducing blurriness and preserving detail. This method allows for fine-tuning of texture appearance, enabling higher levels of anisotropic filtering for better visual fidelity in 3D scenes.
     /// </summary>
     /// <param name="anisotropicFilter">The anisotropic filtering level to set.</param>
-    public void SetTextureAnisotropicFilter(AnisotropicFilter anisotropicFilter);
+    public void SetTextureAnisotropicFilter(Renderer.AnisotropicFilter anisotropicFilter);
     /// <summary>
     /// Uploads image data to the specified texture object in the renderer, replacing its current contents with the provided image data. The texture can be used for mapping images onto 3D surfaces, enabling realistic rendering of materials and surfaces. This method transfers image data from CPU memory to GPU memory, allowing for efficient rendering of textures in 3D scenes.
     /// </summary>

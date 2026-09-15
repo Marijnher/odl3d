@@ -17,7 +17,7 @@ public class ShaderProgram : IDisposable
     /// <summary>
     /// The renderer instance used to create and manage this shader program. The Renderer property provides access to the active renderer, allowing the ShaderProgram to call renderer methods for compiling shaders, linking programs, setting uniforms, and managing resources. This property is used internally by the ShaderProgram class to interact with the rendering backend.
     /// </summary>
-    protected IRenderer Renderer => RenderFactory.Renderer;
+    protected IRendererOld Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// Indicates whether this shader has been disposed and its resources released. After disposing, the shader should not be used again. The Disposed property is set to true when Dispose() is called, and it can be checked to prevent multiple disposals or usage of a disposed shader.

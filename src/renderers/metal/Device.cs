@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using odl3d;
 
-namespace odl3d.Renderers;
+namespace odl3d.Renderer;
 
 public static partial class Metal
 {

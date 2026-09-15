@@ -17,7 +17,7 @@ public class Window : InputHost
     /// <summary>
     /// The renderer instance used to render the window's contents. The Renderer property provides access to the active renderer, allowing the Window to call renderer methods for rendering scenes, managing resources, and interacting with the rendering backend. This property is read-only and is initialized in the constructor.
     /// </summary>
-    protected IRenderer Renderer;
+    protected IRendererOld Renderer;
 
     /// <summary>
     /// The current width of the window in pixels.

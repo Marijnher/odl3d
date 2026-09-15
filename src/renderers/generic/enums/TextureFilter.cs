@@ -1,4 +1,4 @@
-namespace odl3d;
+namespace odl3d.Renderer;
 
 /// <summary>
 /// Defines the texture filtering modes used when sampling a texture at a size other than its native resolution.

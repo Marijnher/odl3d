@@ -10,7 +10,7 @@ public partial class Mesh : IDisposable
     /// <summary>
     /// The renderer instance used to create and manage this mesh. The Renderer property provides access to the active renderer, allowing the Mesh to call renderer methods for creating buffers, binding vertex arrays, drawing elements, and managing resources. This property is used internally by the Mesh class to interact with the rendering backend.
     /// </summary>
-    protected IRenderer Renderer => RenderFactory.Renderer;
+    protected IRendererOld Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// The renderer-backed vertex array object (VAO) handle for this mesh; used to bind the vertex/index buffers for drawing. The VAO encapsulates the vertex attribute configuration and buffer bindings.

@@ -1,6 +1,6 @@
 using System;
 
-namespace odl3d.Renderers;
+namespace odl3d.Renderer;
 
 public static partial class Metal
 {
@@ -13,29 +13,29 @@ public static partial class Metal
         public static SamplerDescriptor Create() =>
             new SamplerDescriptor(SendRaw(ClassPointer, "new"));
 
-        public void SetMinFilter(odl3d.TextureFilter filter) =>
+        public void SetMinFilter(TextureFilter filter) =>
             Send("setMinFilter:", (nuint)filter);
 
-        public void SetMagFilter(odl3d.TextureFilter filter) =>
+        public void SetMagFilter(TextureFilter filter) =>
             Send("setMagFilter:", (nuint)filter);
 
-        public void SetMipFilter(odl3d.MipmapFilter filter) =>
+        public void SetMipFilter(MipmapFilter filter) =>
             Send("setMipFilter:", (nuint)filter);
 
-        public void SetAddressModeS(odl3d.TextureWrap wrap) =>
+        public void SetAddressModeS(TextureWrap wrap) =>
             Send("setSAddressMode:", AddressMode(wrap));
 
-        public void SetAddressModeT(odl3d.TextureWrap wrap) =>
+        public void SetAddressModeT(TextureWrap wrap) =>
             Send("setTAddressMode:", AddressMode(wrap));
 
         public void SetMaxAnisotropy(AnisotropicFilter filter) =>
             Send("setMaxAnisotropy:", (nuint)filter);
 
-        private static nuint AddressMode(odl3d.TextureWrap wrap) => wrap switch
+        private static nuint AddressMode(TextureWrap wrap) => wrap switch
         {
-            odl3d.TextureWrap.Clamp => 0,
-            odl3d.TextureWrap.Repeat => 2,
-            odl3d.TextureWrap.Mirror => 3,
+            TextureWrap.Clamp => 0,
+            TextureWrap.Repeat => 2,
+            TextureWrap.Mirror => 3,
             _ => throw new ArgumentOutOfRangeException(nameof(wrap))
         };
     }

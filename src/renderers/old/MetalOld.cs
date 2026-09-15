@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace odl3d.Renderers;
+namespace odl3d.Renderer;
 
 /// <summary>
 /// Metal backend bootstrap and presentation integration.
@@ -12,7 +12,7 @@ namespace odl3d.Renderers;
 /// Windows and Linux. The renderer creates a CAMetalLayer for GLFW's Cocoa window
 /// and owns the current drawable until <see cref="Present"/> is called.
 /// </summary>
-public sealed class MetalOld : IRenderer
+public sealed class MetalOld : IRendererOld
 {
     private IntPtr device;
     private IntPtr commandQueue;

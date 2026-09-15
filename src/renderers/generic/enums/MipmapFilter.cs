@@ -1,4 +1,4 @@
-namespace odl3d;
+namespace odl3d.Renderer;
 
 /// <summary>
 /// Specifies the filter mode used for mipmaps when sampling textures.

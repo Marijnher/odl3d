@@ -18,7 +18,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// <summary>
     /// The renderer instance used to render the scene. The Renderer property provides access to the active renderer, allowing the Scene to call renderer methods for rendering objects, managing resources, and interacting with the rendering backend. This property is read-only for subclasses and is derived from the associated window.
     /// </summary>
-    protected IRenderer Renderer => RenderFactory.Renderer;
+    protected IRendererOld Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// The camera used to render the scene. The camera's view and projection matrices are combined to create the view-projection matrix used for rendering the objects in the scene. The camera can be configured with position, orientation, field of view, aspect ratio, and other properties to control how the scene is viewed. This property is read-only for subclasses and is derived from the associated window.

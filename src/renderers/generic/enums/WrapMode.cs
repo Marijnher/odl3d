@@ -1,4 +1,4 @@
-namespace odl3d;
+namespace odl3d.Renderer;
 
 /// <summary>
 /// Defines the texture wrapping modes used when sampling textures outside the [0, 1] UV coordinate range.

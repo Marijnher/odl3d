@@ -1,6 +1,6 @@
 using System;
-using System.Security.Cryptography;
 using decodl;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -19,7 +19,7 @@ public class Texture : IDisposable
     /// <summary>
     /// The renderer instance used to create and manage this texture. The Renderer property provides access to the active renderer, allowing the Texture to call renderer methods for creating textures, uploading pixel data, setting texture parameters, and managing resources. This property is used internally by the Texture class to interact with the rendering backend.
     /// </summary>
-    protected IRenderer Renderer => RenderFactory.Renderer;
+    protected IRendererOld Renderer => RenderFactory.Renderer;
     
     /// <summary>
     /// Width of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).

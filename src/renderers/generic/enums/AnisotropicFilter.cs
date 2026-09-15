@@ -1,3 +1,5 @@
+namespace odl3d.Renderer;
+
 /// <summary>
 /// Represents the levels of anisotropic filtering available for textures.
 /// </summary>

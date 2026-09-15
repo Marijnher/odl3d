@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Xml.Linq;
+using odl3d.Renderer;
 
 namespace odl3d.Loaders;
 

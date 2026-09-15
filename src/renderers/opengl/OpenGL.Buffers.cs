@@ -2,9 +2,9 @@ using System;
 using odl3d;
 using static odl3d.GL;
 
-namespace odl3d.Renderers;
+namespace odl3d.Renderer;
 
-public partial class OpenGL : IRenderer
+public partial class OpenGL : IRendererOld
 {
     public uint CreateVertexArray()
     {

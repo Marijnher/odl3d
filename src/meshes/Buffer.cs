@@ -10,7 +10,7 @@ public class Buffer
     /// <summary>
     /// The renderer instance used to create and manage this buffer. The Renderer property provides access to the active renderer, allowing the Buffer to call renderer methods for creating buffers, setting data, binding buffers, and managing resources. This property is used internally by the Buffer class to interact with the rendering backend.
     /// </summary>
-    protected IRenderer Renderer => RenderFactory.Renderer;
+    protected IRendererOld Renderer => RenderFactory.Renderer;
 
     /// <summary>
     /// The renderer-backed buffer handle for this buffer; contains the vertex or index data stored in GPU memory. The handle is used to bind the buffer to a specific target (e.g., array buffer or element buffer) and to set its data using the SetData methods. The handle is generated when the buffer is created and is released when the buffer is disposed.
@@ -28,7 +28,7 @@ public class Buffer
     public bool Disposed { get; private set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Buffer"/> class, creating a new buffer object. The buffer is created using the renderer's <see cref="IRenderer.CreateBuffer"/> method, and its handle is stored in the <see cref="Handle"/> property. The buffer target is specified as a parameter and determines how the buffer is used in rendering operations. The buffer can be filled with data using the SetData methods and is disposed when no longer needed.
+    /// Initializes a new instance of the <see cref="Buffer"/> class, creating a new buffer object. The buffer is created using the renderer's <see cref="IRendererOld.CreateBuffer"/> method, and its handle is stored in the <see cref="Handle"/> property. The buffer target is specified as a parameter and determines how the buffer is used in rendering operations. The buffer can be filled with data using the SetData methods and is disposed when no longer needed.
     /// </summary>
     /// <param name="bufferTarget"></param>
     public Buffer(BufferTarget bufferTarget)
@@ -38,7 +38,7 @@ public class Buffer
     }
 
     /// <summary>
-    /// Sets the data for the buffer object, uploading the specified float array to GPU memory. The data is bound to the buffer's target (e.g., array buffer or element buffer) and is uploaded using the renderer's <see cref="IRenderer.SetBufferData"/> method. The buffer hint specifies how the data will be used (e.g., static, dynamic, or stream), allowing the GPU to optimize its storage and access patterns for efficient rendering.
+    /// Sets the data for the buffer object, uploading the specified float array to GPU memory. The data is bound to the buffer's target (e.g., array buffer or element buffer) and is uploaded using the renderer's <see cref="IRendererOld.SetBufferData"/> method. The buffer hint specifies how the data will be used (e.g., static, dynamic, or stream), allowing the GPU to optimize its storage and access patterns for efficient rendering.
     /// </summary>
     /// <param name="data">The float array containing the data to upload.</param>
     /// <param name="hint">The buffer hint specifying how the data will be used.</param>
@@ -49,7 +49,7 @@ public class Buffer
     }
 
     /// <summary>
-    /// Sets the data for the buffer object, uploading the specified uint array to GPU memory. The data is bound to the buffer's target (e.g., array buffer or element buffer) and is uploaded using the renderer's <see cref="IRenderer.SetBufferData"/> method. The buffer hint specifies how the data will be used (e.g., static, dynamic, or stream), allowing the GPU to optimize its storage and access patterns for efficient rendering.
+    /// Sets the data for the buffer object, uploading the specified uint array to GPU memory. The data is bound to the buffer's target (e.g., array buffer or element buffer) and is uploaded using the renderer's <see cref="IRendererOld.SetBufferData"/> method. The buffer hint specifies how the data will be used (e.g., static, dynamic, or stream), allowing the GPU to optimize its storage and access patterns for efficient rendering.
     /// </summary>
     /// <param name="data">The uint array containing the data to upload.</param>
     /// <param name="hint">The buffer hint specifying how the data will be used.</param>
@@ -60,7 +60,7 @@ public class Buffer
     }
 
     /// <summary>
-    /// Disposes the buffer object, releasing its resources in GPU memory. The buffer is deleted using the renderer's <see cref="IRenderer.DeleteBuffer"/> method, and its handle is no longer valid after disposal. The <see cref="Disposed"/> property is set to true to indicate that the buffer has been disposed and should not be used for rendering.
+    /// Disposes the buffer object, releasing its resources in GPU memory. The buffer is deleted using the renderer's <see cref="IRendererOld.DeleteBuffer"/> method, and its handle is no longer valid after disposal. The <see cref="Disposed"/> property is set to true to indicate that the buffer has been disposed and should not be used for rendering.
     /// </summary>
     public void Dispose()
     {
