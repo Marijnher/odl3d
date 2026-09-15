@@ -9,6 +9,7 @@ public static partial class Metal
     {
         public IntPtr Handle { get; protected set; }
         private readonly bool ownsNativeObject;
+        public bool Disposed { get; protected set; }
 
         public ObjCObject(IntPtr handle, bool ownsNativeObject = false)
         {
@@ -23,6 +24,7 @@ public static partial class Metal
             if (!ownsNativeObject || Handle == IntPtr.Zero) return;
             Send("release");
             Handle = IntPtr.Zero;
+            Disposed = true;
             GC.SuppressFinalize(this);
         }
 

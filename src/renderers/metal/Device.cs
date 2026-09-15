@@ -20,7 +20,7 @@ public static partial class Metal
             }
         }
 
-        public string? Name => GetString("name");
+        public string Name => GetString("name");
         public string Description => GetString("description");
         public ulong RegistryID => GetUInt64("registryID");
 
