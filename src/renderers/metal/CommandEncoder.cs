@@ -13,6 +13,9 @@ public static partial class Metal
             Send("drawPrimitives:vertexStart:vertexCount:", (nuint) primitiveType, (nuint) vertexStart, (nuint) vertexCount);
 
         public void EndEncoding() => Send("endEncoding");
+
+        public void SetRenderPipelineState(RenderPipelineState pipeline) =>
+            Send("setRenderPipelineState:", pipeline);
     }
 
     public enum PrimitiveType : ulong

@@ -9,7 +9,7 @@ public static partial class Metal
     {
         public IntPtr Handle { get; protected set; }
 
-        protected ObjCObject(IntPtr handle)
+        public ObjCObject(IntPtr handle)
         {
             Handle = handle == IntPtr.Zero
                 ? throw new ArgumentException("The Objective-C object cannot be null.", nameof(handle))
@@ -26,7 +26,7 @@ public static partial class Metal
             Convert<T>(GetRaw(selectorName));
 
         protected ulong GetUInt64(string selectorName) =>
-            objc_msgSendUInt64(Handle, GetSelector(selectorName));
+            (ulong) objc_msgSend(Handle, GetSelector(selectorName));
 
         protected string GetString(string selectorName) =>
             Get<NSString>(selectorName).Value;
@@ -39,16 +39,16 @@ public static partial class Metal
         }
 
         protected IntPtr Send(string selectorName, nuint value) =>
-            objc_msgSendUInt64Arg(Handle, GetSelector(selectorName), value);
+            objc_msgSendUInt64(Handle, GetSelector(selectorName), value);
 
-        protected IntPtr Send(string selectorName, nuint arg1, nuint arg2, nuint arg3) =>
-            objc_msgSendDraw(Handle, GetSelector(selectorName), arg1, arg2, arg3);
+        protected void Send(string selectorName, nuint arg1, nuint arg2, nuint arg3) =>
+            objc_msgSendThreeUInt64(Handle, GetSelector(selectorName), arg1, arg2, arg3);
 
         protected IntPtr Send(string selectorName, double red, double green, double blue, double alpha) =>
-            objc_msgSendColor(Handle, GetSelector(selectorName), red, green, blue, alpha);
+            objc_msgSendFourDoubles(Handle, GetSelector(selectorName), red, green, blue, alpha);
 
         protected static IntPtr SendRaw(IntPtr receiver, IntPtr selector, IntPtr arg) =>
-            objc_msgSendArg(receiver, selector, arg);
+            objc_msgSendPtr(receiver, selector, arg);
 
         protected static IntPtr SendRaw(IntPtr receiver, IntPtr selector) =>
             objc_msgSend(receiver, selector);
@@ -57,7 +57,10 @@ public static partial class Metal
             objc_msgSend(receiver, GetSelector(selectorName));
 
         protected static IntPtr SendRaw(IntPtr receiver, string selectorName, IntPtr arg) =>
-            objc_msgSendArg(receiver, GetSelector(selectorName), arg);
+            objc_msgSendPtr(receiver, GetSelector(selectorName), arg);
+
+        protected static void SendUInt(IntPtr receiver, IntPtr selector, nuint value) =>
+            objc_msgSendUInt64(receiver, selector, value);
 
         protected IntPtr Send(string selectorName) =>
             objc_msgSend(Handle, GetSelector(selectorName));
@@ -65,19 +68,29 @@ public static partial class Metal
             Convert<T>(Send(selectorName));
 
         protected IntPtr Send(string selectorName, IntPtr value) =>
-            objc_msgSendArg(Handle, GetSelector(selectorName), value);
+            objc_msgSendPtr(Handle, GetSelector(selectorName), value);
         protected T Send<T>(string selectorName, IntPtr value) where T : ObjCObject =>
             Convert<T>(Send(selectorName, value));
 
         protected IntPtr Send(string selectorName, ObjCObject obj) =>
-            objc_msgSendArg(Handle, GetSelector(selectorName), obj.Handle);
+            objc_msgSendPtr(Handle, GetSelector(selectorName), obj.Handle);
         protected T Send<T>(string selectorName, ObjCObject obj) where T : ObjCObject =>
             Convert<T>(Send(selectorName, obj));
 
         protected IntPtr Send(string selectorName, string? value) =>
-            objc_msgSendArg(Handle, GetSelector(selectorName), value == null ? IntPtr.Zero : NSString.Create(value).Handle);
+            objc_msgSendPtr(Handle, GetSelector(selectorName), value == null ? IntPtr.Zero : NSString.Create(value).Handle);
         protected T Send<T>(string selectorName, string? value) where T : ObjCObject =>
             Convert<T>(Send(selectorName, value));
+
+        protected IntPtr Send(string selectorName, IntPtr arg1, out IntPtr arg2) =>
+            objc_msgSendPtrOutPtr(Handle, GetSelector(selectorName), arg1, out arg2);
+        protected T Send<T>(string selectorName, IntPtr arg1, out IntPtr arg2) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, arg1, out arg2));
+
+        protected IntPtr Send(string selectorName, IntPtr arg1, IntPtr arg2, out IntPtr arg3) =>
+            objc_msgSendPtrPtrOutPtr(Handle, GetSelector(selectorName), arg1, arg2, out arg3);
+        protected T Send<T>(string selectorName, IntPtr arg1, IntPtr arg2, out IntPtr arg3) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, arg1, arg2, out arg3));
 
         protected T Convert<T>(IntPtr objc) where T : ObjCObject 
         {
