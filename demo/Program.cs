@@ -147,7 +147,14 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         using Metal.DepthStencilState depthState = device.CreateDepthStencilState(
             Metal.CompareFunction.LessEqual,
             depthWriteEnabled: true);
-        using Metal.Texture grassTexture = device.CreateTexture(new Texture("assets/grass.png"));
+        using Metal.Texture grassTexture = device.CreateTexture(new Texture("assets/grass.png"), mipmapped: true);
+        using Metal.SamplerState grassSampler = device.CreateSampler(
+            TextureFilter.Linear,
+            TextureFilter.Linear,
+            MipmapFilter.Linear,
+            TextureWrap.Repeat,
+            TextureWrap.Repeat,
+            AnisotropicFilter.X4);
         using Metal.Texture depthTexture = device.CreateDepthTexture((uint)windowWidth, (uint)windowHeight);
         Matrix4x4 initialView = Matrix4x4.CreateLookAt(
             new Vector3(0.0f, 0.0f, 2.0f),
@@ -252,6 +259,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             encoder.SetRenderPipelineState(texturedPipeline);
             encoder.SetVertexBuffer(vertexBuffer1, 0);
             encoder.SetFragmentTexture(grassTexture);
+            encoder.SetFragmentSamplerState(grassSampler);
             encoder.DrawIndexedPrimitives(indexBuffer1);
 
             encoder.SetRenderPipelineState(solidPipeline);

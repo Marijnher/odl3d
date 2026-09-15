@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using odl3d;
 
 namespace odl3d.Renderers;
 
@@ -42,6 +43,28 @@ public static partial class Metal
             return new DepthStencilState(handle);
         }
 
+        public SamplerState CreateSampler(
+            TextureFilter minFilter = TextureFilter.Nearest,
+            TextureFilter magFilter = TextureFilter.Nearest,
+            MipmapFilter mipmapFilter = MipmapFilter.None,
+            TextureWrap wrapH = TextureWrap.Repeat,
+            TextureWrap wrapV = TextureWrap.Repeat,
+            AnisotropicFilter anisotropicFilter = AnisotropicFilter.None)
+        {
+            using SamplerDescriptor descriptor = SamplerDescriptor.Create();
+            descriptor.SetMinFilter(minFilter);
+            descriptor.SetMagFilter(magFilter);
+            descriptor.SetMipFilter(mipmapFilter);
+            descriptor.SetAddressModeS(wrapH);
+            descriptor.SetAddressModeT(wrapV);
+            descriptor.SetMaxAnisotropy(anisotropicFilter);
+
+            IntPtr handle = Send("newSamplerStateWithDescriptor:", descriptor);
+            if (handle == IntPtr.Zero)
+                throw new RenderException("Metal could not create the texture sampler.");
+            return new SamplerState(handle);
+        }
+
         public RenderPipelineState CreateTexturedPipeline() => CreatePipeline("""
                 #include <metal_stdlib>
                 using namespace metal;
@@ -64,16 +87,16 @@ public static partial class Metal
                 }
 
                 fragment float4 triangle_fragment(VertexOut in [[stage_in]],
-                    texture2d<float> colorTexture [[texture(0)]]) {
-                    constexpr sampler samplerState(filter::linear, address::repeat);
-                    return colorTexture.sample(samplerState, in.uv);
+                    texture2d<float> colorTexture [[texture(0)]],
+                    sampler textureSampler [[sampler(0)]]) {
+                    return colorTexture.sample(textureSampler, in.uv);
                 }
                 """
             );
 
-        public Texture CreateTexture(odl3d.Texture image)
+        public Texture CreateTexture(odl3d.Texture image, bool mipmapped = false)
         {
-            var descriptor = TextureDescriptor.Create((uint) image.Width, (uint) image.Height);
+            using var descriptor = TextureDescriptor.Create((uint) image.Width, (uint) image.Height, mipmapped);
             Texture texture = Send<Texture>("newTextureWithDescriptor:", descriptor);
 
             GCHandle pinned = GCHandle.Alloc(image.Pixels, GCHandleType.Pinned);
@@ -85,7 +108,20 @@ public static partial class Metal
             {
                 pinned.Free();
             }
+            if (mipmapped)
+                GenerateMipmaps(texture);
             return texture;
+        }
+
+        public void GenerateMipmaps(Texture texture)
+        {
+            using CommandQueue queue = NewCommandQueue();
+            CommandBuffer commandBuffer = queue.CreateCommandBuffer();
+            BlitCommandEncoder encoder = commandBuffer.CreateBlitCommandEncoder();
+            encoder.GenerateMipmaps(texture);
+            encoder.EndEncoding();
+            commandBuffer.Commit();
+            commandBuffer.WaitUntilCompleted();
         }
 
         public Texture CreateDepthTexture(uint width, uint height)

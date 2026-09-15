@@ -41,6 +41,9 @@ public static partial class Metal
 
         public void SetFragmentTexture(Texture texture, nuint index = 0) =>
             Send("setFragmentTexture:atIndex:", texture.Handle, index);
+
+        public void SetFragmentSamplerState(SamplerState sampler, nuint index = 0) =>
+            Send("setFragmentSamplerState:atIndex:", sampler.Handle, index);
     }
 
     public enum PrimitiveType : ulong

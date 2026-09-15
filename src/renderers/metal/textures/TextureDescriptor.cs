@@ -10,12 +10,12 @@ public static partial class Metal
 
         private TextureDescriptor(IntPtr handle) : base(handle) { }
 
-        public static TextureDescriptor Create(uint width, uint height)
+        public static TextureDescriptor Create(uint width, uint height, bool mipmapped = false)
         {
             IntPtr handle = SendRaw(
                 ClassPointer, 
                 "texture2DDescriptorWithPixelFormat:width:height:mipmapped:",
-                70, width, height, 0
+                70, width, height, mipmapped ? (byte)1 : (byte)0
             );
             if (handle == IntPtr.Zero)
                 throw new RenderException("Metal could not create the texture.");
