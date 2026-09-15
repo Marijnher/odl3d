@@ -126,12 +126,4 @@ public static partial class Metal
             throw new EntryPointNotFoundException($"Could not find native function '{name}'.");
         return Marshal.GetDelegateForFunctionPointer<TDelegate>(ptr);
     }
-
-    public static Device GetDefaultDevice()
-    {
-        IntPtr device = MTLCreateSystemDefaultDevice();
-        if (device == IntPtr.Zero)
-            throw new InvalidOperationException("Metal did not provide a system default device.");
-        return new Device(device);
-    }
 }

@@ -124,7 +124,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
     {
         GLFW.Load();
         Metal.Load();
-        Metal.Device device = Metal.GetDefaultDevice();
+        Metal.Device device = Metal.Device.Default;
         Console.WriteLine(device.Name);
         Console.WriteLine(device.Description);
         Console.WriteLine(device.RegistryID);

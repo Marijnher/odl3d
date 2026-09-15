@@ -20,10 +20,12 @@ public static partial class Metal
             return new MetalLayer(handle);
         }
 
-
         public static MetalLayer AttachToWindow(Device device, IntPtr glfwWindow)
         {
-            CocoaWindow cocoaWindow = CocoaWindow.From(GLFW.glfwGetCocoaWindow(glfwWindow));
+            IntPtr handle = GLFW.glfwGetCocoaWindow(glfwWindow);
+            if (handle == IntPtr.Zero)
+                throw new RenderException("GLFW did not provide an NSWindow for the Metal layer.");
+            CocoaWindow cocoaWindow = new CocoaWindow(handle);
             
             MetalLayer metalLayer = Create();
             metalLayer.SetDevice(device);
@@ -36,7 +38,7 @@ public static partial class Metal
             return metalLayer;
         }
 
-        public Drawable NextDrawable() => new Drawable(GetRaw("nextDrawable"));
+        public Drawable NextDrawable() => Get<Drawable>("nextDrawable");
 
         public void SetDevice(Device device) => Send("setDevice:", device);
 

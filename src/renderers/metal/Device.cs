@@ -8,6 +8,17 @@ public static partial class Metal
     {
         public Device(IntPtr handle) : base(handle) { }
 
+        public static Device Default
+        {
+            get
+            {
+                IntPtr device = MTLCreateSystemDefaultDevice();
+                if (device == IntPtr.Zero)
+                    throw new RenderException("Metal did not provide a system default device.");
+                return new Device(device);
+            }
+        }
+
         public string? Name => GetString("name");
         public string Description => GetString("description");
         public ulong RegistryID => GetUInt64("registryID");
