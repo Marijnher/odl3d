@@ -7,8 +7,8 @@ public interface IRenderCapabilities
     bool SupportsWireframe { get; }
     bool SupportsComputeShaders { get; }
     bool SupportsGeometryShaders { get; }
-    bool SupportAnisotropicFiltering { get; }
-    bool SupportIndependentBlend { get; }
+    bool SupportsAnisotropicFiltering { get; }
+    bool SupportsIndependentBlend { get; }
     bool SupportsIndirectDraw { get; }
 
     int MaxTextureSize { get; }

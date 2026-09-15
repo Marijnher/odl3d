@@ -4,15 +4,19 @@ namespace odl3d.Renderer;
 
 public interface IRenderDevice : IDisposable
 {
+    string Name { get; }
+
     IRenderCapabilities Capabilities { get; }
 
     IRenderSurface CreateSurface(nint nativeWindow);
 
-    IBuffer CreateBuffer(BufferDescription bufferDescription, ReadOnlySpan<byte> initialData = default);
+    IBuffer CreateBuffer(BufferDescription description, ReadOnlySpan<byte> initialData = default);
 
-    ITexture CreateTexture(TextureDescription textureDescription, ReadOnlySpan<byte> initialData = default);
+    ITexture CreateTexture(TextureDescription description, ReadOnlySpan<byte> initialData = default);
     
-    ISampler CreateSampler(SamplerDescription samplerDescription);
+    ISampler CreateSampler(SamplerDescription description);
+
+    IDepthStencilState CreateDepthStencilState(DepthStencilDescription description);
 
     IShaderModule CreateShaderModule(ShaderModuleDescription description);
 

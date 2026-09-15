@@ -123,10 +123,28 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
 
     public static void Main(string[] args)
     {
-        /*GLFW.Load();
-        Metal.Load();
-        using Metal.Device device = Metal.Device.Default;
+        using IRenderDevice device = new odl3d.Renderer.MetalAdapter.MetalRenderDevice();
         Console.WriteLine(device.Name);
+
+        GLFW.Load();
+        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
+        int winWidth = 400;
+        int winHeight = 400;
+        nint winHandle = GLFW.glfwCreateWindow(winWidth, winHeight, "Metal", IntPtr.Zero, IntPtr.Zero);
+        if (winHandle == IntPtr.Zero)
+        {
+            GLFW.glfwTerminate();
+            throw new Exception("Failed to create a GLFW window.");
+        }
+
+        using IRenderSurface surface = device.CreateSurface(winHandle);
+
+        return;
+
+        GLFW.Load();
+        Metal.Load();
+        using Metal.Device mDevice = Metal.Device.Default;
+        Console.WriteLine(mDevice.Name);
 
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
         int windowWidth = 400;
@@ -138,24 +156,24 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             throw new Exception("Failed to create a GLFW window.");
         }
 
-        Metal.MetalLayer layer = Metal.MetalLayer.AttachToWindow(device, windowHandle);
+        Metal.MetalLayer layer = Metal.MetalLayer.AttachToWindow(mDevice, windowHandle);
         layer.SetDisplaySyncEnabled(false);
 
-        using Metal.CommandQueue queue = device.NewCommandQueue();
-        using Metal.RenderPipelineState texturedPipeline = device.CreateTexturedPipeline();
-        using Metal.RenderPipelineState solidPipeline = device.CreateSolidTrianglePipeline();
-        using Metal.DepthStencilState depthState = device.CreateDepthStencilState(
+        using Metal.CommandQueue queue = mDevice.NewCommandQueue();
+        using Metal.RenderPipelineState texturedPipeline = mDevice.CreateTexturedPipeline();
+        using Metal.RenderPipelineState solidPipeline = mDevice.CreateSolidTrianglePipeline();
+        using Metal.DepthStencilState depthState = mDevice.CreateDepthStencilState(
             Metal.CompareFunction.LessEqual,
             depthWriteEnabled: true);
-        using Metal.Texture grassTexture = device.CreateTexture(new Texture("assets/grass.png"), mipmapped: true);
-        using Metal.SamplerState grassSampler = device.CreateSampler(
+        using Metal.Texture grassTexture = mDevice.CreateTexture(new Texture("assets/grass.png"), mipmapped: true);
+        using Metal.SamplerState grassSampler = mDevice.CreateSampler(
             TextureFilter.Linear,
             TextureFilter.Linear,
             MipmapFilter.Linear,
             TextureWrap.Repeat,
             TextureWrap.Repeat,
             AnisotropicFilter.X4);
-        using Metal.Texture depthTexture = device.CreateDepthTexture((uint)windowWidth, (uint)windowHeight);
+        using Metal.Texture depthTexture = mDevice.CreateDepthTexture((uint)windowWidth, (uint)windowHeight);
         Matrix4x4 initialView = Matrix4x4.CreateLookAt(
             new Vector3(0.0f, 0.0f, 2.0f),
             Vector3.Zero,
@@ -165,25 +183,25 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             (float)windowWidth / windowHeight,
             0.1f,
             100.0f);
-        using Metal.Buffer cameraBuffer = device.CreateBuffer(ToMetalMatrix(
+        using Metal.Buffer cameraBuffer = mDevice.CreateBuffer(ToMetalMatrix(
             Matrix4x4.Identity * initialView * projection));
-        using Metal.Buffer vertexBuffer1 = device.CreateBuffer(
+        using Metal.Buffer vertexBuffer1 = mDevice.CreateBuffer(
         [
              0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
              0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
              0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
              0.0f,  0.5f, 0.0f,    0.0f, 1.0f
         ]);
-        using Metal.Buffer indexBuffer1 = device.CreateIndexBuffer(
+        using Metal.Buffer indexBuffer1 = mDevice.CreateIndexBuffer(
             [0, 1, 2, 2, 3, 0]
         );
-        using Metal.Buffer vertexBuffer2 = device.CreateBuffer(
+        using Metal.Buffer vertexBuffer2 = mDevice.CreateBuffer(
         [
              0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
             -0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
             -0.5f, -0.5f, 0.0f,    1.0f, 1.0f
         ]);
-        using Metal.Buffer indexBuffer2 = device.CreateIndexBuffer(
+        using Metal.Buffer indexBuffer2 = mDevice.CreateIndexBuffer(
             [0, 1, 2]
         );
         Vector3 cameraPosition = new(0.0f, 0.0f, 2.0f);
@@ -238,7 +256,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
 
             Metal.Drawable drawable = layer.NextDrawable();
             
-            Metal.RenderPassDescriptor pass = device.NewRenderPassDescriptor();
+            Metal.RenderPassDescriptor pass = mDevice.NewRenderPassDescriptor();
             Metal.RenderPassColorAttachment colAtch0 = pass.ColorAttachments[0];
             colAtch0.SetTexture(drawable.Texture);
             colAtch0.SetLoadAction(Metal.LoadAction.Clear);
@@ -272,7 +290,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             cmdBuf.Commit();
         }
 
-        return;*/
+        return;
 
         int width = 800;
         int height = 600;

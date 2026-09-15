@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace odl3d.Renderer;
 
-public interface IRenderPass : IGPUResource
+public interface IRenderPass : IDisposable
 {
     void SetViewport(Rect viewportRect);
     void SetScissor(Rect scissorRect);

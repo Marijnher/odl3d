@@ -10,7 +10,11 @@ public sealed record RenderPipelineDescription
     public required VertexLayoutDescription VertexLayout { get; init; }
 
     public required TextureFormat ColorFormat { get; init; }
-    public required TextureFormat? DepthFormat { get; init; }
+    public TextureFormat? DepthFormat { get; init; }
+
+    public PrimitiveType PrimitiveType { get; init; } = PrimitiveType.TriangleList;
+
+    public int SampleCount { get; init; } = 1;
 
     public RasterizerDescription Rasterizer { get; init; } = new RasterizerDescription();
     public BlendDescription Blend { get; init; } = new BlendDescription();
