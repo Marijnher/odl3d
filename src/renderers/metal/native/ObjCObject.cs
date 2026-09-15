@@ -25,6 +25,9 @@ public static partial class Metal
         protected T Get<T>(string selectorName) where T : ObjCObject =>
             Convert<T>(GetRaw(selectorName));
 
+        protected uint GetUInt32(string selectorName) =>
+            (uint) objc_msgSend(Handle, GetSelector(selectorName));
+
         protected ulong GetUInt64(string selectorName) =>
             (ulong) objc_msgSend(Handle, GetSelector(selectorName));
 
@@ -96,6 +99,11 @@ public static partial class Metal
             objc_msgSendPtrUInt64UInt64(Handle, GetSelector(selectorName), arg1, arg2, arg3);
         protected T Send<T>(string selectorName, IntPtr arg1, nuint arg2, nuint arg3) where T : ObjCObject =>
             Convert<T>(Send(selectorName, arg1, arg2, arg3));
+
+        protected IntPtr Send(string selectorName, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset) =>
+            objc_msgSendThreeUInt64PtrUInt64(Handle, GetSelector(selectorName), primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset);
+        protected T Send<T>(string selectorName, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset));
 
         protected T Convert<T>(IntPtr objc) where T : ObjCObject 
         {

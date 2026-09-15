@@ -144,9 +144,19 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         Metal.RenderPipelineState pipeline = device.CreateBasicTrianglePipeline();
         Metal.Buffer vertexBuffer = device.CreateBuffer(
         [
-             0.0f,  0.75f,
-            -0.75f, -0.75f,
-             0.75f, -0.75f
+             0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
+             0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
+             0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
+             0.0f,  0.5f, 0.0f,    0.0f, 1.0f
+        ]);
+        Metal.Buffer indexBuffer = device.CreateIndexBuffer(
+            [0, 1, 2, 2, 3, 0]
+        );
+        Metal.Buffer smallerVertexBuffer = device.CreateBuffer(
+        [
+             0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
+            -0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
+            -0.5f, -0.5f, 0.0f,    1.0f, 1.0f
         ]);
         Console.WriteLine($"Queue: {queue.Handle}");
         Console.WriteLine($"Label: {queue.Label}");
@@ -171,6 +181,8 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             Metal.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
             encoder.SetRenderPipelineState(pipeline);
             encoder.SetVertexBuffer(vertexBuffer);
+            encoder.DrawIndexedPrimitives(indexBuffer);
+            encoder.SetVertexBuffer(smallerVertexBuffer);
             encoder.DrawPrimitives(Metal.PrimitiveType.Triangle, 0, 3);
             encoder.EndEncoding();
 

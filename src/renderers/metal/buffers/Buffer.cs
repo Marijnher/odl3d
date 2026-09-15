@@ -6,6 +6,8 @@ public static partial class Metal
 {
     public sealed class Buffer : ObjCObject
     {
+        public uint Length => GetUInt32("length");
+
         public Buffer(IntPtr handle) : base(handle) { }
     }
 }

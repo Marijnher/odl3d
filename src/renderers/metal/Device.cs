@@ -32,14 +32,27 @@ public static partial class Metal
                 #include <metal_stdlib>
                 using namespace metal;
 
-                vertex float4 triangle_vertex(
+                struct VertexOut {
+                    float4 position [[position]];
+                    float2 uv;
+                };
+
+                vertex VertexOut triangle_vertex(
                     uint vertexId [[vertex_id]],
-                    device const float2* positions [[buffer(0)]]) {
-                    return float4(positions[vertexId], 0.0, 1.0);
+                    device const float* vertices [[buffer(0)]]) {
+                    VertexOut out;
+                    uint offset = vertexId * 5;
+                    out.position = float4(
+                        vertices[offset],
+                        vertices[offset + 1],
+                        vertices[offset + 2],
+                        1.0);
+                    out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
+                    return out;
                 }
 
-                fragment float4 triangle_fragment() {
-                    return float4(0.1, 0.8, 0.3, 1.0);
+                fragment float4 triangle_fragment(VertexOut in [[stage_in]]) {
+                    return float4(in.uv, 1.0, 1.0);
                 }
                 """
             );
@@ -57,6 +70,26 @@ public static partial class Metal
                     pinned.AddrOfPinnedObject(), (nuint) (data.Length * sizeof(float)), 0);
                 if (handle == IntPtr.Zero)
                     throw new RenderException("Metal could not create the vertex buffer.");
+                return new Buffer(handle);
+            }
+            finally
+            {
+                pinned.Free();
+            }
+        }
+
+        public Buffer CreateIndexBuffer(uint[] data)
+        {
+            if (data is null || data.Length == 0)
+                throw new ArgumentException("The index data cannot be empty.", nameof(data));
+
+            GCHandle pinned = GCHandle.Alloc(data, GCHandleType.Pinned);
+            try
+            {
+                IntPtr handle = Send("newBufferWithBytes:length:options:",
+                    pinned.AddrOfPinnedObject(), (nuint)(data.Length * sizeof(uint)), 0);
+                if (handle == IntPtr.Zero)
+                    throw new RenderException("Metal could not create the index buffer.");
                 return new Buffer(handle);
             }
             finally
