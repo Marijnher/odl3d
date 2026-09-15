@@ -36,8 +36,8 @@ public static partial class Metal
         public void SetDepthStencilState(DepthStencilState state) =>
             Send("setDepthStencilState:", state);
 
-        public void SetVertexBuffer(Buffer buffer, nuint offset = 0, nuint index = 0) =>
-            Send("setVertexBuffer:offset:atIndex:", buffer.Handle, offset, index);
+        public void SetVertexBuffer(Buffer buffer, nuint index = 0) =>
+            Send("setVertexBuffer:offset:atIndex:", buffer.Handle, 0, index);
 
         public void SetFragmentTexture(Texture texture, nuint index = 0) =>
             Send("setFragmentTexture:atIndex:", texture.Handle, index);

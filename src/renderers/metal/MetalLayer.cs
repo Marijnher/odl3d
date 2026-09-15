@@ -44,5 +44,8 @@ public static partial class Metal
         public void SetPixelFormat(nuint format) => Send("setPixelFormat:", format);
 
         public void SetPresentsWithTransaction(nuint value) => Send("setPresentsWithTransaction:", value);
+
+        public void SetDisplaySyncEnabled(bool enabled) =>
+            Send("setDisplaySyncEnabled:", enabled ? 1 : 0);
     }
 }

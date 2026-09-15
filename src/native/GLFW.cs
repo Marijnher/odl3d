@@ -28,6 +28,13 @@ internal static class GLFW
     public const int GLFW_CURSOR_NORMAL = 0x00034001;
     public const int GLFW_CURSOR_DISABLED = 0x00034003;
     public const int GLFW_KEY_LAST = 348;
+    public const int GLFW_KEY_ESCAPE = 256;
+    public const int GLFW_KEY_W = 87;
+    public const int GLFW_KEY_A = 65;
+    public const int GLFW_KEY_S = 83;
+    public const int GLFW_KEY_D = 68;
+    public const int GLFW_KEY_SPACE = 32;
+    public const int GLFW_KEY_LEFT_SHIFT = 340;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_glfwInit();

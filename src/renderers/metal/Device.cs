@@ -53,17 +53,12 @@ public static partial class Metal
 
                 vertex VertexOut triangle_vertex(
                     uint vertexId [[vertex_id]],
-                    device const float* vertices [[buffer(0)]]) {
+                    device const float* vertices [[buffer(0)]],
+                    constant float4x4& mvp [[buffer(1)]]) {
                     VertexOut out;
                     uint offset = vertexId * 5;
-                    float3 position = float3(
-                        vertices[offset],
-                        vertices[offset + 1],
-                        vertices[offset + 2]);
-                    constexpr float cameraDistance = 2.0;
-                    constexpr float focalLength = 1.0;
-                    float perspective = focalLength / (cameraDistance - position.z);
-                    out.position = float4(position.xy * perspective, position.z, 1.0);
+                    float3 position = float3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
+                    out.position = mvp * float4(position, 1.0);
                     out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
                     return out;
                 }
@@ -107,15 +102,13 @@ public static partial class Metal
             using namespace metal;
             struct VertexOut { float4 position [[position]]; float2 uv; };
             vertex VertexOut triangle_vertex(uint vertexId [[vertex_id]],
-                device const float* vertices [[buffer(0)]]) {
+                device const float* vertices [[buffer(0)]],
+                constant float4x4& mvp [[buffer(1)]]) {
                 VertexOut out;
                 uint offset = vertexId * 5;
                 float3 position = float3(vertices[offset], vertices[offset + 1],
                     vertices[offset + 2]);
-                constexpr float cameraDistance = 2.0;
-                constexpr float focalLength = 1.0;
-                float perspective = focalLength / (cameraDistance - position.z);
-                out.position = float4(position.xy * perspective, position.z, 1.0);
+                out.position = mvp * float4(position, 1.0);
                 out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
                 return out;
             }
