@@ -22,5 +22,20 @@ public static partial class Metal
             // Copy directly into raw buffer
             Marshal.Copy(data, 0, contents, data.Length);
         }
+
+        public unsafe void Update<T>(T[] data) where T : unmanaged
+        {
+            if ((nuint)(data.Length * sizeof(T)) > Length)
+                throw new ArgumentException("The update does not fit in the Metal buffer.", nameof(data));
+
+            IntPtr contents = GetRaw("contents");
+            if (contents == IntPtr.Zero)
+                throw new RenderException("Metal did not provide writable buffer contents.");
+            // Copy directly into raw buffer
+            fixed (T* source = data)
+            {
+                System.Buffer.MemoryCopy(source, (void*) contents, data.Length * sizeof(T), data.Length * sizeof(T));
+            }
+        }
     }
 }

@@ -4,10 +4,9 @@ namespace odl3d.Renderer.MetalAdapter;
 
 public class MetalRenderDevice : IRenderDevice
 {
+    public Metal.Device Device;
+
     public string Name => "Metal";
-
-    private Metal.Device Device;
-
     public IRenderCapabilities Capabilities => new MetalRenderCapabilities();
 
     public MetalRenderDevice()
@@ -17,12 +16,12 @@ public class MetalRenderDevice : IRenderDevice
     }
 
     public IRenderSurface CreateSurface(nint nativeWindow) =>
-        new MetalRenderSurface(Metal.MetalLayer.AttachToWindow(Device, nativeWindow));
+        new MetalRenderSurface(Device, nativeWindow);
 
-    public IBuffer CreateBuffer(BufferDescription description, ReadOnlySpan<byte> initialData = default) =>
-        throw new NotImplementedException();
+    public IBuffer<T> CreateBuffer<T>(BufferDescription description, T[]? initialData = null) where T : unmanaged =>
+        new MetalBuffer<T>(Device, description, initialData);
 
-    public ITexture CreateTexture(TextureDescription description, ReadOnlySpan<byte> initialData = default) =>
+    public ITexture CreateTexture(TextureDescription description, float[]? initialData = null) =>
         throw new NotImplementedException();
     
     public ISampler CreateSampler(SamplerDescription description) =>
@@ -32,10 +31,10 @@ public class MetalRenderDevice : IRenderDevice
         throw new NotImplementedException();
 
     public IShaderModule CreateShaderModule(ShaderModuleDescription description) =>
-        throw new NotImplementedException();
+        new MetalShaderModule(description);
 
-    public IRenderPipeline CreateShaderPipeline(RenderPipelineDescription description) =>
-        throw new NotImplementedException();
+    public IRenderPipeline CreateRenderPipeline(RenderPipelineDescription description) =>
+        new MetalRenderPipeline(Device, description);
 
     public void Dispose() { }
 }

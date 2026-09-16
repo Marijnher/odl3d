@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using odl3d;
 using odl3d.Renderer;
+using odl3d.Renderer.MetalAdapter;
 
 namespace odl3ddemo;
 
@@ -121,6 +123,40 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
     return color;
 }";
 
+    private const string SimpleMetalVertexSource = @"#include <metal_stdlib>
+using namespace metal;
+
+struct VertexIn
+{
+    packed_float3 position;
+    packed_float2 texCoord;
+};
+
+struct VertexOut
+{
+    float4 position [[position]];
+    float2 texCoord;
+};
+
+vertex VertexOut vertex_main(
+                    uint vertexID [[vertex_id]],
+                    device const VertexIn* vertices [[buffer(0)]]
+                )
+{
+    VertexOut out;
+    out.position = float4(vertices[vertexID].position, 1.0);
+    out.texCoord = vertices[vertexID].texCoord;
+    return out;
+}";
+
+    private const string SimpleMetalFragmentSource = @"#include <metal_stdlib>
+using namespace metal;
+
+fragment float4 fragment_main(VertexOut in [[stage_in]])
+{
+    return float4(in.texCoord, 1.0, 1.0);
+}";
+
     public static void Main(string[] args)
     {
         using IRenderDevice device = new odl3d.Renderer.MetalAdapter.MetalRenderDevice();
@@ -138,6 +174,80 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         }
 
         using IRenderSurface surface = device.CreateSurface(winHandle);
+        using IShaderModule vertexShader = device.CreateShaderModule(new ShaderModuleDescription
+        {
+            Stage = ShaderStage.Vertex,
+            Source = SimpleMetalVertexSource,
+            EntryPoint = "vertex_main"
+        });
+        using IShaderModule fragmentShader = device.CreateShaderModule(new ShaderModuleDescription
+        {
+            Stage = ShaderStage.Fragment,
+            Source = SimpleMetalFragmentSource,
+            EntryPoint = "fragment_main"
+        });
+        using IRenderPipeline renderPipeline = device.CreateRenderPipeline(new RenderPipelineDescription()
+        {
+            VertexShader = vertexShader,
+            FragmentShader = fragmentShader,
+            VertexLayout = new VertexLayoutDescription()
+            {
+                Buffers = [],
+                Attributes = []
+            },
+            ColorFormat = TextureFormat.RGBA32Float
+        });
+        float[] vertices = 
+        {
+            0.0f, 0.0f, 0.0f,    0.0f, 0.0f,
+            0.5f, 0.0f, 0.0f,    1.0f, 0.0f,
+            0.5f, 0.5f, 0.0f,    1.0f, 1.0f,
+            0.0f, 0.5f, 0.0f,    0.0f, 1.0f
+        };
+        using IBuffer<float> vtxBuffer = device.CreateBuffer<float>(new BufferDescription
+        {
+            Size = vertices.Length,
+            Usage = BufferUsage.Vertex
+        });
+        vtxBuffer.SetData(vertices);
+
+        uint[] indices =
+        {
+            0, 1, 2, 2, 3, 0
+        };
+        using IBuffer<uint> idxBuffer = device.CreateBuffer<uint>(new BufferDescription
+        {
+            Size = indices.Length,
+            Usage = BufferUsage.Index
+        });
+        idxBuffer.SetData(indices);
+
+        while (GLFW.glfwWindowShouldClose(winHandle) == 0)
+        {
+            GLFW.glfwPollEvents();
+            if (GLFW.glfwGetKey(winHandle, (int) Key.Escape) == GLFW.GLFW_PRESS)
+            {
+                GLFW.glfwSetWindowShouldClose(winHandle, 1);
+            }
+
+            IRenderFrame? frame = surface.AcquireFrame();
+            if (frame == null) throw new RenderException("No frame could be acquired.");
+
+            IRenderPass pass = frame.CreateRenderPass(new RenderPassDescription
+            {
+                Color = new ColorAttachmentDescription { ClearColor = new Color(0, 0, 0) }
+            });
+
+            pass.SetRenderPipeline(renderPipeline);
+            pass.SetVertexBuffer(vtxBuffer);
+            pass.SetIndexBuffer(idxBuffer);
+            pass.DrawIndexed();
+            pass.End();
+
+            frame.Present();
+        }
+
+        GLFW.glfwTerminate();
 
         return;
 
@@ -163,7 +273,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
         using Metal.RenderPipelineState texturedPipeline = mDevice.CreateTexturedPipeline();
         using Metal.RenderPipelineState solidPipeline = mDevice.CreateSolidTrianglePipeline();
         using Metal.DepthStencilState depthState = mDevice.CreateDepthStencilState(
-            Metal.CompareFunction.LessEqual,
+            CompareFunction.LessEqual,
             depthWriteEnabled: true);
         using Metal.Texture grassTexture = mDevice.CreateTexture(new Texture("assets/grass.png"), mipmapped: true);
         using Metal.SamplerState grassSampler = mDevice.CreateSampler(
@@ -192,7 +302,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
              0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
              0.0f,  0.5f, 0.0f,    0.0f, 1.0f
         ]);
-        using Metal.Buffer indexBuffer1 = mDevice.CreateIndexBuffer(
+        using Metal.Buffer indexBuffer1 = mDevice.CreateBuffer(
             [0, 1, 2, 2, 3, 0]
         );
         using Metal.Buffer vertexBuffer2 = mDevice.CreateBuffer(
@@ -201,7 +311,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             -0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
             -0.5f, -0.5f, 0.0f,    1.0f, 1.0f
         ]);
-        using Metal.Buffer indexBuffer2 = mDevice.CreateIndexBuffer(
+        using Metal.Buffer indexBuffer2 = mDevice.CreateBuffer(
             [0, 1, 2]
         );
         Vector3 cameraPosition = new(0.0f, 0.0f, 2.0f);
@@ -259,13 +369,13 @@ fragment float4 fragment_main(VertexOut in [[stage_in]],
             Metal.RenderPassDescriptor pass = mDevice.NewRenderPassDescriptor();
             Metal.RenderPassColorAttachment colAtch0 = pass.ColorAttachments[0];
             colAtch0.SetTexture(drawable.Texture);
-            colAtch0.SetLoadAction(Metal.LoadAction.Clear);
-            colAtch0.SetStoreAction(Metal.StoreAction.Store);
+            colAtch0.SetLoadAction(LoadAction.Clear);
+            colAtch0.SetStoreAction(StoreAction.Store);
             colAtch0.SetClearColor(0, 0, 0, 1);
             Metal.RenderPassDepthAttachment depthAttachment = pass.DepthAttachment;
             depthAttachment.SetTexture(depthTexture);
-            depthAttachment.SetLoadAction(Metal.LoadAction.Clear);
-            depthAttachment.SetStoreAction(Metal.StoreAction.DontCare);
+            depthAttachment.SetLoadAction(LoadAction.Clear);
+            depthAttachment.SetStoreAction(StoreAction.DontCare);
             depthAttachment.SetClearDepth(1.0);
 
             Metal.CommandBuffer cmdBuf = queue.CreateCommandBuffer();

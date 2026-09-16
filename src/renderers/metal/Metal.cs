@@ -6,6 +6,7 @@ namespace odl3d.Renderer;
 
 public static partial class Metal
 {
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_MTLCreateSystemDefaultDevice();
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_sel_registerName([MarshalAs(UnmanagedType.LPStr)] string name);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_getClass([MarshalAs(UnmanagedType.LPStr)] string name);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSend(IntPtr receiver, IntPtr selector);
@@ -23,9 +24,16 @@ public static partial class Metal
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendRegion(IntPtr receiver, IntPtr selector, MTLRegion region, nuint level, IntPtr bytes, nuint bytesPerRow);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendViewport(IntPtr receiver, IntPtr selector, MTLViewport viewport);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendScissorRect(IntPtr receiver, IntPtr selector, MTLScissorRect scissorRect);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_MTLCreateSystemDefaultDevice();
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate CGSize d_objc_msgSendRetSize(IntPtr receiver, IntPtr selector);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendNSRect(IntPtr receiver, IntPtr selector, NSRect rect);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate NSRect d_objc_msgSendRetNSRect(IntPtr reciever, IntPtr selector);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate double d_objc_msgSendRetDouble(IntPtr receiver, IntPtr selector);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate uint d_objc_msgSendRetUInt32(IntPtr receiver, IntPtr selector);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate ulong d_objc_msgSendRetUInt64(IntPtr receiver, IntPtr selector);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendSize(IntPtr receiver, IntPtr selector, CGSize size);
 
 #pragma warning disable CS8618
+    private static d_MTLCreateSystemDefaultDevice MTLCreateSystemDefaultDevice;
     private static d_sel_registerName sel_registerName;
     private static d_objc_getClass obcj_getClass;
     private static d_objc_msgSend objc_msgSend;
@@ -43,7 +51,13 @@ public static partial class Metal
     private static d_objc_msgSendRegion objc_msgSendRegion;
     private static d_objc_msgSendViewport objc_msgSendViewport;
     private static d_objc_msgSendScissorRect objc_msgSendScissorRect;
-    private static d_MTLCreateSystemDefaultDevice MTLCreateSystemDefaultDevice;
+    private static d_objc_msgSendRetSize objc_msgSendRetSize;
+    private static d_objc_msgSendNSRect objc_msgSendNSRect;
+    private static d_objc_msgSendRetNSRect objc_msgSendRetNSRect;
+    private static d_objc_msgSendRetDouble objc_msgSendRetDouble;
+    private static d_objc_msgSendRetUInt32 objc_msgSendRetUInt32;
+    private static d_objc_msgSendRetUInt64 objc_msgSendRetUInt64;
+    private static d_objc_msgSendSize objc_msgSendSize;
 #pragma warning restore CS8618
 
     private static IntPtr _objc;
@@ -63,6 +77,7 @@ public static partial class Metal
         if (!NativeLibrary.TryLoad("/System/Library/Frameworks/Metal.framework/Metal", out _metal))
             throw new DllNotFoundException("Could not load the Metal framework.");
 
+        MTLCreateSystemDefaultDevice = GetFunction<d_MTLCreateSystemDefaultDevice>(_metal, "MTLCreateSystemDefaultDevice");
         sel_registerName = GetFunction<d_sel_registerName>(_objc, "sel_registerName");
         obcj_getClass = GetFunction<d_objc_getClass>(_objc, "objc_getClass");
         objc_msgSend = GetFunction<d_objc_msgSend>(_objc, "objc_msgSend");
@@ -80,7 +95,13 @@ public static partial class Metal
         objc_msgSendRegion = GetFunction<d_objc_msgSendRegion>(_objc, "objc_msgSend");
         objc_msgSendViewport = GetFunction<d_objc_msgSendViewport>(_objc, "objc_msgSend");
         objc_msgSendScissorRect = GetFunction<d_objc_msgSendScissorRect>(_objc, "objc_msgSend");
-        MTLCreateSystemDefaultDevice = GetFunction<d_MTLCreateSystemDefaultDevice>(_metal, "MTLCreateSystemDefaultDevice");
+        objc_msgSendRetSize = GetFunction<d_objc_msgSendRetSize>(_objc, "objc_msgSend");
+        objc_msgSendNSRect = GetFunction<d_objc_msgSendNSRect>(_objc, "objc_msgSend");
+        objc_msgSendRetNSRect = GetFunction<d_objc_msgSendRetNSRect>(_objc, "objc_msgSend");
+        objc_msgSendRetDouble = GetFunction<d_objc_msgSendRetDouble>(_objc, "objc_msgSend");
+        objc_msgSendRetUInt32 = GetFunction<d_objc_msgSendRetUInt32>(_objc, "objc_msgSend");
+        objc_msgSendRetUInt64 = GetFunction<d_objc_msgSendRetUInt64>(_objc, "objc_msgSend");
+        objc_msgSendSize = GetFunction<d_objc_msgSendSize>(_objc, "objc_msgSend");
 
         Loaded = true;
     }
@@ -134,5 +155,33 @@ public static partial class Metal
         public nuint Y;
         public nuint Width;
         public nuint Height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CGSize
+    {
+        public double Width;
+        public double Height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NSPoint
+    {
+        public double X;
+        public double Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NSSize
+    {
+        public double Width;
+        public double Height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NSRect
+    {
+        public NSPoint Origin;
+        public NSSize Size;
     }
 }

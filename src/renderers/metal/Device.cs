@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using odl3d;
 
@@ -153,7 +154,7 @@ public static partial class Metal
             }
             """);
 
-        public Buffer CreateBuffer(float[] data)
+        public unsafe Buffer CreateBuffer<T>(T[] data) where T : unmanaged
         {
             if (data is null || data.Length == 0)
                 throw new ArgumentException("The buffer data cannot be empty.", nameof(data));
@@ -162,7 +163,7 @@ public static partial class Metal
             try
             {
                 IntPtr handle = Send("newBufferWithBytes:length:options:",
-                    pinned.AddrOfPinnedObject(), (nuint) (data.Length * sizeof(float)), 0);
+                    pinned.AddrOfPinnedObject(), (nuint) (data.Length * sizeof(T)), 0);
                 if (handle == IntPtr.Zero)
                     throw new RenderException("Metal could not create the vertex buffer.");
                 return new Buffer(handle);
@@ -173,33 +174,16 @@ public static partial class Metal
             }
         }
 
-        public Buffer CreateIndexBuffer(uint[] data)
-        {
-            if (data is null || data.Length == 0)
-                throw new ArgumentException("The index data cannot be empty.", nameof(data));
+        public RenderPipelineState CreatePipeline(string vertexSource, string fragmentSource, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main") =>
+            CreatePipeline(vertexSource + "\n\n" + fragmentSource, vertexEntryPoint, fragmentEntryPoint);
 
-            GCHandle pinned = GCHandle.Alloc(data, GCHandleType.Pinned);
-            try
-            {
-                IntPtr handle = Send("newBufferWithBytes:length:options:",
-                    pinned.AddrOfPinnedObject(), (nuint)(data.Length * sizeof(uint)), 0);
-                if (handle == IntPtr.Zero)
-                    throw new RenderException("Metal could not create the index buffer.");
-                return new Buffer(handle);
-            }
-            finally
-            {
-                pinned.Free();
-            }
-        }
-
-        public RenderPipelineState CreatePipeline(string source)
+        public RenderPipelineState CreatePipeline(string source, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main")
         {
             using Library library = CompileLibrary(source);
 
             using var descriptor = RenderPipelineDescriptor.Create();
-            using ObjCObject vertexFunction = library.NewFunctionWithName("triangle_vertex");
-            using ObjCObject fragmentFunction = library.NewFunctionWithName("triangle_fragment");
+            using ObjCObject vertexFunction = library.NewFunctionWithName(vertexEntryPoint);
+            using ObjCObject fragmentFunction = library.NewFunctionWithName(fragmentEntryPoint);
             descriptor.SetVertexFunction(vertexFunction);
             descriptor.SetFragmentFunction(fragmentFunction);
             descriptor.SetDepthAttachmentPixelFormat(252); // Depth32Float

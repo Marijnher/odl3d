@@ -4,8 +4,8 @@ namespace odl3d.Renderer;
 
 public interface IRenderSurface : IGPUResource
 {
-    int Width { get; }
-    int Height { get; }
+    uint Width { get; }
+    uint Height { get; }
     bool VSync { get; set; }
     
     TextureFormat ColorFormat { get; }
@@ -14,5 +14,5 @@ public interface IRenderSurface : IGPUResource
 
     void Resize(int width, int height);
     
-    IFrame? AcquireFrame();
+    IRenderFrame? AcquireFrame();
 }

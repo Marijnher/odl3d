@@ -9,6 +9,8 @@ public static partial class Metal
     {
         private static IntPtr ClassPointer => Class("CAMetalLayer");
 
+        public CGSize DrawableSize => GetSize("drawableSize");
+
         private MetalLayer(IntPtr handle) : base(handle) { }
 
         public static MetalLayer Create()
@@ -34,6 +36,22 @@ public static partial class Metal
             ContentView contentView = cocoaWindow.ContentView;
             contentView.SetWantsLayer(1);
             contentView.SetLayer(metalLayer);
+
+            NSRect bounds = contentView.Bounds;
+            double contentScale = contentView.BackingScaleFactor;
+            double windowScale = cocoaWindow.BackingScaleFactor;
+            if (contentScale != windowScale)
+                Console.WriteLine($"WARNING: content scale ({contentScale}) and window scale ({windowScale}) are not equal.");
+
+            metalLayer.SetFrame(bounds);
+            metalLayer.SetBounds(bounds);
+            metalLayer.SetContentsScale(contentScale);
+            metalLayer.SetDrawableSize(
+                new CGSize { Width = bounds.Size.Width * contentScale, Height = bounds.Size.Height * contentScale }
+            );
+
+            CGSize cgSize = metalLayer.DrawableSize;
+
             return metalLayer;
         }
 
@@ -47,5 +65,17 @@ public static partial class Metal
 
         public void SetDisplaySyncEnabled(bool enabled) =>
             Send("setDisplaySyncEnabled:", enabled ? 1 : 0);
+
+        public void SetFrame(NSRect rect) =>
+            Send("setFrame:", rect);
+
+        public void SetBounds(NSRect rect) =>
+            Send("setBounds:", rect);
+
+        public void SetContentsScale(double scalingFactor) =>
+            Send("setContentsScale:", scalingFactor);
+
+        public void SetDrawableSize(CGSize size) =>
+            Send("setDrawableSize:", size);
     }
 }

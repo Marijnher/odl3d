@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using odl3d;
 
 namespace odl3d.Renderer;
 
-public interface IFrame : IDisposable
+public interface IRenderFrame : IDisposable
 {
     ITexture ColorTexture { get; }
 

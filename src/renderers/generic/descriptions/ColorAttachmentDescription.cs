@@ -6,5 +6,5 @@ public sealed record ColorAttachmentDescription
 
     public StoreAction StoreAction { get; init; } = StoreAction.Store;
 
-    public Color ClearColor { get; init; }
+    public Color ClearColor { get; init; } = Color.Black;
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace odl3d.Renderer;
 
@@ -41,14 +42,23 @@ public static partial class Metal
         protected T Get<T>(string selectorName) where T : ObjCObject =>
             Convert<T>(GetRaw(selectorName));
 
+        protected CGSize GetSize(string selectorName) =>
+            objc_msgSendRetSize(Handle, GetSelector(selectorName));
+
         protected uint GetUInt32(string selectorName) =>
-            (uint) objc_msgSend(Handle, GetSelector(selectorName));
+            objc_msgSendRetUInt32(Handle, GetSelector(selectorName));
 
         protected ulong GetUInt64(string selectorName) =>
-            (ulong) objc_msgSend(Handle, GetSelector(selectorName));
+            objc_msgSendRetUInt64(Handle, GetSelector(selectorName));
+
+        protected double GetDouble(string selectorName) =>
+            objc_msgSendRetDouble(Handle, GetSelector(selectorName));
 
         protected string GetString(string selectorName) =>
             Get<NSString>(selectorName).Value;
+
+        protected NSRect GetRect(string selectorName) =>
+            objc_msgSendRetNSRect(Handle, GetSelector(selectorName));
 
         protected string? GetStringOrNull(string selectorName)
         {
@@ -152,6 +162,16 @@ public static partial class Metal
             objc_msgSendScissorRect(Handle, GetSelector(selectorName), scissorRect);
         protected T Send<T>(string selectorName, MTLScissorRect scissorRect) where T : ObjCObject =>
             Convert<T>(Send(selectorName, scissorRect));
+
+        protected IntPtr Send(string selectorName, NSRect rect) =>
+            objc_msgSendNSRect(Handle, GetSelector(selectorName), rect);
+        protected T Send<T>(string selectorName, NSRect rect) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, rect));
+
+        protected IntPtr Send(string selectorName, CGSize size) =>
+            objc_msgSendSize(Handle, GetSelector(selectorName), size);
+        protected T Send<T>(string selectorName, CGSize size) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, size));
 
         protected T Convert<T>(IntPtr objc) where T : ObjCObject 
         {

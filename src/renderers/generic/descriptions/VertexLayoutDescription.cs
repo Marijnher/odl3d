@@ -5,6 +5,6 @@ namespace odl3d.Renderer;
 
 public sealed record VertexLayoutDescription
 {
-    public required IReadOnlyList<VertexBufferLayoutDescription> Buffers { get; init; }
-    public required IReadOnlyList<VertexAttributeDescription> Attributes { get; init; }
+    public required VertexBufferLayoutDescription[] Buffers { get; init; }
+    public required VertexAttributeDescription[] Attributes { get; init; }
 }

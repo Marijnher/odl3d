@@ -2,11 +2,12 @@ using System;
 
 namespace odl3d.Renderer;
 
-public interface IBuffer : IGPUResource
+public interface IBuffer<T> : IGPUResource where T : unmanaged
 {
-    nuint Size { get; }
+    int Size { get; }
     BufferUsage Usage { get; }
     BufferAccess Access { get; }
+    BufferType Type { get; }
 
-    void UpdateBuffer(ReadOnlySpan<byte> data);
+    void SetData(T[] data);
 }

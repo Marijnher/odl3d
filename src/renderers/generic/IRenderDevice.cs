@@ -10,9 +10,9 @@ public interface IRenderDevice : IDisposable
 
     IRenderSurface CreateSurface(nint nativeWindow);
 
-    IBuffer CreateBuffer(BufferDescription description, ReadOnlySpan<byte> initialData = default);
+    IBuffer<T> CreateBuffer<T>(BufferDescription description, T[]? initialData = null) where T : unmanaged;
 
-    ITexture CreateTexture(TextureDescription description, ReadOnlySpan<byte> initialData = default);
+    ITexture CreateTexture(TextureDescription description, float[]? initialData = null);
     
     ISampler CreateSampler(SamplerDescription description);
 
@@ -20,5 +20,5 @@ public interface IRenderDevice : IDisposable
 
     IShaderModule CreateShaderModule(ShaderModuleDescription description);
 
-    IRenderPipeline CreateShaderPipeline(RenderPipelineDescription description);
+    IRenderPipeline CreateRenderPipeline(RenderPipelineDescription description);
 }

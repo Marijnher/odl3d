@@ -4,10 +4,12 @@ namespace odl3d.Renderer.MetalAdapter;
 
 public class MetalRenderSurface : IRenderSurface
 {
+    private Metal.Device Device;
     private Metal.MetalLayer MetalLayer;
+    private Metal.CommandQueue CommandQueue;
 
-    public int Width => throw new NotImplementedException();
-    public int Height => throw new NotImplementedException();
+    public uint Width => (uint) MetalLayer.DrawableSize.Width;
+    public uint Height => (uint) MetalLayer.DrawableSize.Height;
     public bool VSync
     {
         get => throw new NotImplementedException();
@@ -19,9 +21,14 @@ public class MetalRenderSurface : IRenderSurface
     public TextureFormat? DepthFormat => throw new NotImplementedException();
     public int SampleCount => throw new NotImplementedException();
 
-    public MetalRenderSurface(Metal.MetalLayer metalLayer)
+    public Metal.Texture DepthTexture { get; }
+
+    public MetalRenderSurface(Metal.Device device, nint windowHandle)
     {
-        MetalLayer = metalLayer;
+        Device = device;
+        MetalLayer = Metal.MetalLayer.AttachToWindow(Device, windowHandle);
+        CommandQueue = Device.NewCommandQueue();
+        DepthTexture = Device.CreateDepthTexture(Width, Height);
     }
 
     public void Resize(int width, int height)
@@ -29,13 +36,16 @@ public class MetalRenderSurface : IRenderSurface
         throw new NotImplementedException();
     }
     
-    public IFrame? AcquireFrame()
+    public IRenderFrame? AcquireFrame()
     {
-        return null;
+        var drawable = MetalLayer.NextDrawable();
+        return new MetalRenderFrame(Device, this, CommandQueue, drawable);
     }
 
     public void Dispose()
     {
+        if (Disposed) return;
+        DepthTexture.Dispose();
         Disposed = true;
     }
 }
