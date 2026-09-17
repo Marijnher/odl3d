@@ -27,7 +27,7 @@ public class MetalTexture : ITexture
         Height = description.Height;
         Texture = Device.CreateTexture(
             initialData ?? new byte[Width * Height * 4],
-            Width, Height
+            Width, Height, description.Format
         );
     }
 

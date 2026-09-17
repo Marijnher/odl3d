@@ -28,6 +28,7 @@ public static partial class Metal
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendNSRect(IntPtr receiver, IntPtr selector, NSRect rect);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate NSRect d_objc_msgSendRetNSRect(IntPtr reciever, IntPtr selector);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate double d_objc_msgSendRetDouble(IntPtr receiver, IntPtr selector);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int d_objc_msgSendRetInt32(IntPtr receiver, IntPtr selector);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate uint d_objc_msgSendRetUInt32(IntPtr receiver, IntPtr selector);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate ulong d_objc_msgSendRetUInt64(IntPtr receiver, IntPtr selector);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendSize(IntPtr receiver, IntPtr selector, CGSize size);
@@ -55,6 +56,7 @@ public static partial class Metal
     private static d_objc_msgSendNSRect objc_msgSendNSRect;
     private static d_objc_msgSendRetNSRect objc_msgSendRetNSRect;
     private static d_objc_msgSendRetDouble objc_msgSendRetDouble;
+    private static d_objc_msgSendRetInt32 objc_msgSendRetInt32;
     private static d_objc_msgSendRetUInt32 objc_msgSendRetUInt32;
     private static d_objc_msgSendRetUInt64 objc_msgSendRetUInt64;
     private static d_objc_msgSendSize objc_msgSendSize;
@@ -99,6 +101,7 @@ public static partial class Metal
         objc_msgSendNSRect = GetFunction<d_objc_msgSendNSRect>(_objc, "objc_msgSend");
         objc_msgSendRetNSRect = GetFunction<d_objc_msgSendRetNSRect>(_objc, "objc_msgSend");
         objc_msgSendRetDouble = GetFunction<d_objc_msgSendRetDouble>(_objc, "objc_msgSend");
+        objc_msgSendRetInt32 = GetFunction<d_objc_msgSendRetInt32>(_objc, "objc_msgSend");
         objc_msgSendRetUInt32 = GetFunction<d_objc_msgSendRetUInt32>(_objc, "objc_msgSend");
         objc_msgSendRetUInt64 = GetFunction<d_objc_msgSendRetUInt64>(_objc, "objc_msgSend");
         objc_msgSendSize = GetFunction<d_objc_msgSendSize>(_objc, "objc_msgSend");
@@ -130,6 +133,20 @@ public static partial class Metal
             throw new EntryPointNotFoundException($"Could not find native function '{name}'.");
         return Marshal.GetDelegateForFunctionPointer<TDelegate>(ptr);
     }
+
+    public static nuint GetPixelFormat(TextureFormat textureFormat) => textureFormat switch
+    {
+        TextureFormat.RGBA8Unorm => 70,
+        TextureFormat.BGRA8Unorm => 80,
+        TextureFormat.RGBA16Float => 115,
+        TextureFormat.RGBA32Float => 125,
+
+        TextureFormat.Depth16Unorm => 250,
+        TextureFormat.Depth32Float => 252,
+        TextureFormat.Depth24UnormStencil8 => 255,
+        TextureFormat.Depth32FloatStencil8 => 260,
+        _ => throw new RenderException("Unsupported texture format.")
+    };
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MTLRegion

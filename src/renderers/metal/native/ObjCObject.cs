@@ -45,6 +45,9 @@ public static partial class Metal
         protected CGSize GetSize(string selectorName) =>
             objc_msgSendRetSize(Handle, GetSelector(selectorName));
 
+        protected int GetInt32(string selectorName) =>
+            objc_msgSendRetInt32(Handle, GetSelector(selectorName));
+
         protected uint GetUInt32(string selectorName) =>
             objc_msgSendRetUInt32(Handle, GetSelector(selectorName));
 
@@ -87,7 +90,7 @@ public static partial class Metal
         protected T Send<T>(string selectorName) where T : ObjCObject =>
             Convert<T>(Send(selectorName));
 
-        protected IntPtr Send(string selectorName, IntPtr value) =>
+        public IntPtr Send(string selectorName, IntPtr value) =>
             objc_msgSendPtr(Handle, GetSelector(selectorName), value);
         protected T Send<T>(string selectorName, IntPtr value) where T : ObjCObject =>
             Convert<T>(Send(selectorName, value));

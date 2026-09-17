@@ -71,6 +71,8 @@ public class MetalRenderPass : IRenderPass
     }
     public void SetDepthStencilState(IDepthStencilState state)
     {
+        var metalDepthStencil = (MetalDepthStencilState) state;
+        Encoder.SetDepthStencilState(metalDepthStencil.DepthStencilState);
     }
 
     public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, nuint offset = 0) where T : unmanaged

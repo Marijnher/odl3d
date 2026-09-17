@@ -24,5 +24,8 @@ public static partial class Metal
 
         public void SetDepthAttachmentPixelFormat(nuint pixelFormat) =>
             Send("setDepthAttachmentPixelFormat:", pixelFormat);
+
+        public void SetVertexDescriptor(VertexDescriptor vertexDescriptor) =>
+            Send("setVertexDescriptor:", vertexDescriptor);
     }
 }

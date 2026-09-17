@@ -18,7 +18,7 @@ public static partial class Metal
     {
         public RenderPipelineColorAttachment(IntPtr handle) : base(handle) { }
 
-        public void SetPixelFormat(uint pixelFormat) =>
+        public void SetPixelFormat(nuint pixelFormat) =>
             Send("setPixelFormat:", pixelFormat);
     }
 }

@@ -128,8 +128,8 @@ using namespace metal;
 
 struct VertexIn
 {
-    packed_float3 position;
-    packed_float2 texCoord;
+    float3 position [[attribute(0)]];
+    float2 texCoord [[attribute(1)]];
 };
 
 struct VertexOut
@@ -140,12 +140,13 @@ struct VertexOut
 
 vertex VertexOut vertex_main(
                     uint vertexID [[vertex_id]],
-                    device const VertexIn* vertices [[buffer(0)]]
+                    VertexIn in [[stage_in]],
+                    constant float4x4& camera [[buffer(1)]]
                 )
 {
     VertexOut out;
-    out.position = float4(vertices[vertexID].position, 1.0);
-    out.texCoord = vertices[vertexID].texCoord;
+    out.position = camera * float4(in.position, 1.0);
+    out.texCoord = in.texCoord;
     return out;
 }";
 
@@ -159,6 +160,44 @@ fragment float4 fragment_main(
                 )
 {
     float4 color = texture.sample(sampler, in.texCoord);
+    return color;
+}";
+
+    private const string SimplerMetalVertexSource = @"#include <metal_stdlib>
+using namespace metal;
+
+struct VertexIn
+{
+    packed_float3 position;
+    packed_float2 texCoord;
+};
+
+struct VertexOut
+{
+    float4 position [[position]];
+    float2 texCoord;
+};
+
+vertex VertexOut vertex_main(
+                    uint vertexID [[vertex_id]],
+                    device const VertexIn* vertices [[buffer(0)]],
+                    constant float4x4& camera [[buffer(1)]]
+                )
+{
+    VertexOut out;
+    out.position = camera * float4(vertices[vertexID].position, 1.0);
+    out.texCoord = vertices[vertexID].texCoord;
+    return out;
+}";
+
+    private const string SimplerMetalFragmentSource = @"#include <metal_stdlib>
+using namespace metal;
+
+fragment float4 fragment_main(
+                    VertexOut in [[stage_in]]
+                )
+{
+    float4 color = float4(in.texCoord, 1.0, 1.0);
     return color;
 }";
 
@@ -179,6 +218,34 @@ fragment float4 fragment_main(
         }
 
         using IRenderSurface surface = device.CreateSurface(winHandle);
+
+        var vertexLayout = new VertexLayoutDescription
+        {
+            Buffers = [
+                new VertexBufferLayoutDescription // Buffer 0
+                {
+                    BufferIndex = 0,
+                    Stride = 5 * sizeof(float),
+                    StepFunction = StepMode.PerVertex
+                }
+            ],
+            Attributes = [
+                new VertexAttributeDescription // Atribute 0 (position, float3)
+                {
+                    AttributeIndex = 0,
+                    Format = VertexFormat.Float3,
+                    Offset = 0,
+                    BufferSlot = 0
+                },
+                new VertexAttributeDescription // Attribute 1 (texCoord, float2)
+                {
+                    AttributeIndex = 1,
+                    Format = VertexFormat.Float2,
+                    Offset = 3 * sizeof(float),
+                    BufferSlot = 0
+                }
+            ]
+        };
         using IShaderModule vertexShader = device.CreateShaderModule(new ShaderModuleDescription
         {
             Stage = ShaderStage.Vertex,
@@ -195,23 +262,40 @@ fragment float4 fragment_main(
         {
             VertexShader = vertexShader,
             FragmentShader = fragmentShader,
-            VertexLayout = new VertexLayoutDescription()
-            {
-                Buffers = [],
-                Attributes = []
-            },
+            VertexLayout = vertexLayout,
             ColorFormat = TextureFormat.RGBA32Float
         });
+
+        using IShaderModule simpleVertex = device.CreateShaderModule(new ShaderModuleDescription
+        {
+            Stage = ShaderStage.Vertex,
+            Source = SimplerMetalVertexSource,
+            EntryPoint = "vertex_main"
+        });
+        using IShaderModule simpleFragment = device.CreateShaderModule(new ShaderModuleDescription
+        {
+            Stage = ShaderStage.Fragment,
+            Source = SimplerMetalFragmentSource,
+            EntryPoint = "fragment_main"
+        });
+        using IRenderPipeline simpleRenderPipleline = device.CreateRenderPipeline(new RenderPipelineDescription()
+        {
+            VertexShader = simpleVertex,
+            FragmentShader = simpleFragment,
+            VertexLayout = vertexLayout,
+            ColorFormat = TextureFormat.RGBA32Float
+        });
+
         float[] vertices = 
         {
             // 0.0f, 0.0f, 0.0f,    0.0f, 0.0f,
             // 0.5f, 0.0f, 0.0f,    1.0f, 0.0f,
             // 0.5f, 0.5f, 0.0f,    1.0f, 1.0f,
             // 0.0f, 0.5f, 0.0f,    0.0f, 1.0f
-            -0.5f, -0.5f, 0.0f,      0.0f, 0.0f,
-            0.5f, -0.5f, 0.0f,       1.0f, 0.0f,
-            0.5f, 0.5f, 0.0f,        1.0f, 1.0f,
-            -0.5f, 0.5f, 0.0f,       0.0f, 1.0f
+            -0.25f, -0.25f, 0.0f,      0.0f, 0.0f,
+            0.25f, -0.25f, 0.0f,       1.0f, 0.0f,
+            0.25f, 0.25f, 0.0f,        1.0f, 1.0f,
+            -0.25f, 0.25f, 0.0f,       0.0f, 1.0f
         };
         using IBuffer<float> vtxBuffer = device.CreateBuffer<float>(new BufferDescription
         {
@@ -231,7 +315,17 @@ fragment float4 fragment_main(
         });
         idxBuffer.SetData(indices);
 
-        using IDepthStencilState state = device.CreateDepthStencilState(new DepthStencilDescription
+        using IBuffer<float> triangleBuffer = device.CreateBuffer(new BufferDescription
+        {
+            Size = 3 * 5,
+            Usage = BufferUsage.Vertex
+        }, [
+            1.0f, 0.0f, 0.0f,   0.0f, 0.0f,
+            1.0f, 0.0f, 1.0f,   1.0f, 0.0f,
+            1.0f, 1.0f, 0.0f,   1.0f, 1.0f
+        ]);
+
+        using IDepthStencilState depthStencil = device.CreateDepthStencilState(new DepthStencilDescription
         {
             DepthCompareFunction = CompareFunction.Less,
             DepthTestEnabled = true,
@@ -243,7 +337,7 @@ fragment float4 fragment_main(
         {
             Width = (uint) texSource.Width,
             Height = (uint) texSource.Height,
-            Format = TextureFormat.RGBA32Float
+            Format = TextureFormat.RGBA8Unorm
         }, texSource.Bytes);
         using ISampler sampler = device.CreateSampler(new SamplerDescription
         {
@@ -251,6 +345,30 @@ fragment float4 fragment_main(
             MagFilter = TextureFilter.Nearest,
             MipmapFilter = MipmapFilter.Linear
         });
+
+        Matrix4x4 view = Matrix4x4.CreateLookAt(
+            new Vector3(0.0f, 0.0f, 2.0f),
+            Vector3.Zero,
+            Vector3.UnitY
+        );
+        Matrix4x4 projection = Matrix4x4.CreatePerspectiveFieldOfView(
+            MathF.PI / 3.0f,
+            (float) winWidth / winHeight,
+            0.1f,
+            100.0f
+        );
+        using IBuffer<float> camBuffer = device.CreateBuffer(new BufferDescription
+        {
+            Size = 16,
+            Usage = BufferUsage.Uniform,
+        }, ToBufferArray(view * projection));
+
+        Vector3 cameraPosition = new(0.0f, 0.0f, 2.0f);
+        float cameraYaw = 0.0f;
+        float cameraPitch = 0.0f;
+        double previousTime = GLFW.glfwGetTime();
+        GLFW.glfwSetInputMode(winHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+        GLFW.glfwGetCursorPos(winHandle, out double previousMouseX, out double previousMouseY);
 
         while (GLFW.glfwWindowShouldClose(winHandle) == 0)
         {
@@ -260,113 +378,19 @@ fragment float4 fragment_main(
                 GLFW.glfwSetWindowShouldClose(winHandle, 1);
             }
 
-            IRenderFrame? frame = surface.AcquireFrame();
+            using IRenderFrame? frame = surface.AcquireFrame();
             if (frame == null) throw new RenderException("No frame could be acquired.");
 
-            IRenderPass pass = frame.CreateRenderPass(new RenderPassDescription
+            using IRenderPass pass = frame.CreateRenderPass(new RenderPassDescription
             {
                 Color = new ColorAttachmentDescription { ClearColor = new Color(0, 0, 0) }
             });
-
-            pass.SetRenderPipeline(renderPipeline);
-            pass.SetVertexBuffer(vtxBuffer);
-            pass.SetIndexBuffer(idxBuffer);
-            pass.SetTexture(texture);
-            pass.SetSampler(sampler);
-            pass.DrawIndexed();
-            pass.End();
-
-            frame.Present();
-        }
-
-        GLFW.glfwTerminate();
-
-        return;
-
-        GLFW.Load();
-        Metal.Load();
-        using Metal.Device mDevice = Metal.Device.Default;
-        Console.WriteLine(mDevice.Name);
-
-        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
-        int windowWidth = 400;
-        int windowHeight = 400;
-        nint windowHandle = GLFW.glfwCreateWindow(windowWidth, windowHeight, "Metal", IntPtr.Zero, IntPtr.Zero);
-        if (windowHandle == IntPtr.Zero)
-        {
-            GLFW.glfwTerminate();
-            throw new Exception("Failed to create a GLFW window.");
-        }
-
-        Metal.MetalLayer layer = Metal.MetalLayer.AttachToWindow(mDevice, windowHandle);
-        layer.SetDisplaySyncEnabled(false);
-
-        using Metal.CommandQueue queue = mDevice.NewCommandQueue();
-        using Metal.RenderPipelineState texturedPipeline = mDevice.CreateTexturedPipeline();
-        using Metal.RenderPipelineState solidPipeline = mDevice.CreateSolidTrianglePipeline();
-        using Metal.DepthStencilState depthState = mDevice.CreateDepthStencilState(
-            CompareFunction.LessEqual,
-            depthWriteEnabled: true);
-        var grassAsset = decodl.PNGDecoder.Decode("assets/grass.png");
-        using Metal.Texture grassTexture = mDevice.CreateTexture(grassAsset.Bytes, (uint) grassAsset.Width, (uint) grassAsset.Height);
-        using Metal.SamplerState grassSampler = mDevice.CreateSampler(
-            TextureFilter.Linear,
-            TextureFilter.Linear,
-            MipmapFilter.Linear,
-            TextureWrap.Repeat,
-            TextureWrap.Repeat,
-            TextureWrap.Repeat,
-            AnisotropicFilter.X4);
-        using Metal.Texture depthTexture = mDevice.CreateDepthTexture((uint)windowWidth, (uint)windowHeight);
-        Matrix4x4 initialView = Matrix4x4.CreateLookAt(
-            new Vector3(0.0f, 0.0f, 2.0f),
-            Vector3.Zero,
-            Vector3.UnitY);
-        Matrix4x4 projection = Matrix4x4.CreatePerspectiveFieldOfView(
-            MathF.PI / 3.0f,
-            (float)windowWidth / windowHeight,
-            0.1f,
-            100.0f);
-        using Metal.Buffer cameraBuffer = mDevice.CreateBuffer(ToMetalMatrix(
-            Matrix4x4.Identity * initialView * projection));
-        using Metal.Buffer vertexBuffer1 = mDevice.CreateBuffer(
-        [
-             0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
-             0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
-             0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
-             0.0f,  0.5f, 0.0f,    0.0f, 1.0f
-        ]);
-        using Metal.Buffer indexBuffer1 = mDevice.CreateBuffer(
-            [0, 1, 2, 2, 3, 0]
-        );
-        using Metal.Buffer vertexBuffer2 = mDevice.CreateBuffer(
-        [
-             0.0f,  0.0f, 0.0f,    0.0f, 0.0f,
-            -0.5f,  0.0f, 0.0f,    1.0f, 0.0f,
-            -0.5f, -0.5f, 0.0f,    1.0f, 1.0f
-        ]);
-        using Metal.Buffer indexBuffer2 = mDevice.CreateBuffer(
-            [0, 1, 2]
-        );
-        Vector3 cameraPosition = new(0.0f, 0.0f, 2.0f);
-        float cameraYaw = 0.0f;
-        float cameraPitch = 0.0f;
-        GLFW.glfwSetInputMode(windowHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
-        GLFW.glfwGetCursorPos(windowHandle, out double previousMouseX, out double previousMouseY);
-        double previousTime = GLFW.glfwGetTime();
-
-        while (GLFW.glfwWindowShouldClose(windowHandle) == 0)
-        {
-            GLFW.glfwPollEvents();
-
-            if (GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_ESCAPE) == GLFW.GLFW_PRESS)
-                GLFW.glfwSetWindowShouldClose(windowHandle, GLFW.GLFW_TRUE);
 
             double currentTime = GLFW.glfwGetTime();
             float deltaTime = MathF.Min((float)(currentTime - previousTime), 0.1f);
             previousTime = currentTime;
 
-            GLFW.glfwGetCursorPos(windowHandle, out double mouseX, out double mouseY);
+            GLFW.glfwGetCursorPos(winHandle, out double mouseX, out double mouseY);
             cameraYaw += (float)(mouseX - previousMouseX) * 0.0025f;
             cameraPitch -= (float)(mouseY - previousMouseY) * 0.0025f;
             cameraPitch = Math.Clamp(cameraPitch, -MathF.PI / 2.0f + 0.01f, MathF.PI / 2.0f - 0.01f);
@@ -379,64 +403,46 @@ fragment float4 fragment_main(
                 -MathF.Cos(cameraYaw) * MathF.Cos(cameraPitch));
             Vector3 movementForward = Vector3.Normalize(new(forward.X, 0.0f, forward.Z));
             Vector3 right = new(MathF.Cos(cameraYaw), 0.0f, MathF.Sin(cameraYaw));
-            if (GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS)
+            if (GLFW.glfwGetKey(winHandle, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS)
                 cameraPosition += movementForward * (deltaTime * 2.0f);
-            if (GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS)
+            if (GLFW.glfwGetKey(winHandle, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS)
                 cameraPosition -= movementForward * (deltaTime * 2.0f);
-            if (GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS)
+            if (GLFW.glfwGetKey(winHandle, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS)
                 cameraPosition -= right * (deltaTime * 2.0f);
-            if (GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS)
+            if (GLFW.glfwGetKey(winHandle, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS)
                 cameraPosition += right * (deltaTime * 2.0f);
-            if (GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS)
+            if (GLFW.glfwGetKey(winHandle, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS)
                 cameraPosition += Vector3.UnitY * (deltaTime * 2.0f);
-            if (GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS)
+            if (GLFW.glfwGetKey(winHandle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS)
                 cameraPosition -= Vector3.UnitY * (deltaTime * 2.0f);
 
             Matrix4x4 currentView = Matrix4x4.CreateLookAt(
                 cameraPosition,
                 cameraPosition + forward,
                 Vector3.UnitY);
-            cameraBuffer.Update(ToMetalMatrix(currentView * projection));
+            camBuffer.SetData(ToBufferArray(currentView * projection));
 
-            Metal.Drawable drawable = layer.NextDrawable();
-            
-            Metal.RenderPassDescriptor pass = mDevice.NewRenderPassDescriptor();
-            Metal.RenderPassColorAttachment colAtch0 = pass.ColorAttachments[0];
-            colAtch0.SetTexture(drawable.Texture);
-            colAtch0.SetLoadAction(LoadAction.Clear);
-            colAtch0.SetStoreAction(StoreAction.Store);
-            colAtch0.SetClearColor(0, 0, 0, 1);
-            Metal.RenderPassDepthAttachment depthAttachment = pass.DepthAttachment;
-            depthAttachment.SetTexture(depthTexture);
-            depthAttachment.SetLoadAction(LoadAction.Clear);
-            depthAttachment.SetStoreAction(StoreAction.DontCare);
-            depthAttachment.SetClearDepth(1.0);
+            pass.SetRenderPipeline(renderPipeline);
+            pass.SetDepthStencilState(depthStencil);
+            pass.SetVertexBuffer(camBuffer, 1);
+            pass.SetVertexBuffer(vtxBuffer, 0);
+            pass.SetIndexBuffer(idxBuffer);
+            pass.SetTexture(texture);
+            pass.SetSampler(sampler);
+            pass.DrawIndexed();
 
-            Metal.CommandBuffer cmdBuf = queue.CreateCommandBuffer();
+            pass.SetRenderPipeline(simpleRenderPipleline);
+            pass.SetVertexBuffer(triangleBuffer);
+            pass.Draw(0, 3);
 
-            Metal.CommandEncoder encoder = cmdBuf.RenderCommandEncoder(pass);
-            encoder.SetDepthStencilState(depthState);
-            encoder.SetVertexBuffer(cameraBuffer, 1);
+            pass.End();
 
-            encoder.SetRenderPipelineState(texturedPipeline);
-            encoder.SetVertexBuffer(vertexBuffer1, 0);
-            encoder.SetFragmentTexture(grassTexture);
-            encoder.SetFragmentSamplerState(grassSampler);
-            encoder.DrawIndexedPrimitives(indexBuffer1);
-
-            encoder.SetRenderPipelineState(solidPipeline);
-            encoder.SetVertexBuffer(vertexBuffer2, 0);
-            encoder.DrawIndexedPrimitives(indexBuffer2);
-
-            encoder.EndEncoding();
-
-            cmdBuf.Present(drawable);
-            cmdBuf.Commit();
+            frame.Present();
         }
 
-        return;
+        GLFW.glfwTerminate();
 
-        int width = 800;
+        /*int width = 800;
         int height = 600;
 
         GLFW.Load();
@@ -466,10 +472,10 @@ fragment float4 fragment_main(
         }
 
         window.Dispose();
-        shader.Dispose();
+        shader.Dispose();*/
     }
 
-    private static float[] ToMetalMatrix(Matrix4x4 matrix)
+    private static float[] ToBufferArray(Matrix4x4 matrix)
     {
         return
         [

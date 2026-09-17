@@ -28,7 +28,7 @@ public class MetalRenderSurface : IRenderSurface
         Device = device;
         MetalLayer = Metal.MetalLayer.AttachToWindow(Device, windowHandle);
         CommandQueue = Device.NewCommandQueue();
-        DepthTexture = Device.CreateDepthTexture(Width, Height);
+        DepthTexture = Device.CreateTexture(Width, Height, TextureFormat.Depth32Float);
     }
 
     public void Resize(int width, int height)

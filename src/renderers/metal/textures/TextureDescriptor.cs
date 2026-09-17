@@ -10,14 +10,9 @@ public static partial class Metal
 
         private TextureDescriptor(IntPtr handle) : base(handle) { }
 
-        public static TextureDescriptor Create(uint width, uint height) =>
-            Create(width, height, 70);
-
-        public static TextureDescriptor CreateDepth(uint width, uint height) =>
-            Create(width, height, 252);
-
-        private static TextureDescriptor Create(uint width, uint height, nuint pixelFormat)
+        public static TextureDescriptor Create(uint width, uint height, TextureFormat textureFormat = TextureFormat.RGBA8Unorm)
         {
+            nuint pixelFormat = GetPixelFormat(textureFormat);
             IntPtr handle = SendRaw(
                 ClassPointer,
                 "texture2DDescriptorWithPixelFormat:width:height:mipmapped:",

@@ -68,7 +68,7 @@ public static partial class Metal
             return new SamplerState(handle);
         }
 
-        public RenderPipelineState CreateTexturedPipeline() => CreatePipeline("""
+        public RenderPipelineState CreateTexturedPipeline() => CreatePipeline(VertexDescriptor.Create(), """
                 #include <metal_stdlib>
                 using namespace metal;
 
@@ -77,7 +77,7 @@ public static partial class Metal
                     float2 uv;
                 };
 
-                vertex VertexOut triangle_vertex(
+                vertex VertexOut vertex_main(
                     uint vertexId [[vertex_id]],
                     device const float* vertices [[buffer(0)]],
                     constant float4x4& mvp [[buffer(1)]]) {
@@ -89,7 +89,7 @@ public static partial class Metal
                     return out;
                 }
 
-                fragment float4 triangle_fragment(VertexOut in [[stage_in]],
+                fragment float4 fragment_main(VertexOut in [[stage_in]],
                     texture2d<float> colorTexture [[texture(0)]],
                     sampler textureSampler [[sampler(0)]]) {
                     return colorTexture.sample(textureSampler, in.uv);
@@ -97,12 +97,18 @@ public static partial class Metal
                 """
             );
 
-        public unsafe Texture CreateTexture(byte[] data, uint width, uint height)
+        public Texture CreateTexture(uint width, uint height, TextureFormat textureFormat = TextureFormat.RGBA8Unorm)
         {
-            using var descriptor = TextureDescriptor.Create(width, height);
+            using var descriptor = TextureDescriptor.Create(width, height, textureFormat);
             Texture texture = Send<Texture>("newTextureWithDescriptor:", descriptor);
-            fixed(void* dataPtr = data) texture.Upload((nint) dataPtr, 0, width * 4, width, height);
             return texture;
+        }
+
+        public unsafe Texture CreateTexture(byte[] data, uint width, uint height, TextureFormat textureFormat = TextureFormat.RGBA8Unorm)
+        {
+            Texture tex = CreateTexture(width, height, textureFormat);
+            tex.Upload(data, 0, width * 4, width, height);
+            return tex;
         }
 
         public void GenerateMipmaps(CommandQueue queue, Texture texture)
@@ -114,20 +120,11 @@ public static partial class Metal
             commandBuffer.Commit();
         }
 
-        public Texture CreateDepthTexture(uint width, uint height)
-        {
-            using TextureDescriptor descriptor = TextureDescriptor.CreateDepth(width, height);
-            IntPtr handle = Send("newTextureWithDescriptor:", descriptor);
-            if (handle == IntPtr.Zero)
-                throw new RenderException("Metal could not create the depth texture.");
-            return new Texture(handle);
-        }
-
-        public RenderPipelineState CreateSolidTrianglePipeline() => CreatePipeline("""
+        public RenderPipelineState CreateSolidTrianglePipeline() => CreatePipeline(VertexDescriptor.Create(), """
             #include <metal_stdlib>
             using namespace metal;
             struct VertexOut { float4 position [[position]]; float2 uv; };
-            vertex VertexOut triangle_vertex(uint vertexId [[vertex_id]],
+            vertex VertexOut vertex_main(uint vertexId [[vertex_id]],
                 device const float* vertices [[buffer(0)]],
                 constant float4x4& mvp [[buffer(1)]]) {
                 VertexOut out;
@@ -138,7 +135,7 @@ public static partial class Metal
                 out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
                 return out;
             }
-            fragment float4 triangle_fragment(VertexOut in [[stage_in]]) {
+            fragment float4 fragment_main(VertexOut in [[stage_in]]) {
                 return float4(0.1, 0.8, 0.3, 1.0);
             }
             """);
@@ -163,22 +160,23 @@ public static partial class Metal
             }
         }
 
-        public RenderPipelineState CreatePipeline(string vertexSource, string fragmentSource, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main") =>
-            CreatePipeline(vertexSource + "\n\n" + fragmentSource, vertexEntryPoint, fragmentEntryPoint);
+        public RenderPipelineState CreatePipeline(VertexDescriptor vertexDescriptor, string vertexSource, string fragmentSource, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main") =>
+            CreatePipeline(vertexDescriptor, vertexSource + "\n\n" + fragmentSource, vertexEntryPoint, fragmentEntryPoint);
 
-        public RenderPipelineState CreatePipeline(string source, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main")
+        public RenderPipelineState CreatePipeline(VertexDescriptor vertexDescriptor, string source, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main")
         {
             using Library library = CompileLibrary(source);
 
-            using var descriptor = RenderPipelineDescriptor.Create();
+            using RenderPipelineDescriptor descriptor = RenderPipelineDescriptor.Create();
             using ObjCObject vertexFunction = library.NewFunctionWithName(vertexEntryPoint);
             using ObjCObject fragmentFunction = library.NewFunctionWithName(fragmentEntryPoint);
             descriptor.SetVertexFunction(vertexFunction);
             descriptor.SetFragmentFunction(fragmentFunction);
-            descriptor.SetDepthAttachmentPixelFormat(252); // Depth32Float
+            descriptor.SetDepthAttachmentPixelFormat(GetPixelFormat(TextureFormat.Depth32Float));
+            descriptor.SetVertexDescriptor(vertexDescriptor);
 
             var colorAttachment = descriptor.ColorAttachments[0];
-            colorAttachment.SetPixelFormat(80); // BGRA8Unorm
+            colorAttachment.SetPixelFormat(GetPixelFormat(TextureFormat.BGRA8Unorm));
 
             IntPtr pipeline = Send("newRenderPipelineStateWithDescriptor:error:", descriptor.Handle, out IntPtr error);
             ThrowIfError(pipeline, error, "Metal render pipeline creation failed");
