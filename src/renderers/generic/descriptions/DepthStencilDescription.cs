@@ -6,5 +6,5 @@ public sealed record DepthStencilDescription
 {
     public bool DepthTestEnabled { get; init; }
     public bool DepthWriteEnabled { get; init; }
-    public CompareFunction DepthCompare { get; init; } = CompareFunction.LessEqual;
+    public CompareFunction DepthCompareFunction { get; init; } = CompareFunction.LessEqual;
 }

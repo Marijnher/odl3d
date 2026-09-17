@@ -18,8 +18,5 @@ public class MetalShaderModule : IShaderModule
         ShaderLanguage = description.ShaderLanguage;
     }
 
-    public void Dispose()
-    {
-        Disposed = true;
-    }
+    public void Dispose() => Disposed = true;
 }

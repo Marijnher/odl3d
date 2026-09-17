@@ -28,7 +28,7 @@ public class MetalRenderDevice : IRenderDevice
         throw new NotImplementedException();
 
     public IDepthStencilState CreateDepthStencilState(DepthStencilDescription description) =>
-        throw new NotImplementedException();
+        new MetalDepthStencilState(Device, description);
 
     public IShaderModule CreateShaderModule(ShaderModuleDescription description) =>
         new MetalShaderModule(description);

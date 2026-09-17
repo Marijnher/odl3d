@@ -12,6 +12,7 @@ public class MetalRenderFrame : IRenderFrame
     private Metal.CommandBuffer CommandBuffer;
 
     public ITexture ColorTexture => throw new NotImplementedException();
+    public bool Disposed { get; private set; }
 
     public MetalRenderFrame(Metal.Device device, MetalRenderSurface renderSurface, Metal.CommandQueue commandQueue, Metal.Drawable drawable)
     {
@@ -31,5 +32,10 @@ public class MetalRenderFrame : IRenderFrame
         CommandBuffer.Commit();
     }
 
-    public void Dispose() => throw new NotImplementedException();
+    public void Dispose()
+    {
+        if (Disposed) return;
+        CommandBuffer.Dispose();
+        Disposed = true;
+    }
 }

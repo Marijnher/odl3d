@@ -12,7 +12,12 @@ public abstract class MetalBuffer
 
     public abstract Metal.Buffer Buffer { get; }
 
-    public void Dispose() => Buffer.Dispose();
+    public void Dispose()
+    {
+        if (Disposed) return;
+         Buffer.Dispose();
+         Disposed = true;
+    }
 }
 
 public class MetalBuffer<T> : MetalBuffer, IBuffer<T> where T : unmanaged

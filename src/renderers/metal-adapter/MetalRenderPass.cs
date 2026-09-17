@@ -15,6 +15,8 @@ public class MetalRenderPass : IRenderPass
     private MetalBuffer? IndexBuffer;
     private Metal.PrimitiveType MetalPrimitiveType;
 
+    public bool Disposed { get; private set; }
+
     public MetalRenderPass(
         Metal.Device device,
         MetalRenderSurface renderSurface,
@@ -27,7 +29,7 @@ public class MetalRenderPass : IRenderPass
         Drawable = drawable;
         CommandBuffer = commandBuffer;
 
-        var renderPass = Device.NewRenderPassDescriptor();
+        using var renderPass = Device.NewRenderPassDescriptor();
 
         Metal.RenderPassColorAttachment colAtch0 = renderPass.ColorAttachments[0];
         colAtch0.SetTexture(Drawable.Texture);
@@ -62,7 +64,9 @@ public class MetalRenderPass : IRenderPass
             _ => throw new RenderException($"Unsupported primitive type: {Pipeline.PrimitiveType}")
         };
     }
-    public void SetDepthStencilState(IDepthStencilState state) => throw new NotImplementedException();
+    public void SetDepthStencilState(IDepthStencilState state)
+    {
+    }
 
     public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, nuint offset = 0) where T : unmanaged
     {
@@ -110,5 +114,10 @@ public class MetalRenderPass : IRenderPass
 
     public void End() => Encoder.EndEncoding();
 
-    public void Dispose() => throw new NotImplementedException();
+    public void Dispose() 
+    {
+        if (Disposed) return;
+        Encoder.Dispose();
+        Disposed = true;
+    }
 }

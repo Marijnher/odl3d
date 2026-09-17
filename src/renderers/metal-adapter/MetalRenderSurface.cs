@@ -45,7 +45,9 @@ public class MetalRenderSurface : IRenderSurface
     public void Dispose()
     {
         if (Disposed) return;
+        CommandQueue.Dispose();
         DepthTexture.Dispose();
+        MetalLayer.Dispose();
         Disposed = true;
     }
 }

@@ -222,6 +222,13 @@ fragment float4 fragment_main(VertexOut in [[stage_in]])
         });
         idxBuffer.SetData(indices);
 
+        IDepthStencilState state = device.CreateDepthStencilState(new DepthStencilDescription
+        {
+            DepthCompareFunction = CompareFunction.Less,
+            DepthTestEnabled = true,
+            DepthWriteEnabled = true
+        });
+
         while (GLFW.glfwWindowShouldClose(winHandle) == 0)
         {
             GLFW.glfwPollEvents();

@@ -49,9 +49,6 @@ public static partial class Metal
             metalLayer.SetDrawableSize(
                 new CGSize { Width = bounds.Size.Width * contentScale, Height = bounds.Size.Height * contentScale }
             );
-
-            CGSize cgSize = metalLayer.DrawableSize;
-
             return metalLayer;
         }
 
