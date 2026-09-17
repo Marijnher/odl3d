@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using odl3d.Renderer;
 namespace odl3d;
 
 /// <summary>
@@ -17,7 +18,9 @@ public class Window : InputHost
     /// <summary>
     /// The renderer instance used to render the window's contents. The Renderer property provides access to the active renderer, allowing the Window to call renderer methods for rendering scenes, managing resources, and interacting with the rendering backend. This property is read-only and is initialized in the constructor.
     /// </summary>
-    protected IRendererOld Renderer;
+    protected IRenderDevice Renderer;
+
+    protected IRenderSurface RenderSurface;
 
     /// <summary>
     /// The current width of the window in pixels.
@@ -85,13 +88,13 @@ public class Window : InputHost
     /// <param name="height">Window height in pixels.</param>
     /// <param name="title">Window title.</param>
     /// </summary>
-    public Window(int width, int height, string title)
+    public Window(IRenderDevice renderer, int width, int height, string title)
     {
-        Renderer = RenderFactory.Renderer;
+        Renderer = renderer;
         Width = width;
         Height = height;
 
-        Renderer.ConfigureWindow();
+        // Renderer.ConfigureWindow(); // OpenGL hints
 
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
         Handle = GLFW.glfwCreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
@@ -100,14 +103,16 @@ public class Window : InputHost
             GLFW.glfwTerminate();
             throw new Exception("Failed to create a GLFW window.");
         }
-        GLFW.glfwMakeContextCurrent(Handle);
-        Renderer.Initialize();
-        Renderer.AttachWindow(Handle);
-        Renderer.SetVSync(false);
-        UpdateFramebufferSize();
-        Renderer.SetEnableDepthTest(true);
-        Renderer.SetAlphaBlending(true);
 
+        RenderSurface = renderer.CreateSurface(Handle);
+        RenderSurface.VSync = false;
+
+        UpdateFramebufferSize();
+
+        // GLFW.glfwMakeContextCurrent(Handle);
+
+        // Renderer.SetEnableDepthTest(true);
+        // Renderer.SetAlphaBlending(true);
 
         // Default non-moveable camera
         Camera = new Camera(this);
@@ -153,7 +158,7 @@ public class Window : InputHost
     public void SetWireFrame(bool enabled)
     {
         Wireframe = enabled;
-        Renderer.SetWireFrame(enabled);
+        // Renderer.SetWireFrame(enabled);
     }
 
     /// <summary>
@@ -218,8 +223,7 @@ public class Window : InputHost
         if (width <= 0 || height <= 0) return;
         FramebufferWidth = width;
         FramebufferHeight = height;
-        Renderer.SetDrawableSize(width, height);
-        Renderer.SetViewport(0, 0, width, height);
+        RenderSurface.Resize(FramebufferWidth, FramebufferHeight);
     }
 
     /// <summary>
@@ -245,7 +249,7 @@ public class Window : InputHost
     /// </summary>
     public void SwapBuffers()
     {
-        Renderer.Present(Handle);
+        // Renderer.Present(Handle);
     }
 
     /// <summary>
@@ -274,9 +278,9 @@ public class Window : InputHost
     /// </summary>
     public void Clear()
     {
-        Renderer.ClearColor(BackgroundColor);
-        Renderer.ClearColorBuffer();
-        Renderer.ClearDepthBuffer();
+        // Renderer.ClearColor(BackgroundColor);
+        // Renderer.ClearColorBuffer();
+        // Renderer.ClearDepthBuffer();
     }
 
     /// <summary>
@@ -286,16 +290,16 @@ public class Window : InputHost
     public void Render(ShaderProgram shader)
     {
         Clear();
-        Renderer.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
+        // Renderer.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
         // Clear depth buffer
-        Renderer.ClearDepthBuffer();
+        // Renderer.ClearDepthBuffer();
         foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Opaque);
         // Draw transparent objects after opaque ones without writing to the depth buffer
-        Renderer.SetDepthMask(false);
+        // Renderer.SetDepthMask(false);
         foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Transparent);
-        Renderer.SetDepthMask(true);
+        // Renderer.SetDepthMask(true);
         // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
-        Renderer.ClearDepthBuffer();
+        // Renderer.ClearDepthBuffer();
         foreach (Scene2D scene in Scenes2D)
         {
             scene.Draw(shader, RenderPass.Opaque);

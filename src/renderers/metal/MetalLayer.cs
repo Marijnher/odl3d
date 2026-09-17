@@ -9,7 +9,53 @@ public static partial class Metal
     {
         private static IntPtr ClassPointer => Class("CAMetalLayer");
 
-        public CGSize DrawableSize => GetSize("drawableSize");
+        public Device Device
+        {
+            get => Get<Device>("device");
+            set => Send("setDevice:", value);
+        }
+        
+        public nuint PixelFormat
+        {
+            get => GetUInt32("pixelFormat");
+            set => Send("setPixelFormat:", value);
+        }
+        
+        public bool PresentsWithTransaction
+        {
+            get => GetInt32("presentsWithTransaction") == 1;
+            set => Send("setPresentsWithTransaction:", value ? 1 : 0);
+        }
+
+        public bool DisplaySyncEnabled
+        {
+            get => GetInt32("displaySyncEnabled") == 1;
+            set => Send("setDisplaySyncEnabled:", value ? 1 : 0);
+        }
+        
+        public NSRect Frame
+        {
+            get => GetRect("frame");
+            set => Send("setFrame:", value);
+        }
+        
+        public NSRect Bounds
+        {
+            get => GetRect("bounds");
+            set => Send("setBounds:", value);
+        }
+
+        public double ContentsScale
+        {
+            get => GetDouble("contentsScale");
+            set => Send("setContentsScale:", value);
+        }
+
+        public CGSize DrawableSize
+        {
+            get => GetSize("drawableSize");
+            set => Send("setDrawableSize:", value);
+        }
 
         private MetalLayer(IntPtr handle) : base(handle) { }
 
@@ -29,9 +75,9 @@ public static partial class Metal
             CocoaWindow cocoaWindow = new CocoaWindow(handle);
             
             MetalLayer metalLayer = Create();
-            metalLayer.SetDevice(device);
-            metalLayer.SetPixelFormat(80); // MTLPixelFormatBGRA8Unorm
-            metalLayer.SetPresentsWithTransaction(0);
+            metalLayer.Device = device;
+            metalLayer.PixelFormat = GetPixelFormat(TextureFormat.BGRA8Unorm);
+            metalLayer.PresentsWithTransaction = false;
 
             ContentView contentView = cocoaWindow.ContentView;
             contentView.SetWantsLayer(1);
@@ -43,36 +89,16 @@ public static partial class Metal
             if (contentScale != windowScale)
                 Console.WriteLine($"WARNING: content scale ({contentScale}) and window scale ({windowScale}) are not equal.");
 
-            metalLayer.SetFrame(bounds);
-            metalLayer.SetBounds(bounds);
-            metalLayer.SetContentsScale(contentScale);
-            metalLayer.SetDrawableSize(
-                new CGSize { Width = bounds.Size.Width * contentScale, Height = bounds.Size.Height * contentScale }
-            );
+            metalLayer.Frame = bounds;
+            metalLayer.Bounds = bounds;
+            metalLayer.ContentsScale = contentScale;
+            metalLayer.DrawableSize = new CGSize {
+                Width = bounds.Size.Width * contentScale,
+                Height = bounds.Size.Height * contentScale
+            };
             return metalLayer;
         }
 
         public Drawable NextDrawable() => Get<Drawable>("nextDrawable");
-
-        public void SetDevice(Device device) => Send("setDevice:", device);
-
-        public void SetPixelFormat(nuint format) => Send("setPixelFormat:", format);
-
-        public void SetPresentsWithTransaction(nuint value) => Send("setPresentsWithTransaction:", value);
-
-        public void SetDisplaySyncEnabled(bool enabled) =>
-            Send("setDisplaySyncEnabled:", enabled ? 1 : 0);
-
-        public void SetFrame(NSRect rect) =>
-            Send("setFrame:", rect);
-
-        public void SetBounds(NSRect rect) =>
-            Send("setBounds:", rect);
-
-        public void SetContentsScale(double scalingFactor) =>
-            Send("setContentsScale:", scalingFactor);
-
-        public void SetDrawableSize(CGSize size) =>
-            Send("setDrawableSize:", size);
     }
 }

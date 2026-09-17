@@ -6,6 +6,7 @@ public sealed record ShaderModuleDescription
 {
     public required ShaderStage Stage { get; init; }
     public required string Source { get; init; }
+    public bool SourceAsFilename { get; init; } = false;
     public required string EntryPoint { get; init; }
     public ShaderLanguage ShaderLanguage { get; init; } = ShaderLanguage.Default;
 }

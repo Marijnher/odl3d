@@ -12,8 +12,8 @@ public class MetalRenderSurface : IRenderSurface
     public uint Height => (uint) MetalLayer.DrawableSize.Height;
     public bool VSync
     {
-        get => throw new NotImplementedException();
-        set => MetalLayer.SetDisplaySyncEnabled(value);
+        get => MetalLayer.DisplaySyncEnabled;
+        set => MetalLayer.DisplaySyncEnabled = value;
     }
     public bool Disposed { get; private set; }
     
@@ -21,7 +21,7 @@ public class MetalRenderSurface : IRenderSurface
     public TextureFormat? DepthFormat => throw new NotImplementedException();
     public int SampleCount => throw new NotImplementedException();
 
-    public Metal.Texture DepthTexture { get; }
+    public Metal.Texture DepthTexture { get; private set; }
 
     public MetalRenderSurface(Metal.Device device, nint windowHandle)
     {
@@ -33,7 +33,19 @@ public class MetalRenderSurface : IRenderSurface
 
     public void Resize(int width, int height)
     {
-        throw new NotImplementedException();
+        DepthTexture.Dispose();
+        DepthTexture = Device.CreateTexture(Width, Height, TextureFormat.Depth32Float);
+        MetalLayer.DrawableSize = new Metal.CGSize() {
+            Width = width * MetalLayer.ContentsScale,
+            Height = height * MetalLayer.ContentsScale
+        };
+        MetalLayer.Bounds = new Metal.NSRect
+        {
+            Origin = new Metal.NSPoint() { X = 0, Y = 0 },
+            Size = new Metal.NSSize { Width = width, Height = height }
+        };
+        MetalLayer.Frame = MetalLayer.Bounds;
+
     }
     
     public IRenderFrame? AcquireFrame()

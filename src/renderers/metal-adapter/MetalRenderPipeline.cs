@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace odl3d.Renderer.MetalAdapter;
 
@@ -35,10 +36,18 @@ public class MetalRenderPipeline : IRenderPipeline
             layout.StepFunction = bufDescr.StepFunction;
         }
 
+        string vertexSource = description.VertexShader.Source;
+        if (description.VertexShader.SourceAsFilename)
+            vertexSource = File.ReadAllText(vertexSource);
+
+        string fragmentSource = description.FragmentShader.Source;
+        if (description.FragmentShader.SourceAsFilename)
+            fragmentSource = File.ReadAllText(fragmentSource);
+
         Pipeline = Device.CreatePipeline(
             vertexDescriptor,
-            description.VertexShader.Source,
-            description.FragmentShader.Source,
+            vertexSource,
+            fragmentSource,
             description.VertexShader.EntryPoint,
             description.FragmentShader.EntryPoint
         );
