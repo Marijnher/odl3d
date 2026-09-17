@@ -8,9 +8,9 @@ public sealed record SamplerDescription
     public TextureFilter MagFilter { get; init; } = TextureFilter.Nearest;
     public MipmapFilter MipmapFilter { get; init; } = MipmapFilter.None;
 
-    public TextureWrap AddressU { get; init; } = TextureWrap.Repeat;
-    public TextureWrap AddressV { get; init; } = TextureWrap.Repeat;
-    public TextureWrap AddressW { get; init; } = TextureWrap.Repeat;
+    public TextureWrap WrapU { get; init; } = TextureWrap.Repeat;
+    public TextureWrap WrapV { get; init; } = TextureWrap.Repeat;
+    public TextureWrap WrapW { get; init; } = TextureWrap.Repeat;
 
     public AnisotropicFilter Anisotropy { get; init; } = AnisotropicFilter.None;
 

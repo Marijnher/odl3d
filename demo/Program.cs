@@ -152,14 +152,19 @@ vertex VertexOut vertex_main(
     private const string SimpleMetalFragmentSource = @"#include <metal_stdlib>
 using namespace metal;
 
-fragment float4 fragment_main(VertexOut in [[stage_in]])
+fragment float4 fragment_main(
+                    VertexOut in [[stage_in]],
+                    texture2d<float> texture [[texture(0)]],
+                    sampler sampler [[sampler(0)]]
+                )
 {
-    return float4(in.texCoord, 1.0, 1.0);
+    float4 color = texture.sample(sampler, in.texCoord);
+    return color;
 }";
 
     public static void Main(string[] args)
     {
-        using IRenderDevice device = new odl3d.Renderer.MetalAdapter.MetalRenderDevice();
+        using IRenderDevice device = new MetalRenderDevice();
         Console.WriteLine(device.Name);
 
         GLFW.Load();
@@ -199,10 +204,14 @@ fragment float4 fragment_main(VertexOut in [[stage_in]])
         });
         float[] vertices = 
         {
-            0.0f, 0.0f, 0.0f,    0.0f, 0.0f,
-            0.5f, 0.0f, 0.0f,    1.0f, 0.0f,
-            0.5f, 0.5f, 0.0f,    1.0f, 1.0f,
-            0.0f, 0.5f, 0.0f,    0.0f, 1.0f
+            // 0.0f, 0.0f, 0.0f,    0.0f, 0.0f,
+            // 0.5f, 0.0f, 0.0f,    1.0f, 0.0f,
+            // 0.5f, 0.5f, 0.0f,    1.0f, 1.0f,
+            // 0.0f, 0.5f, 0.0f,    0.0f, 1.0f
+            -0.5f, -0.5f, 0.0f,      0.0f, 0.0f,
+            0.5f, -0.5f, 0.0f,       1.0f, 0.0f,
+            0.5f, 0.5f, 0.0f,        1.0f, 1.0f,
+            -0.5f, 0.5f, 0.0f,       0.0f, 1.0f
         };
         using IBuffer<float> vtxBuffer = device.CreateBuffer<float>(new BufferDescription
         {
@@ -222,11 +231,25 @@ fragment float4 fragment_main(VertexOut in [[stage_in]])
         });
         idxBuffer.SetData(indices);
 
-        IDepthStencilState state = device.CreateDepthStencilState(new DepthStencilDescription
+        using IDepthStencilState state = device.CreateDepthStencilState(new DepthStencilDescription
         {
             DepthCompareFunction = CompareFunction.Less,
             DepthTestEnabled = true,
             DepthWriteEnabled = true
+        });
+
+        var texSource = decodl.PNGDecoder.Decode("assets/grass.png");
+        using ITexture texture = device.CreateTexture(new TextureDescription
+        {
+            Width = (uint) texSource.Width,
+            Height = (uint) texSource.Height,
+            Format = TextureFormat.RGBA32Float
+        }, texSource.Bytes);
+        using ISampler sampler = device.CreateSampler(new SamplerDescription
+        {
+            MinFilter = TextureFilter.Nearest,
+            MagFilter = TextureFilter.Nearest,
+            MipmapFilter = MipmapFilter.Linear
         });
 
         while (GLFW.glfwWindowShouldClose(winHandle) == 0)
@@ -248,6 +271,8 @@ fragment float4 fragment_main(VertexOut in [[stage_in]])
             pass.SetRenderPipeline(renderPipeline);
             pass.SetVertexBuffer(vtxBuffer);
             pass.SetIndexBuffer(idxBuffer);
+            pass.SetTexture(texture);
+            pass.SetSampler(sampler);
             pass.DrawIndexed();
             pass.End();
 
@@ -282,11 +307,13 @@ fragment float4 fragment_main(VertexOut in [[stage_in]])
         using Metal.DepthStencilState depthState = mDevice.CreateDepthStencilState(
             CompareFunction.LessEqual,
             depthWriteEnabled: true);
-        using Metal.Texture grassTexture = mDevice.CreateTexture(new Texture("assets/grass.png"), mipmapped: true);
+        var grassAsset = decodl.PNGDecoder.Decode("assets/grass.png");
+        using Metal.Texture grassTexture = mDevice.CreateTexture(grassAsset.Bytes, (uint) grassAsset.Width, (uint) grassAsset.Height);
         using Metal.SamplerState grassSampler = mDevice.CreateSampler(
             TextureFilter.Linear,
             TextureFilter.Linear,
             MipmapFilter.Linear,
+            TextureWrap.Repeat,
             TextureWrap.Repeat,
             TextureWrap.Repeat,
             AnisotropicFilter.X4);

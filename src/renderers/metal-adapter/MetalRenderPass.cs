@@ -6,26 +6,31 @@ public class MetalRenderPass : IRenderPass
 {
     private Metal.Device Device;
     private MetalRenderSurface RenderSurface;
+    private Metal.CommandQueue CommandQueue;
     private Metal.Drawable Drawable;
     private Metal.CommandBuffer CommandBuffer;
-    public Metal.CommandEncoder Encoder;
+    private Metal.CommandEncoder Encoder;
 
     private MetalRenderPipeline? Pipeline;
     private MetalBuffer? VertexBuffer;
     private MetalBuffer? IndexBuffer;
     private Metal.PrimitiveType MetalPrimitiveType;
+    private MetalTexture? Texture;
+    private MetalSampler? Sampler;
 
     public bool Disposed { get; private set; }
 
     public MetalRenderPass(
         Metal.Device device,
         MetalRenderSurface renderSurface,
+        Metal.CommandQueue commandQueue,
         Metal.Drawable drawable,
         Metal.CommandBuffer commandBuffer,
         RenderPassDescription description)
     {
         Device = device;
         RenderSurface = renderSurface;
+        CommandQueue = commandQueue;
         Drawable = drawable;
         CommandBuffer = commandBuffer;
 
@@ -79,12 +84,29 @@ public class MetalRenderPass : IRenderPass
     }
     public void SetUniformBuffer<T>(int slot, IBuffer<T> buffer, nuint offset = 0) where T : unmanaged => throw new NotImplementedException();
 
-    public void SetTexture(int slot, ITexture texture) => throw new NotImplementedException();
-    public void SetSampler(int slot, ISampler sampler) => throw new NotImplementedException();
+    public void SetTexture(ITexture texture, int slot = 0)
+    {
+        Texture = (MetalTexture) texture;
+        Encoder.SetFragmentTexture(Texture.Texture, (nuint) slot);
+    }
+    public void SetSampler(ISampler sampler, int slot = 0)
+    {
+        Sampler = (MetalSampler) sampler;
+        Encoder.SetFragmentSamplerState(Sampler.Sampler, (nuint) slot);
+    }
+
+    void PreDraw()
+    {
+        if (Texture != null && Sampler != null && Sampler.MipmapFilter != MipmapFilter.None)
+        {
+            Texture.ValidateMipmaps(Device, CommandQueue);
+        }
+    }
 
     public void Draw(int startIndex, int vertexCount)
     {
         if (Pipeline == null) throw new RenderException("Cannot draw without a valid pipeline attached.");
+        PreDraw();
         Encoder.DrawPrimitives(MetalPrimitiveType, startIndex, vertexCount);
     }
     public void Draw()
@@ -97,6 +119,7 @@ public class MetalRenderPass : IRenderPass
     {
         if (VertexBuffer == null) throw new RenderException("Cannot draw without a valid vertex buffer attached.");
         if (IndexBuffer == null) throw new RenderException("Cannot draw without a valid index buffer attached.");
+        PreDraw();
         Encoder.DrawIndexedPrimitives(
             indexBuffer: IndexBuffer.Buffer,
             indexCount: (uint) indexCount,

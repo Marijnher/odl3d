@@ -21,11 +21,11 @@ public class MetalRenderDevice : IRenderDevice
     public IBuffer<T> CreateBuffer<T>(BufferDescription description, T[]? initialData = null) where T : unmanaged =>
         new MetalBuffer<T>(Device, description, initialData);
 
-    public ITexture CreateTexture(TextureDescription description, float[]? initialData = null) =>
-        throw new NotImplementedException();
+    public ITexture CreateTexture(TextureDescription description, byte[]? initialData = null) =>
+        new MetalTexture(Device, description, initialData);
     
-    public ISampler CreateSampler(SamplerDescription description) =>
-        throw new NotImplementedException();
+    public ISampler CreateSampler(SamplerDescription? description = null) =>
+        new MetalSampler(Device, description ?? new SamplerDescription());
 
     public IDepthStencilState CreateDepthStencilState(DepthStencilDescription description) =>
         new MetalDepthStencilState(Device, description);

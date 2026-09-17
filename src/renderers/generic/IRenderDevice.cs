@@ -12,9 +12,9 @@ public interface IRenderDevice : IDisposable
 
     IBuffer<T> CreateBuffer<T>(BufferDescription description, T[]? initialData = null) where T : unmanaged;
 
-    ITexture CreateTexture(TextureDescription description, float[]? initialData = null);
+    ITexture CreateTexture(TextureDescription description, byte[]? initialData = null);
     
-    ISampler CreateSampler(SamplerDescription description);
+    ISampler CreateSampler(SamplerDescription? description = null);
 
     IDepthStencilState CreateDepthStencilState(DepthStencilDescription description);
 

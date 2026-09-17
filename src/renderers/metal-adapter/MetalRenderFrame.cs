@@ -24,7 +24,7 @@ public class MetalRenderFrame : IRenderFrame
     }
 
     public IRenderPass CreateRenderPass(RenderPassDescription renderPassDescription) =>
-        new MetalRenderPass(Device, RenderSurface, Drawable, CommandBuffer, renderPassDescription);
+        new MetalRenderPass(Device, RenderSurface, CommandQueue, Drawable, CommandBuffer, renderPassDescription);
     
     public void Present()
     {

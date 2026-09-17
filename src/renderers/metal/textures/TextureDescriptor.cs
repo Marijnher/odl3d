@@ -10,29 +10,22 @@ public static partial class Metal
 
         private TextureDescriptor(IntPtr handle) : base(handle) { }
 
-        public static TextureDescriptor Create(uint width, uint height, bool mipmapped = false)
+        public static TextureDescriptor Create(uint width, uint height) =>
+            Create(width, height, 70);
+
+        public static TextureDescriptor CreateDepth(uint width, uint height) =>
+            Create(width, height, 252);
+
+        private static TextureDescriptor Create(uint width, uint height, nuint pixelFormat)
         {
             IntPtr handle = SendRaw(
-                ClassPointer, 
+                ClassPointer,
                 "texture2DDescriptorWithPixelFormat:width:height:mipmapped:",
-                70, width, height, mipmapped ? (byte)1 : (byte)0
+                pixelFormat, width, height, 1
             );
             if (handle == IntPtr.Zero)
                 throw new RenderException("Metal could not create the texture.");
             return new TextureDescriptor(handle);
         }
-
-        public static TextureDescriptor CreateDepth(uint width, uint height)
-        {
-            IntPtr handle = SendRaw(
-                ClassPointer,
-                "texture2DDescriptorWithPixelFormat:width:height:mipmapped:",
-                252, width, height, 0
-            );
-            if (handle == IntPtr.Zero)
-                throw new RenderException("Metal could not create the depth texture.");
-            return new TextureDescriptor(handle);
-        }
-
     }
 }

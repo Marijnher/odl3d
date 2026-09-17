@@ -48,16 +48,18 @@ public static partial class Metal
             TextureFilter minFilter = TextureFilter.Nearest,
             TextureFilter magFilter = TextureFilter.Nearest,
             MipmapFilter mipmapFilter = MipmapFilter.None,
-            TextureWrap wrapH = TextureWrap.Repeat,
+            TextureWrap wrapU = TextureWrap.Repeat,
             TextureWrap wrapV = TextureWrap.Repeat,
+            TextureWrap wrapW = TextureWrap.Repeat,
             AnisotropicFilter anisotropicFilter = AnisotropicFilter.None)
         {
             using SamplerDescriptor descriptor = SamplerDescriptor.Create();
             descriptor.SetMinFilter(minFilter);
             descriptor.SetMagFilter(magFilter);
             descriptor.SetMipFilter(mipmapFilter);
-            descriptor.SetAddressModeS(wrapH);
+            descriptor.SetAddressModeS(wrapU);
             descriptor.SetAddressModeT(wrapV);
+            descriptor.SetAddressModeR(wrapW);
             descriptor.SetMaxAnisotropy(anisotropicFilter);
 
             IntPtr handle = Send("newSamplerStateWithDescriptor:", descriptor);
@@ -95,34 +97,21 @@ public static partial class Metal
                 """
             );
 
-        public Texture CreateTexture(odl3d.Texture image, bool mipmapped = false)
+        public unsafe Texture CreateTexture(byte[] data, uint width, uint height)
         {
-            using var descriptor = TextureDescriptor.Create((uint) image.Width, (uint) image.Height, mipmapped);
+            using var descriptor = TextureDescriptor.Create(width, height);
             Texture texture = Send<Texture>("newTextureWithDescriptor:", descriptor);
-
-            GCHandle pinned = GCHandle.Alloc(image.Pixels, GCHandleType.Pinned);
-            try
-            {
-                texture.Upload(pinned.AddrOfPinnedObject(), (nuint) (image.Width * 4), (uint) image.Width, (uint) image.Height);
-            }
-            finally
-            {
-                pinned.Free();
-            }
-            if (mipmapped)
-                GenerateMipmaps(texture);
+            fixed(void* dataPtr = data) texture.Upload((nint) dataPtr, 0, width * 4, width, height);
             return texture;
         }
 
-        public void GenerateMipmaps(Texture texture)
+        public void GenerateMipmaps(CommandQueue queue, Texture texture)
         {
-            using CommandQueue queue = NewCommandQueue();
             CommandBuffer commandBuffer = queue.CreateCommandBuffer();
             BlitCommandEncoder encoder = commandBuffer.CreateBlitCommandEncoder();
             encoder.GenerateMipmaps(texture);
             encoder.EndEncoding();
             commandBuffer.Commit();
-            commandBuffer.WaitUntilCompleted();
         }
 
         public Texture CreateDepthTexture(uint width, uint height)

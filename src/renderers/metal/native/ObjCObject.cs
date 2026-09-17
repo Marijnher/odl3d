@@ -137,9 +137,9 @@ public static partial class Metal
         protected T Send<T>(string selectorName, IntPtr arg1, nuint arg2, nuint arg3) where T : ObjCObject =>
             Convert<T>(Send(selectorName, arg1, arg2, arg3));
 
-        protected IntPtr Send(string selectorName, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) =>
+        protected IntPtr Send(string selectorName, int level, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) =>
             objc_msgSendRegion(Handle, GetSelector(selectorName),
-                new() { Width = width, Height = height, Depth = 1 }, 0, bytes, bytesPerRow);
+                new() { Width = width, Height = height, Depth = 1 }, (nuint) level, bytes, bytesPerRow);
         protected T Send<T>(string selectorName, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) where T : ObjCObject =>
             Convert<T>(Send(selectorName, bytes, bytesPerRow, width, height));
 

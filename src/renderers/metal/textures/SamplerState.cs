@@ -28,6 +28,9 @@ public static partial class Metal
         public void SetAddressModeT(TextureWrap wrap) =>
             Send("setTAddressMode:", AddressMode(wrap));
 
+        public void SetAddressModeR(TextureWrap wrap) =>
+            Send("setRAddressMode:", AddressMode(wrap));
+
         public void SetMaxAnisotropy(AnisotropicFilter filter) =>
             Send("setMaxAnisotropy:", (nuint)filter);
 
