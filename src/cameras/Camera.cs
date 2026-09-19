@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -13,40 +16,114 @@ public class Camera
     /// </summary>
     public Window Window { get; protected set; }
 
+    protected IRenderDevice Renderer => Window.Renderer;
+
+    public IBuffer<float> ViewProjBuffer;
+
+    private Vector3 _position = Vector3.Zero;
     /// <summary>
     /// The position of the camera in world space. This vector defines where the camera is located in the 3D scene. The default position is at the origin (0, 0, 0).
     /// </summary>
-    public Vector3 Position = Vector3.Zero;
+    public Vector3 Position
+    {
+        get => _position;
+        set
+        {
+            if (_position.Equals(value)) return;
+            _position = value;
+            InvalidateBuffers();
+        }
+    }
 
+    private float _yaw = -90f; // -90 faces down -Z, matching the previous fixed camera
     /// <summary>
     /// The yaw angle of the camera in degrees, representing rotation around the Y-axis. A yaw of -90 degrees points the camera down the negative Z-axis, which is a common default orientation in 3D graphics. The yaw can be adjusted to rotate the camera left or right.
     /// </summary>
-    public float Yaw = -90f; // -90 faces down -Z, matching the previous fixed camera
+    public float Yaw
+    {
+        get => _yaw;
+        set
+        {
+            if (_yaw.Equals(value)) return;
+            _yaw = value;
+            InvalidateBuffers();
+        }
+    }
 
+    private float _pitch = 0f;
     /// <summary>
     /// The pitch angle of the camera in degrees, representing rotation around the X-axis. The pitch is clamped between -89 and 89 degrees to prevent gimbal lock and unnatural flipping of the camera view. A pitch of 0 degrees means the camera is level, while positive values tilt the camera upward and negative values tilt it downward.
     /// </summary>
-    public float Pitch = 0f;
+    public float Pitch
+    {
+        get => _pitch;
+        set
+        {
+            if (_pitch.Equals(value)) return;
+            _pitch = value;
+            InvalidateBuffers();
+        }
+    }
 
+    private float _fov = 60f;
     /// <summary>
     /// The field of view (FOV) of the camera in degrees, defining the vertical angle of the camera's view frustum. A typical FOV for a perspective camera is around 60 degrees, which provides a natural perspective without excessive distortion. The FOV can be adjusted to zoom in or out on the scene.
     /// </summary>
-    public float FieldOfViewDegrees = 60f;
+    public float FieldOfViewDegrees
+    {
+        get => _fov;
+        set
+        {
+            if (_fov.Equals(value)) return;
+            _fov = value;
+            InvalidateBuffers();
+        }
+    }
 
+    private float _aspectRatio;
     /// <summary>
     /// The aspect ratio of the camera's view, defined as the width divided by the height of the viewport. The default aspect ratio is 4:3, but it should be set to match the actual dimensions of the rendering window or viewport to avoid distortion in the rendered scene.
     /// </summary>
-    public float AspectRatio;
+    public float AspectRatio
+    {
+        get => _aspectRatio;
+        set
+        {
+            if (_aspectRatio.Equals(value)) return;
+            _aspectRatio = value;
+            InvalidateBuffers();
+        }
+    }
 
+    private float _nearPlane = 0.1f;
     /// <summary>
     /// The near clipping plane distance for the camera's view frustum. Objects closer than this distance will not be rendered. The default value is 0.1 units, which is a common choice for 3D rendering to avoid clipping artifacts with nearby objects.
     /// </summary>
-    public float NearPlane = 0.1f;
+    public float NearPlane
+    {
+        get => _nearPlane;
+        set
+        {
+            if (_nearPlane.Equals(value)) return;
+            _nearPlane = value;
+            InvalidateBuffers();
+        }
+    }
 
+    private float _farPlane = 100f;
     /// <summary>
     /// The far clipping plane distance for the camera's view frustum. Objects farther than this distance will not be rendered. The default value is 100 units, which is a typical choice for 3D rendering to limit the depth of the scene and improve performance.
     /// </summary>
-    public float FarPlane = 100f;
+    public float FarPlane
+    {
+        get => _farPlane;
+        set
+        {
+            if (_farPlane.Equals(value)) return;
+            _farPlane = value;
+            InvalidateBuffers();
+        }
+    }
 
     /// <summary>
     /// Calculates and returns the normalized forward direction vector of the camera based on its current yaw and pitch angles. This vector points in the direction the camera is facing in world space. The calculation uses trigonometric functions to convert the yaw and pitch angles from degrees to a 3D direction vector, which is then normalized to ensure it has a length of 1. This direction vector can be used for movement, raycasting, or other operations that require knowledge of where the camera is looking.
@@ -112,7 +189,13 @@ public class Camera
     public Camera(Window window, float aspectRatio)
     {
         Window = window;
-        AspectRatio = aspectRatio;
+        _aspectRatio = aspectRatio;
+        ViewProjBuffer = Renderer.CreateBuffer<float>(new BufferDescription
+        {
+            Size = 32,
+            Usage = BufferUsage.Uniform
+        });
+        InvalidateBuffers();
     }
 
     /// <summary>
@@ -139,6 +222,20 @@ public class Camera
     /// <returns>The perspective projection matrix representing the camera's projection from 3D world space to 2D screen space.</returns>
     public Matrix4x4 GetProjectionMatrix() =>
         Matrix4x4.CreatePerspectiveFieldOfView(FieldOfViewDegrees * MathF.PI / 180f, AspectRatio, NearPlane, FarPlane);
+
+    protected void InvalidateBuffers()
+    {
+        List<float> viewProjList = GetViewMatrix().ToArray().ToList();
+        Matrix4x4 proj = GetProjectionMatrix();
+        Matrix4x4 remapZ = new Matrix4x4(
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 0.5f, 0.0f, // Scale Z by 0.5
+            0.0f, 0.0f, 0.5f, 1.0f  // Shift Z by 0.5
+        );
+        viewProjList.AddRange((proj * remapZ).ToArray().ToList());
+        ViewProjBuffer.SetData(viewProjList.ToArray());
+    }
 
     /// <summary>
     /// Updates the camera's state based on the elapsed time since the last update. This method is intended to be overridden by derived camera classes that have dynamic behavior, such as movable cameras that respond to user input. The deltaTime parameter represents the time elapsed since the last update, allowing for frame-rate-independent movement and animation.

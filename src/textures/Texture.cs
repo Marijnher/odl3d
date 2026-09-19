@@ -16,20 +16,19 @@ public class Texture : IDisposable
     public static MipmapFilter DefaultMipmapMode = MipmapFilter.None;
     public static AnisotropicFilter DefaultAnisotropicMode = AnisotropicFilter.None;
 
-    /// <summary>
-    /// The renderer instance used to create and manage this texture. The Renderer property provides access to the active renderer, allowing the Texture to call renderer methods for creating textures, uploading pixel data, setting texture parameters, and managing resources. This property is used internally by the Texture class to interact with the rendering backend.
-    /// </summary>
-    protected IRendererOld Renderer => RenderFactory.Renderer;
+    protected IRenderDevice Renderer => Window.Renderer;
+
+    public ITexture RenderTexture;
     
     /// <summary>
     /// Width of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).
     /// </summary>
-    public int Width { get; private set; }
+    public uint Width { get; private set; }
 
     /// <summary>
     /// Height of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).
     /// </summary>
-    public int Height { get; private set; }
+    public uint Height { get; private set; }
 
     /// <summary>
     /// The pixel buffer, in RGBA order, 4 bytes per pixel, row-major order, top-to-bottom.
@@ -111,11 +110,17 @@ public class Texture : IDisposable
     /// </summary>
     /// <param name="width">Width of the texture in pixels.</param>
     /// <param name="height">Height of the texture in pixels.</param>
-    public Texture(int width, int height)
+    public Texture(uint width, uint height)
     {
         Width = width;
         Height = height;
         Pixels = new byte[width * height * 4];
+        RenderTexture = Renderer.CreateTexture(new TextureDescription
+        {
+            Format = TextureFormat.RGBA8Unorm,
+            Width = Width,
+            Height = Height
+        }, Pixels);
     }
 
     /// <summary>
@@ -125,9 +130,15 @@ public class Texture : IDisposable
     public Texture(string filename)
     {
         (byte[] bytes, int width, int height) = PNGDecoder.Decode(filename);
-        Width = width;
-        Height = height;
+        Width = (uint) width;
+        Height = (uint) height;
         Pixels = bytes;
+        RenderTexture = Renderer.CreateTexture(new TextureDescription
+        {
+            Format = TextureFormat.RGBA8Unorm,
+            Width = Width,
+            Height = Height
+        }, Pixels);
     }
 
     ~Texture()
@@ -145,7 +156,7 @@ public class Texture : IDisposable
     /// <param name="b">Blue component of the color (0-255).</param>
     /// <param name="a">Alpha component of the color (0-255).</param>
     /// <returns>A new Texture initialized with the specified color.</returns>
-    public static Texture FromColor(int width, int height, byte r, byte g, byte b, byte a = 255)
+    public static Texture FromColor(uint width, uint height, byte r, byte g, byte b, byte a = 255)
     {
         Texture texture = new Texture(width, height);
         for (int i = 0; i < width * height; i++)
@@ -166,7 +177,7 @@ public class Texture : IDisposable
     /// <param name="height">Height of the texture in pixels.</param>
     /// <param name="color">Color to fill the texture with (RGBA).</param>
     /// <returns>A new Texture initialized with the specified color.</returns>
-    public static Texture FromColor(int width, int height, Color color)
+    public static Texture FromColor(uint width, uint height, Color color)
     {
         return FromColor(width, height, color.R, color.G, color.B, color.A);
     }
@@ -180,16 +191,16 @@ public class Texture : IDisposable
     /// <param name="colorB">Second color of the checkerboard pattern (RGB).</param>
     /// <param name="cellSize">Size of each square in the checkerboard pattern in pixels.</param>
     /// <returns>A new Texture initialized with the checkerboard pattern.</returns>
-    public static Texture FromCheckerboard(int width, int height, (byte R, byte G, byte B) colorA, (byte R, byte G, byte B) colorB, int cellSize = 8)
+    public static Texture FromCheckerboard(uint width, uint height, (byte R, byte G, byte B) colorA, (byte R, byte G, byte B) colorB, int cellSize = 8)
     {
         Texture texture = new Texture(width, height);
-        for (int y = 0; y < height; y++)
+        for (uint y = 0; y < height; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (uint x = 0; x < width; x++)
             {
                 bool isA = ((x / cellSize) + (y / cellSize)) % 2 == 0;
                 (byte R, byte G, byte B) color = isA ? colorA : colorB;
-                int o = (y * width + x) * 4;
+                uint o = (y * width + x) * 4;
                 texture.Pixels[o] = color.R;
                 texture.Pixels[o + 1] = color.G;
                 texture.Pixels[o + 2] = color.B;
@@ -211,7 +222,7 @@ public class Texture : IDisposable
     /// <param name="c3">Color of the bottom-left corner.</param>
     /// <param name="c4">Color of the bottom-right corner.</param>
     /// <returns>A new Texture initialized with the specified gradient.</returns>
-    public static Texture FromGradient(int x, int y, int width, int height, Color c1, Color c2, Color c3, Color c4)
+    public static Texture FromGradient(int x, int y, uint width, uint height, Color c1, Color c2, Color c3, Color c4)
     {
         Texture texture = new Texture(width, height);
         for (int dy = y; dy < y + height; dy++)
@@ -230,7 +241,7 @@ public class Texture : IDisposable
                 double f2 = fxr * fyt;
                 double f3 = fxl * fyb;
                 double f4 = fxr * fyb;
-                int o = (dy * width + dx) * 4;
+                uint o = (uint) (dy * width + dx) * 4;
                 texture.Pixels[o    ] = (byte) Math.Round(f1 * c1.R + f2 * c2.R + f3 * c3.R + f4 * c4.R);
                 texture.Pixels[o + 1] = (byte) Math.Round(f1 * c1.G + f2 * c2.G + f3 * c3.G + f4 * c4.G);
                 texture.Pixels[o + 2] = (byte) Math.Round(f1 * c1.B + f2 * c2.B + f3 * c3.B + f4 * c4.B);
@@ -251,7 +262,7 @@ public class Texture : IDisposable
     /// <param name="a">Alpha component of the color (0-255).</param>
     public void SetPixel(int x, int y, byte r, byte g, byte b, byte a = 255)
     {
-        int o = (y * Width + x) * 4;
+        uint o = (uint) (y * Width + x) * 4;
         Pixels[o] = r;
         Pixels[o + 1] = g;
         Pixels[o + 2] = b;
@@ -262,29 +273,12 @@ public class Texture : IDisposable
     }
 
     /// <summary>
-    /// Uploads the pixel data to the GPU, creating the renderer texture if necessary. If the texture has already been uploaded and has not been modified since the last upload, this method does nothing. After calling this method, the texture can be bound and used for rendering.
-    /// </summary>
-    public void Upload()
-    {
-        if (Handle == 0) Handle = Renderer.CreateTexture();
-        Renderer.BindTexture(this);
-        Renderer.SetTextureMinFilter(FilterMode, Mipmap);
-        Renderer.SetTextureMagFilter(FilterMode);
-        Renderer.SetTextureAnisotropicFilter(AnisotropicFilter);
-        Renderer.SetTextureWrapModeH(WrapModeH);
-        Renderer.SetTextureWrapModeV(WrapModeV);
-        Renderer.UploadTexture(this);
-        if (Mipmap != MipmapFilter.None) Renderer.GenerateMipmaps();
-        Uploaded = true;
-    }
-
-    /// <summary>
     /// Disposes of the texture, releasing its renderer handle and pixel buffer. After calling this method, the texture should not be used again. If the texture has already been disposed, this method does nothing.
     /// </summary>
     public void Dispose()
     {
         if (Disposed) return;
-        if (Handle != 0 && Renderer != null) Renderer.DeleteTexture(this);
+        RenderTexture.Dispose();
         Disposed = true;
         OnDisposed?.Invoke();
     }

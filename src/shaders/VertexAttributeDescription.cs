@@ -1,6 +1,6 @@
 using System;
 
-namespace odl3d.Renderer;
+namespace odl3d;
 
 public sealed record VertexAttributeDescription
 {

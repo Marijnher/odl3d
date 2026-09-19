@@ -75,16 +75,16 @@ public class MetalRenderPass : IRenderPass
         Encoder.SetDepthStencilState(metalDepthStencil.DepthStencilState);
     }
 
-    public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, nuint offset = 0) where T : unmanaged
+    public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
         VertexBuffer = (MetalBuffer<T>) buffer;
-        Encoder.SetVertexBuffer(VertexBuffer.Buffer, (nuint) slot);
+        Encoder.SetVertexBuffer(VertexBuffer.Buffer, (nuint) slot, offset);
     }
-    public void SetIndexBuffer<T>(IBuffer<T> buffer, nuint offset = 0) where T : unmanaged
+    public void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged
     {
         IndexBuffer = (MetalBuffer<T>) buffer;
     }
-    public void SetUniformBuffer<T>(int slot, IBuffer<T> buffer, nuint offset = 0) where T : unmanaged => throw new NotImplementedException();
+    public void SetUniformBuffer<T>(int slot, IBuffer<T> buffer, uint offset = 0) where T : unmanaged => throw new NotImplementedException();
 
     public void SetTexture(ITexture texture, int slot = 0)
     {
@@ -111,11 +111,6 @@ public class MetalRenderPass : IRenderPass
         PreDraw();
         Encoder.DrawPrimitives(MetalPrimitiveType, startIndex, vertexCount);
     }
-    public void Draw()
-    {
-        if (VertexBuffer == null) throw new RenderException("Cannot draw without a vertex buffer attached.");
-        Draw(0, VertexBuffer.Size);
-    }
 
     public void DrawIndexed(int startIndex, int indexCount)
     {
@@ -126,7 +121,7 @@ public class MetalRenderPass : IRenderPass
             indexBuffer: IndexBuffer.Buffer,
             indexCount: (uint) indexCount,
             indexType: Metal.IndexType.UInt32,
-            indexBufferOffset: (nuint) startIndex,
+            indexBufferOffset: (nuint) startIndex * sizeof(uint),
             primitiveType: MetalPrimitiveType
         );
     }

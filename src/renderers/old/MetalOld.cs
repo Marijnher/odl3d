@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -42,7 +42,7 @@ public sealed class MetalOld : IRendererOld
     private readonly Dictionary<uint, uint> vaoIndexBuffers = new();
     private readonly Dictionary<uint, uint> vaoVertexBuffers = new();
     private readonly Dictionary<uint, string> shaders = new();
-    private readonly Dictionary<uint, ShaderType> shaderTypes = new();
+    private readonly Dictionary<uint, ShaderStage> shaderTypes = new();
     private readonly Dictionary<uint, List<uint>> programs = new();
     private readonly Dictionary<uint, (IntPtr Vertex, IntPtr Fragment, IntPtr Pipeline)> pipelines = new();
     private readonly Dictionary<int, string> uniforms = new();
@@ -789,7 +789,7 @@ public sealed class MetalOld : IRendererOld
         return levels;
     }
 
-    public uint CreateShader(ShaderType shaderType)
+    public uint CreateShader(ShaderStage shaderType)
     {
         RequireInitialized();
         uint handle = NewHandle(IntPtr.Zero);
@@ -824,7 +824,7 @@ public sealed class MetalOld : IRendererOld
         return handle;
     }
 
-    public void DeleteShaderProgram(ShaderProgram program)
+    public void DeleteShaderProgram(ShaderPipeline program)
     {
         if (pipelines.Remove(program.Handle, out var pipeline))
         {
@@ -836,14 +836,14 @@ public sealed class MetalOld : IRendererOld
         DeleteHandle(program.Handle);
     }
 
-    public void AttachShader(ShaderProgram program, Shader shader)
+    public void AttachShader(ShaderPipeline program, Shader shader)
     {
         if (!programs.TryGetValue(program.Handle, out var attached))
             throw new RenderException("Invalid Metal shader program.");
         attached.Add(shader.Handle);
     }
 
-    public bool LinkShaderProgram(ShaderProgram program)
+    public bool LinkShaderProgram(ShaderPipeline program)
     {
         if (!programs.TryGetValue(program.Handle, out var attached) || attached.Count < 2)
             return false;
@@ -892,18 +892,18 @@ public sealed class MetalOld : IRendererOld
         return true;
     }
 
-    public string GetShaderProgramLog(ShaderProgram program) => pipelines.ContainsKey(program.Handle)
+    public string GetShaderProgramLog(ShaderPipeline program) => pipelines.ContainsKey(program.Handle)
         ? string.Empty
         : "Metal pipeline has not been created.";
 
-    public void UseShaderProgram(ShaderProgram program)
+    public void UseShaderProgram(ShaderPipeline program)
     {
         if (!pipelines.ContainsKey(program.Handle))
             throw new RenderException("The Metal shader program is not linked.");
         activeProgram = program.Handle;
     }
 
-    public int GetUniformLocation(ShaderProgram program, string name)
+    public int GetUniformLocation(ShaderPipeline program, string name)
     {
         if (activeProgram != program.Handle && !programs.ContainsKey(program.Handle))
             throw new RenderException("Invalid Metal shader program.");
@@ -1055,3 +1055,4 @@ public sealed class MetalOld : IRendererOld
         return 5;
     }
 }
+*/

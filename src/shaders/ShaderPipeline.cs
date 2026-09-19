@@ -1,37 +1,26 @@
 using System;
 using System.Numerics;
 using System.Text;
+using odl3d.Renderer;
 
 namespace odl3d;
 
 /// <summary>
 /// A shader program consisting of a vertex shader and a fragment shader, compiled and linked into a single renderer program. The ShaderProgram class provides methods to compile the shaders from source code, link them into a program, set uniform variables, and use the program for rendering. It also implements IDisposable to allow for proper cleanup of renderer resources when the shader is no longer needed.
 /// </summary>
-public class ShaderProgram : IDisposable
+public class ShaderPipeline : IDisposable
 {
     /// <summary>
     /// The renderer handle of the shader program; 0 if not yet created. The handle is assigned when the shader is compiled and linked, and it can be used to bind the program for rendering or to set uniform variables. The handle should be deleted when the shader is disposed to free renderer resources.
     /// </summary>
-    public uint Handle { get; private set; }
+    public IRenderPipeline Pipeline { get; private set; }
 
-    /// <summary>
-    /// The renderer instance used to create and manage this shader program. The Renderer property provides access to the active renderer, allowing the ShaderProgram to call renderer methods for compiling shaders, linking programs, setting uniforms, and managing resources. This property is used internally by the ShaderProgram class to interact with the rendering backend.
-    /// </summary>
-    protected IRendererOld Renderer => RenderFactory.Renderer;
+    protected IRenderDevice Renderer => Window.Renderer;
 
     /// <summary>
     /// Indicates whether this shader has been disposed and its resources released. After disposing, the shader should not be used again. The Disposed property is set to true when Dispose() is called, and it can be checked to prevent multiple disposals or usage of a disposed shader.
     /// </summary>
     public bool Disposed { get; private set; }
-
-    /// <summary>
-    /// Creates a new ShaderProgram by compiling the given vertex and fragment shader source code, linking them into a shader program, and checking for compilation and linking errors. If any errors occur during compilation or linking, an exception is thrown with the error log. The resulting shader program can be used for rendering by calling Use() and setting uniform variables as needed.
-    /// </summary>
-    /// <param name="vertexSource">The source code of the vertex shader.</param>
-    /// <param name="fragmentSource">The source code of the fragment shader.</param>
-    /// <exception cref="ShaderException">Thrown if the vertex or fragment shader fails to compile, or if the shader program fails to link.</exception>
-    public ShaderProgram(string vertexSource, string fragmentSource) :
-        this(new Shader(vertexSource, ShaderType.Vertex), new Shader(fragmentSource, ShaderType.Fragment), true) { }
 
     /// <summary>
     /// Creates a new ShaderProgram by linking the given vertex and fragment Shader objects into a shader program. The shaders are attached to the program, linked, and checked for linking errors. If any errors occur during linking, an exception is thrown with the error log. Optionally, the source shaders can be automatically disposed after linking to free resources.
@@ -40,19 +29,15 @@ public class ShaderProgram : IDisposable
     /// <param name="fragmentShader">The fragment shader to link.</param>
     /// <param name="autoDisposeSource">Indicates whether to automatically dispose the source shaders after linking.</param>
     /// <exception cref="ShaderException">Thrown if the shader program fails to link.</exception>
-    public ShaderProgram(Shader vertexShader, Shader fragmentShader, bool autoDisposeSource = true)
+    public ShaderPipeline(Shader vertexShader, Shader fragmentShader, VertexLayoutDescription vertexLayout, bool autoDisposeSource = true)
     {
-        Handle = Renderer.CreateShaderProgram();
-        Renderer.AttachShader(this, vertexShader);
-        Renderer.AttachShader(this, fragmentShader);
-        bool success = Renderer.LinkShaderProgram(this);
-
-        if (!success)
+        Pipeline = Renderer.CreateRenderPipeline(new RenderPipelineDescription
         {
-            string log = Renderer.GetShaderProgramLog(this);
-            throw new ShaderException("Shader program failed to link: " + log);
-        }
-
+            VertexShader = vertexShader.ShaderModule,
+            FragmentShader = fragmentShader.ShaderModule,
+            ColorFormat = TextureFormat.RGBA32Float,
+            VertexLayout = vertexLayout
+        });
         if (autoDisposeSource)
         {
             vertexShader.Dispose();
@@ -60,15 +45,10 @@ public class ShaderProgram : IDisposable
         }
     }
 
-    ~ShaderProgram()
+    ~ShaderPipeline()
     {
         if (!Disposed) Console.WriteLine("Warning: ShaderProgram was not disposed before being finalized. This may cause a renderer resource leak.");
     }
-
-    /// <summary>
-    /// Binds the shader program for use in rendering. After calling this method, subsequent draw calls will use this shader program until another shader is bound or the program is unbound. This method should be called before setting uniform variables or drawing objects that require this shader.
-    /// </summary>
-    public void Use() => Renderer.UseShaderProgram(this);
 
     /// <summary>
     /// Sets a 4x4 matrix uniform variable in the shader program. The matrix is provided as a System.Numerics.Matrix4x4, and it is converted to a float array in column-major order before being passed to the renderer. The uniform variable is identified by its name, and the shader program must be in use (bound) when this method is called.
@@ -77,8 +57,8 @@ public class ShaderProgram : IDisposable
     /// <param name="matrix">The 4x4 matrix value to set for the uniform variable.</param>
     public void SetMatrix(string name, Matrix4x4 matrix)
     {
-        int location = Renderer.GetUniformLocation(this, name);
-        Renderer.SetUniformMatrix(location, matrix);
+        // int location = Renderer.GetUniformLocation(this, name);
+        // Renderer.SetUniformMatrix(location, matrix);
     }
 
     /// <summary>
@@ -88,8 +68,8 @@ public class ShaderProgram : IDisposable
     /// <param name="value">The integer value to set for the uniform variable.</param>
     public void SetInt(string name, int value)
     {
-        int location = Renderer.GetUniformLocation(this, name);
-        Renderer.SetUniformInt(location, value);
+        // int location = Renderer.GetUniformLocation(this, name);
+        // Renderer.SetUniformInt(location, value);
     }
 
     /// <summary>
@@ -99,8 +79,8 @@ public class ShaderProgram : IDisposable
     /// <param name="color">The color value to set.</param>
     public void SetColor(string name, Color color)
     {
-        int location = Renderer.GetUniformLocation(this, name);
-        Renderer.SetUniformColor(location, color);
+        // int location = Renderer.GetUniformLocation(this, name);
+        // Renderer.SetUniformColor(location, color);
     }
 
     /// <summary>
@@ -109,7 +89,45 @@ public class ShaderProgram : IDisposable
     public void Dispose()
     {
         if (Disposed) return;
-        Renderer.DeleteShaderProgram(this);
+        Pipeline.Dispose();
         Disposed = true;
     }
+
+    public static ShaderPipeline CreateDefault()
+    {
+        var defaultVertex = new Shader(defaultVertexMetal, ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
+        var defaultFragment = new Shader(defaultFragmentMetal, ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
+        var vertexLayout = new VertexLayoutDescription
+        {
+            Buffers = [
+                new VertexBufferLayoutDescription // Buffer 0
+                {
+                    BufferIndex = 0,
+                    Stride = 5 * sizeof(float),
+                    StepFunction = StepMode.PerVertex
+                }
+            ],
+            Attributes = [
+                new VertexAttributeDescription // Atribute 0 (position, float3)
+                {
+                    AttributeIndex = 0,
+                    Format = VertexFormat.Float3,
+                    Offset = 0,
+                    BufferSlot = 0
+                },
+                new VertexAttributeDescription // Attribute 1 (texCoord, float2)
+                {
+                    AttributeIndex = 1,
+                    Format = VertexFormat.Float2,
+                    Offset = 3 * sizeof(float),
+                    BufferSlot = 0
+                }
+            ]
+        };
+        return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout);
+    }
+
+    private static string defaultVertexMetal = @$"demo/shaders/msl/simple_vertex.metal";
+
+    private static string defaultFragmentMetal = @$"demo/shaders/msl/simple_fragment.metal";
 }

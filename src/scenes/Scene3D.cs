@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -22,12 +23,15 @@ public class Scene3D : Scene<Object3D>
     /// </summary>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
+    public override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
-        Matrix4x4 viewProjection = Camera.GetViewMatrix() * Camera.GetProjectionMatrix();
-        foreach (Object3D sceneObject in Objects)
-            sceneObject.Draw(shader, viewProjection, renderPass);
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            Object3D obj = Objects[i];
+            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * ObjectShaderData.NumFloats));
+            obj.Draw(pass, passType);
+        }
     }
 }
 

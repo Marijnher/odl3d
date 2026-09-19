@@ -1,4 +1,5 @@
 using System;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -10,12 +11,12 @@ public class Shader
     /// <summary>
     /// The renderer-backed shader program handle for this shader; contains the state of the vertex and fragment shaders. The shader program is used to encapsulate the shader configuration and is managed by the renderer for efficient rendering.
     /// </summary>
-    public uint Handle { get; private set; }
+    public IShaderModule ShaderModule;
 
     /// <summary>
     /// Indicates whether the shader has been disposed; used to prevent double disposal and ensure proper resource management. Once disposed, the shader handle is no longer valid and should not be used for rendering.
     /// </summary>
-    protected IRendererOld Renderer => RenderFactory.Renderer;
+    protected IRenderDevice Renderer => Window.Renderer;
 
     /// <summary>
     /// Indicates whether the shader has been disposed; used to prevent double disposal and ensure proper resource management. Once disposed, the shader handle is no longer valid and should not be used for rendering.
@@ -28,16 +29,16 @@ public class Shader
     /// <param name="source">The source code for the shader.</param>
     /// <param name="type">The type of the shader.</param>
     /// <exception cref="ShaderException">Thrown when shader compilation fails.</exception>
-    public Shader(string source, ShaderType type)
+    public Shader(string source, ShaderStage stage, string entryPoint, ShaderLanguage shaderLanguage, bool sourceIsFilename = true)
     {
-        Handle = Renderer.CreateShader(type);
-        Renderer.SetShaderSource(this, source);
-        bool success = Renderer.CompileShader(this);
-        if (!success)
+        ShaderModule = Renderer.CreateShaderModule(new ShaderModuleDescription
         {
-            string log = Renderer.GetShaderLog(this);
-            throw new ShaderException($"Shader compilation failed ({type}): {log}");
-        }
+            ShaderLanguage = shaderLanguage,
+            EntryPoint = entryPoint,
+            Source = source,
+            Stage = stage,
+            SourceAsFilename = sourceIsFilename
+        });
     }
 
     /// <summary>
@@ -46,7 +47,7 @@ public class Shader
     public void Dispose()
     {
         if (Disposed) return;
-        Renderer.DeleteShader(this);
+        ShaderModule.Dispose();
         Disposed = true;
     }
 }

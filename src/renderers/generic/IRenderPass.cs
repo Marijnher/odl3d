@@ -11,15 +11,14 @@ public interface IRenderPass : IDisposable
     void SetRenderPipeline(IRenderPipeline shaderPipeline);
     void SetDepthStencilState(IDepthStencilState state);
 
-    void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, nuint offset = 0) where T : unmanaged;
-    void SetIndexBuffer<T>(IBuffer<T> buffer, nuint offset = 0) where T : unmanaged;
-    void SetUniformBuffer<T>(int slot, IBuffer<T> buffer, nuint offset = 0) where T : unmanaged;
+    void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged;
+    void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged;
+    void SetUniformBuffer<T>(int slot, IBuffer<T> buffer, uint offset = 0) where T : unmanaged;
 
     void SetTexture(ITexture texture, int slot = 0);
     void SetSampler(ISampler sampler, int slot = 0);
 
     void Draw(int startIndex, int vertexCount);
-    void Draw();
     void DrawIndexed(int startIndex, int indexCount);
     void DrawIndexed();
 

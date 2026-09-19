@@ -30,7 +30,7 @@ public sealed class GlyphAtlas
     /// <summary>The shared CPU-side atlas buffer that glyph coverage bitmaps are packed into.</summary>
     public Texture Texture { get; private set; }
 
-    public GlyphAtlas(int initialSize = 512)
+    public GlyphAtlas(uint initialSize = 512)
     {
         Texture = new Texture(initialSize, initialSize);
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using odl3d.Renderer;
+using odl3d.Renderer.MetalAdapter;
 namespace odl3d;
 
 /// <summary>
@@ -13,39 +14,30 @@ public class Window : InputHost
     /// <summary>
     /// The native handle of the GLFW window. This can be used to set up additional callbacks or query window properties not exposed by this class.
     /// </summary>
-    public IntPtr Handle { get; private set; }
+    public IntPtr Handle { get; protected set; }
 
+    private static IRenderDevice? _renderer;
     /// <summary>
     /// The renderer instance used to render the window's contents. The Renderer property provides access to the active renderer, allowing the Window to call renderer methods for rendering scenes, managing resources, and interacting with the rendering backend. This property is read-only and is initialized in the constructor.
     /// </summary>
-    protected IRenderDevice Renderer;
+    public static IRenderDevice Renderer => _renderer ?? throw new RenderException("Cannot access the global renderer until a Window has been created.");
 
-    protected IRenderSurface RenderSurface;
+    public IRenderSurface RenderSurface;
 
     /// <summary>
     /// The current width of the window in pixels.
     /// </summary>
-    public int Width { get; private set; }
+    public int Width { get; protected set; }
     
     /// <summary>
     /// The current height of the window in pixels.
     /// </summary>
-    public int Height { get; private set; }
-
-    /// <summary>
-    /// The current framebuffer width in pixels. This can differ from Width on high-DPI displays.
-    /// </summary>
-    public int FramebufferWidth { get; private set; }
-
-    /// <summary>
-    /// The current framebuffer height in pixels. This can differ from Height on high-DPI displays.
-    /// </summary>
-    public int FramebufferHeight { get; private set; }
+    public int Height { get; protected set; }
 
     /// <summary>
     /// Indicates whether the cursor is currently captured (hidden and locked to the window for camera control). When false, the cursor is visible and free to move within the window.
     /// </summary>
-    public bool CursorCaptured { get; private set; } = false;
+    public bool CursorCaptured { get; protected set; } = false;
 
     /// <summary>
     /// The background color used when clearing the window's color buffer. This is set at creation and can be changed at any time. The default is black (0,0,0).
@@ -75,12 +67,17 @@ public class Window : InputHost
     /// <summary>
     /// Indicates whether the window is currently rendering in wireframe mode. When set to true, all geometry is rendered as wireframes instead of filled polygons.
     /// </summary>
-    public bool Wireframe { get; private set; } = false;
+    public bool Wireframe { get; protected set; } = false;
 
     /// <summary>
     /// The time at the previous frame, used to calculate delta time between frames. This is updated each frame during the window's update loop.
     /// </summary>
     private double? previousTime;
+
+    public ShaderPipeline Pipeline { get; protected set; }
+
+    private IDepthStencilState OpaqueStencil;
+    private IDepthStencilState TransparentStencil;
 
     /// <summary>
     /// Creates a new window with the specified width, height, and title. The window is centered on the primary monitor and its renderer context is made current. The cursor is hidden and locked to the window so mouse movement can drive camera look.
@@ -88,9 +85,10 @@ public class Window : InputHost
     /// <param name="height">Window height in pixels.</param>
     /// <param name="title">Window title.</param>
     /// </summary>
-    public Window(IRenderDevice renderer, int width, int height, string title)
+    public Window(int width, int height, string title)
     {
-        Renderer = renderer;
+        _renderer = new MetalRenderDevice();
+        
         Width = width;
         Height = height;
 
@@ -103,20 +101,31 @@ public class Window : InputHost
             GLFW.glfwTerminate();
             throw new Exception("Failed to create a GLFW window.");
         }
+        Center();
 
-        RenderSurface = renderer.CreateSurface(Handle);
-        RenderSurface.VSync = false;
+        RenderSurface = Renderer.CreateSurface(Handle);
 
-        UpdateFramebufferSize();
+        OpaqueStencil = Renderer.CreateDepthStencilState(new DepthStencilDescription
+        {
+            DepthTestEnabled = true,
+            DepthWriteEnabled = true,
+            DepthCompareFunction = CompareFunction.Less
+        });
+        TransparentStencil = Renderer.CreateDepthStencilState(new DepthStencilDescription
+        {
+            DepthTestEnabled = true,
+            DepthWriteEnabled = false,
+            DepthCompareFunction = CompareFunction.Less
+        });
+
+        Pipeline = ShaderPipeline.CreateDefault();
 
         // GLFW.glfwMakeContextCurrent(Handle);
 
-        // Renderer.SetEnableDepthTest(true);
         // Renderer.SetAlphaBlending(true);
 
         // Default non-moveable camera
         Camera = new Camera(this);
-        Center();
     }
 
     ~Window()
@@ -159,6 +168,11 @@ public class Window : InputHost
     {
         Wireframe = enabled;
         // Renderer.SetWireFrame(enabled);
+    }
+
+    public void SetShaderPipeline(ShaderPipeline pipeline)
+    {
+        Pipeline = pipeline;
     }
 
     /// <summary>
@@ -213,17 +227,8 @@ public class Window : InputHost
         {
             Camera.AspectRatio = (float) width / height;
             Scenes2D.ForEach(scene => scene.UpdateWindowSize());
+            RenderSurface.Resize(Width, Height);
         }
-        UpdateFramebufferSize();
-    }
-
-    private void UpdateFramebufferSize()
-    {
-        GLFW.glfwGetFramebufferSize(Handle, out int width, out int height);
-        if (width <= 0 || height <= 0) return;
-        FramebufferWidth = width;
-        FramebufferHeight = height;
-        RenderSurface.Resize(FramebufferWidth, FramebufferHeight);
     }
 
     /// <summary>
@@ -286,26 +291,42 @@ public class Window : InputHost
     /// <summary>
     /// Renders all 3D and 2D scenes in the window using the specified shader. This method clears the window's color and depth buffers, sets the viewport, and then draws each scene in the order they were added. The depth buffer is cleared between the 3D and 2D groups so 2D scenes are always in front of 3D scenes. Within the 3D group, opaque objects across all scenes are drawn before any scene's transparent objects, so transparent objects (e.g. soft shadow decals) always blend against fully-drawn opaque geometry regardless of which scene either belongs to.
     /// </summary>
-    /// <param name="shader">The shader to use for rendering the scenes.</param>
-    public void Render(ShaderProgram shader)
+    public void Render()
     {
-        Clear();
-        // Renderer.SetViewport(0, 0, FramebufferWidth, FramebufferHeight);
-        // Clear depth buffer
-        // Renderer.ClearDepthBuffer();
-        foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Opaque);
+        IRenderFrame? frame = RenderSurface.AcquireFrame();
+        if (frame == null) throw new RenderException("Failed to acquire frame.");
+        IRenderPass pass = frame.CreateRenderPass(new RenderPassDescription
+        {
+            Color = new ColorAttachmentDescription { ClearColor = BackgroundColor },
+            Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear, StoreAction = StoreAction.DontCare}
+        });
+        pass.SetRenderPipeline(Pipeline.Pipeline);
+        pass.SetViewport(new Rect(0, 0, RenderSurface.Width, RenderSurface.Height));
+        pass.SetDepthStencilState(OpaqueStencil);
+        pass.SetVertexBuffer(Camera.ViewProjBuffer, 1);
+
+        foreach (Scene3D scene in Scenes3D)
+        {
+            scene.UpdateObjectModelBuffer();
+            scene.Draw(pass, RenderPass.Opaque);
+        }
         // Draw transparent objects after opaque ones without writing to the depth buffer
-        // Renderer.SetDepthMask(false);
-        foreach (Scene3D scene in Scenes3D) scene.Draw(shader, RenderPass.Transparent);
-        // Renderer.SetDepthMask(true);
+        // pass.SetDepthStencilState(TransparentStencil);
+        foreach (Scene3D scene in Scenes3D)
+        {
+            scene.Draw(pass, RenderPass.Transparent);
+        }
         // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
-        // Renderer.ClearDepthBuffer();
+        // pass.SetDepthStencilState(OpaqueStencil);
         foreach (Scene2D scene in Scenes2D)
         {
-            scene.Draw(shader, RenderPass.Opaque);
+            scene.UpdateObjectModelBuffer();
+            scene.Draw(pass, RenderPass.Opaque);
             // Depth mask is not important for 2D scenes so we don't need to disable it.
-            scene.Draw(shader, RenderPass.Transparent);
+            scene.Draw(pass, RenderPass.Transparent);
         }
+        pass.End();
+        frame.Present();
     }
 
     /// <summary>
@@ -363,7 +384,10 @@ public class Window : InputHost
             Scenes2D[0].Dispose();
         }
         base.Dispose();
+        OpaqueStencil.Dispose();
+        TransparentStencil.Dispose();
         Renderer.Dispose();
+        Pipeline.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;

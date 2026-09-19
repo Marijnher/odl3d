@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -15,10 +16,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// </summary>
     public Window Window { get; }
 
-    /// <summary>
-    /// The renderer instance used to render the scene. The Renderer property provides access to the active renderer, allowing the Scene to call renderer methods for rendering objects, managing resources, and interacting with the rendering backend. This property is read-only for subclasses and is derived from the associated window.
-    /// </summary>
-    protected IRendererOld Renderer => RenderFactory.Renderer;
+    protected IRenderDevice Renderer => Window.Renderer;
 
     /// <summary>
     /// The camera used to render the scene. The camera's view and projection matrices are combined to create the view-projection matrix used for rendering the objects in the scene. The camera can be configured with position, orientation, field of view, aspect ratio, and other properties to control how the scene is viewed. This property is read-only for subclasses and is derived from the associated window.
@@ -32,6 +30,11 @@ public abstract class Scene<T> : Drawable where T : Object3D
     protected Scene(Window window)
     {
         this.Window = window;
+        ObjectShaderDataBuffer = Renderer.CreateBuffer<float>(new BufferDescription
+        {
+            Size = ObjectShaderData.NumFloats * 100,
+            Usage = BufferUsage.Uniform
+        });
     }
 
     ~Scene()
@@ -43,6 +46,8 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// The list of objects contained in the scene. This list can be modified by adding or removing objects, and the Draw method will render all objects in this list.
     /// </summary>
     public List<T> Objects { get; } = new List<T>();
+
+    protected IBuffer<float> ObjectShaderDataBuffer;
 
     /// <summary>
     /// Enables or disables input handling for the scene. When enabled, the scene will create a ProxyInputManager to handle input events. When disabled, the ProxyInputManager will be disposed and input events will no longer be processed for this scene. This method allows the user to control whether the scene should respond to user input.
@@ -65,7 +70,11 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// Adds an object of type T to the scene's collection of objects. The object will be included in the scene's rendering when the Draw method is called.
     /// </summary>
     /// <param name="sceneObject">The object to add to the scene.</param>
-    public void Add(T sceneObject) => Objects.Add(sceneObject);
+    public void Add(T sceneObject) 
+    {
+        Objects.Add(sceneObject);
+        if (Objects.Count >= 95) Console.WriteLine($"WARNING: Shader data may not support more than 100 objects.");
+    }
 
     /// <summary>
     /// Removes an object of type T from the scene's collection of objects. If the object is not found in the collection, no action is taken. The object will no longer be included in the scene's rendering after removal.
@@ -73,12 +82,22 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// <param name="sceneObject">The object to remove from the scene.</param>
     public void Remove(T sceneObject) => Objects.Remove(sceneObject);
 
+    public void UpdateObjectModelBuffer()
+    {
+        float[] shaderData = new float[ObjectShaderDataBuffer.Size];
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            Array.Copy(Objects[i].GetShaderData(), 0, shaderData, i * ObjectShaderData.NumFloats, ObjectShaderData.NumFloats);
+        }
+        ObjectShaderDataBuffer.SetData(shaderData);
+    }
+
     /// <summary>
     /// Draws the scene using the specified shader. This method must be implemented by subclasses to define how the objects in the scene are rendered. The shader parameter provides the shader program to use for rendering, and the implementation should handle setting up any necessary matrices or state before drawing the objects.
     /// </summary>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public abstract void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque);
+    public abstract void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque);
 
     /// <summary>
     /// Updates all objects in the scene by calling their Update methods. This should be called once per frame to ensure that the scene and its objects are updated correctly.

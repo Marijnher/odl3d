@@ -16,28 +16,31 @@ public static class Program
         int height = 600;
 
         GLFW.Load();
-
-        using IRenderDevice renderer = new MetalRenderDevice();
-        Console.WriteLine($"Renderer: {renderer.Name}");
         
-        using Window window = new Window(renderer, width, height, "odl3d");
+        using Window window = new Window(width, height, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
-        window.Camera = new MoveableCamera(window);
+        window.Camera = new MoveableCamera(window)
+        {
+            Position = new Vector3(0, 0, 2f)
+        };
         window.SetCursorCapture(true);
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
+        Scene3D scene = new Scene3D(window);
+
+        //Mesh mesh = MeshBuilder.CreateSphere(1);
+        Mesh mesh = MeshBuilder.CreatePlane(1, 1, 0.1f);
+        Texture grassTexture = new Texture("assets/grass.png");
+        Object3D obj = new Object3D(scene, mesh, null);
+
         while (!window.ShouldClose)
         {
-            GLFW.glfwPollEvents();
+            window.Update(0f);
+            window.Render();
         }
 
         return;
-
-        // bool metal = RenderFactory.Renderer is odl3d.Renderer.MetalOld;
-        // ShaderProgram shader = new ShaderProgram(
-        //     metal ? MetalVertexSource : VertexSource,
-        //     metal ? MetalFragmentSource : FragmentSource);
 
         // DemoScene demoScene1 = new DemoScene(window);
         // UIScene uiScene = new UIScene(window);

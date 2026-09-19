@@ -45,7 +45,6 @@ public class MetalRenderSurface : IRenderSurface
             Size = new Metal.NSSize { Width = width, Height = height }
         };
         MetalLayer.Frame = MetalLayer.Bounds;
-
     }
     
     public IRenderFrame? AcquireFrame()

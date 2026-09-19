@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -22,15 +24,16 @@ public class Object3D : Drawable
     /// </summary>
     public Scene<Object3D> Scene;
 
-    /// <summary>
-    /// The position of this object in world space, relative to the scene's origin. The position is used to compute the model matrix for rendering, which transforms the object's local coordinates to world coordinates.
-    /// </summary>
-    protected IRendererOld Renderer => RenderFactory.Renderer;
+    protected IRenderDevice Renderer => Window.Renderer;
+
+    protected ObjectShaderData ShaderData = new ObjectShaderData();
 
     /// <summary>
     /// The texture to use when drawing this object, or null to draw without a texture.
     /// </summary>
     public Texture? Texture;
+
+    public Sampler Sampler;
 
     /// <summary>
     /// The color multiplier applied to the texture when drawing this object. Defaults to white, which means the texture is drawn with its original colors. Changing this color can tint the texture.
@@ -75,17 +78,19 @@ public class Object3D : Drawable
     /// <param name="texture">The texture to use when drawing this object, or null to draw without a texture.</param>
     public Object3D(Scene<Object3D> scene, Mesh? mesh = null, Texture? texture = null) 
     {
-        this.Scene = scene;
-        this.Mesh = mesh;
-        this.Texture = texture;
+        Scene = scene;
+        Mesh = mesh;
+        Texture = texture;
+        Sampler = new Sampler();
         scene.Add(this);
     }
 
     protected Object3D(Scene<Object3D> scene, Mesh? mesh, Texture? texture, bool addToScene) 
     {
-        this.Scene = scene;
-        this.Mesh = mesh;
-        this.Texture = texture;
+        Scene = scene;
+        Mesh = mesh;
+        Texture = texture;
+        Sampler = new Sampler();
         if (addToScene) scene.Add(this);
     }
 
@@ -122,6 +127,12 @@ public class Object3D : Drawable
         Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
         Matrix4x4.CreateTranslation(Position + Scene.Position);
 
+    public virtual float[] GetShaderData()
+     {
+        ShaderData.Model = GetModelMatrix();
+        return ShaderData.ToFloats();
+    }
+
     /// <summary>
     /// True if this object must be alpha-blended against whatever has already been drawn behind it (e.g. a soft shadow decal), as opposed to being fully opaque or a hard 0/255 alpha cutout. Transparent objects are rendered in a second pass, after all opaque objects, without writing to the depth buffer, so they blend correctly regardless of scene/model ordering.
     /// </summary>
@@ -133,26 +144,31 @@ public class Object3D : Drawable
     /// <param name="shader">The shader program to use for rendering this object.</param>
     /// <param name="viewProjection">The combined view and projection matrix, typically obtained from the camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; the object is skipped if it does not belong to this pass.</param>
-    public virtual void Draw(ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
+    public virtual void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
-        if (!Visible || Disposed || Mesh == null) return;
-        if (pass == RenderPass.Transparent != IsTransparent) return;
-        Matrix4x4 model = GetModelMatrix();
+        if (!Visible || Disposed || Mesh == null || Mesh.Disposed) return;
+        if (passType == RenderPass.Transparent != IsTransparent) return;
 
-        shader.Use();
-        shader.SetMatrix("uMVP", model * viewProjection);
-        shader.SetInt("uTexture", 0);
-        shader.SetInt("uUseTexture", Texture == null ? 0 : 1);
-        shader.SetColor("uColor", Color);
-        shader.SetColor("texColor", TextureColor);
+        pass.SetVertexBuffer(Mesh.Vertices);
+        pass.SetIndexBuffer(Mesh.Indices);
+        if (Texture != null && !Texture.Disposed) pass.SetTexture(Texture.RenderTexture);
+        pass.SetSampler(Sampler.RenderSampler);
+        pass.DrawIndexed();
+
+        // shader.Use();
+        // shader.SetMatrix("uMVP", model * viewProjection);
+        // shader.SetInt("uTexture", 0);
+        // shader.SetInt("uUseTexture", Texture == null ? 0 : 1);
+        // shader.SetColor("uColor", Color);
+        // shader.SetColor("texColor", TextureColor);
         // Lighting uniforms are only meaningful for meshes that carry normals; shaders without them ignore these.
-        shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
-        if (Mesh.HasNormals) shader.SetMatrix("uModel", model);
+        // shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
+        // if (Mesh.HasNormals) shader.SetMatrix("uModel", model);
 
-        if (Texture != null && !Texture.Uploaded) Texture.Upload();
-        Renderer.BindTexture(Texture);
+        // if (Texture != null && !Texture.Uploaded) Texture.Upload();
+        // Renderer.BindTexture(Texture);
 
-        Mesh.Draw();
+        // Mesh.Draw();
     }
 
     /// <summary>
@@ -178,4 +194,23 @@ public class Object3D : Drawable
         Scene?.Remove(this);
         Disposed = true;
     }
+}
+
+public struct ObjectShaderData
+{
+    public Matrix4x4 Model;
+
+    public float[] ToFloats()
+    {
+        float[] array =
+        [
+            Model.M11, Model.M21, Model.M31, Model.M41,
+            Model.M12, Model.M22, Model.M32, Model.M42,
+            Model.M13, Model.M23, Model.M33, Model.M34,
+            Model.M14, Model.M24, Model.M34, Model.M44
+        ];
+        return array;
+    }
+
+    public static int NumFloats => 16;
 }

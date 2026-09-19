@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using odl3d.Loaders;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -51,6 +52,8 @@ public class Model : Object3D
     /// </summary>
     protected List<Object3D> Objects = new List<Object3D>();
 
+    private IBuffer<float> ObjectShaderDataBuffer;
+
     /// <summary>
     /// The total number of vertices rendered by this model's mesh parts.
     /// </summary>
@@ -83,6 +86,11 @@ public class Model : Object3D
             Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], localTransform);
             Objects.Add(obj);
         }
+        ObjectShaderDataBuffer = Renderer.CreateBuffer<float>(new BufferDescription
+        {
+            Size = ObjectShaderData.NumFloats * meshes.Length,
+            Usage = BufferUsage.Uniform
+        });
     }
 
     /// <summary>
@@ -139,21 +147,33 @@ public class Model : Object3D
         return new Model(scene, meshes, textures);
     }
 
+    protected void BindObjectData()
+    {
+        float[] shaderData = new float[ObjectShaderDataBuffer.Size];
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            Array.Copy(Objects[i].GetShaderData(), 0, shaderData, i * ObjectShaderData.NumFloats, ObjectShaderData.NumFloats);
+        }
+        ObjectShaderDataBuffer.SetData(shaderData);
+    }
+
     /// <summary>
     /// Draws the model using the specified shader and view-projection matrix. Sub-objects are filtered by the given render pass so opaque and transparent parts can be drawn in separate passes across the whole scene.
     /// </summary>
     /// <param name="shader">The shader to use for rendering the model.</param>
     /// <param name="viewProjection">The combined view-projection matrix for the current camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; sub-objects not belonging to this pass are skipped.</param>
-    public override void Draw(ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
+    public override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
-        foreach (var obj in Objects)
+        for (int i = 0; i < Objects.Count; i++)
         {
+            var obj = Objects[i];
             obj.Visible = Visible;
             if (Texture != null) obj.Texture = Texture;
             obj.Color = Color;
             obj.TextureColor = TextureColor;
-            obj.Draw(shader, viewProjection, pass);
+            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * ObjectShaderData.NumFloats));
+            obj.Draw(pass, passType);
         }
     }
 

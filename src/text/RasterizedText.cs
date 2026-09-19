@@ -31,10 +31,10 @@ public abstract class RasterizedText : Text
     }
 
     /// <summary>The width of the composed texture in pixels, or 0 before the first build.</summary>
-    public int PixelWidth => Texture?.Width ?? 0;
+    public uint PixelWidth => Texture?.Width ?? 0;
 
     /// <summary>The height of the composed texture in pixels, or 0 before the first build.</summary>
-    public int PixelHeight => Texture?.Height ?? 0;
+    public uint PixelHeight => Texture?.Height ?? 0;
 
     /// <inheritdoc/>
     protected override void Rebuild()
@@ -50,8 +50,8 @@ public abstract class RasterizedText : Text
             widest = MathF.Max(widest, lineWidths[i]);
         }
 
-        int width = Math.Max(1, (int)MathF.Ceiling(widest));
-        int height = Math.Max(1, (int)MathF.Ceiling(Font.LineHeight * lines.Length));
+        uint width = Math.Max(1, (uint)MathF.Ceiling(widest));
+        uint height = Math.Max(1, (uint)MathF.Ceiling(Font.LineHeight * lines.Length));
         int barThickness = Math.Max(1, (int)MathF.Ceiling(Font.UnderlineThickness));
 
         Texture composed = new Texture(width, height);
@@ -113,7 +113,7 @@ public abstract class RasterizedText : Text
             {
                 int dx = destX + col;
                 if (dx < 0 || dx >= dest.Width) continue;
-                int srcOffset = ((glyph.Y + row) * atlasTexture.Width + (glyph.X + col)) * 4;
+                int srcOffset = (int) ((glyph.Y + row) * atlasTexture.Width + (glyph.X + col)) * 4;
                 byte alpha = atlasTexture.Pixels[srcOffset + 3];
                 if (alpha == 0) continue;
                 dest.SetPixel(dx, dy, 255, 255, 255, alpha);

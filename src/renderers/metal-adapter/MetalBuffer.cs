@@ -6,7 +6,6 @@ public abstract class MetalBuffer
 {
     public int Size { get; protected set; }
     public BufferUsage Usage { get; protected set; }
-    public BufferAccess Access { get; protected set; }
     public BufferType Type { get; protected set; }
     public bool Disposed { get; protected set; }
 
@@ -28,7 +27,6 @@ public class MetalBuffer<T> : MetalBuffer, IBuffer<T> where T : unmanaged
     {
         Size = description.Size;
         Usage = description.Usage;
-        Access = description.Access;
         if (initialData != null && initialData.Length != Size) throw new RenderException("Provided data is not the same size as the buffer.");
         Buffer = device.CreateBuffer(initialData ?? new T[description.Size]);
     }

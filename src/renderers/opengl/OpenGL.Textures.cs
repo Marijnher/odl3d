@@ -74,7 +74,7 @@ public partial class OpenGL : IRendererOld
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (int) anisotropicFilter);
 
     public void UploadTexture(Texture texture) =>
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture.Width, texture.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture.Pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (int) texture.Width, (int) texture.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture.Pixels);
 
     public void GenerateMipmaps() => glGenerateMipmap(GL_TEXTURE_2D);
 }

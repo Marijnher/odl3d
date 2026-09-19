@@ -3,8 +3,19 @@ using namespace metal;
 
 struct VertexIn
 {
-    packed_float3 position;
-    packed_float2 texCoord;
+    float3 position [[attribute(0)]];
+    float2 texCoord [[attribute(1)]];
+};
+
+struct SceneData
+{
+    float4x4 view;
+    float4x4 projection;
+};
+
+struct ObjectData
+{
+    float4x4 model;
 };
 
 struct VertexOut
@@ -14,13 +25,14 @@ struct VertexOut
 };
 
 vertex VertexOut vertex_main(
-                    uint vertexID [[vertex_id]],
-                    device const VertexIn* vertices [[buffer(0)]],
-                    constant float4x4& camera [[buffer(1)]]
+                    VertexIn in [[stage_in]],
+                    constant SceneData& scene [[buffer(1)]],
+                    constant ObjectData& object [[buffer(2)]]
                 )
 {
+    float4x4 mvp = scene.projection * scene.view * object.model;
     VertexOut out;
-    out.position = camera * float4(vertices[vertexID].position, 1.0);
-    out.texCoord = vertices[vertexID].texCoord;
+    out.position = mvp * float4(in.position, 1.0);
+    out.texCoord = in.texCoord;
     return out;
 }

@@ -1,4 +1,4 @@
-namespace odl3d.Renderer;
+namespace odl3d;
 
 public enum ShaderStage
 {

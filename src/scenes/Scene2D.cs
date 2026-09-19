@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -54,20 +57,22 @@ public class Scene2D : Scene<Object3D>
     /// </summary>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
+    public override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
         
-        float scaleX = (float) Window.FramebufferWidth / Window.Width;
-        float scaleY = (float) Window.FramebufferHeight / Window.Height;
+        float scaleX = (float) Window.RenderSurface.Width / Window.Width;
+        float scaleY = (float) Window.RenderSurface.Height / Window.Height;
         int vpX = (int) ((Viewport.X + Position.X) * scaleX);
         int vpY = (int) ((Viewport.Y + Position.Y) * scaleY);
         int vpWidth = (int) (Viewport.Width * scaleX);
         int vpHeight = (int) (Viewport.Height * scaleY);
-        Renderer.SetViewport(vpX, Window.FramebufferHeight - vpY - vpHeight, vpWidth, vpHeight);
-        Matrix4x4 projection = GetProjectionMatrix();
+        pass.SetViewport(new Rect(vpX, Window.RenderSurface.Height - vpY - vpHeight, vpWidth, vpHeight));
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
-            Objects[i].Draw(shader, projection, renderPass);
+        {
+            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * ObjectShaderData.NumFloats));
+            Objects[i].Draw(pass, passType);
+        }
     }
 }
