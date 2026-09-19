@@ -45,57 +45,28 @@ public static partial class Metal
         }
 
         public SamplerState CreateSampler(
-            TextureFilter minFilter = TextureFilter.Nearest,
-            TextureFilter magFilter = TextureFilter.Nearest,
-            MipmapFilter mipmapFilter = MipmapFilter.None,
-            TextureWrap wrapU = TextureWrap.Repeat,
-            TextureWrap wrapV = TextureWrap.Repeat,
-            TextureWrap wrapW = TextureWrap.Repeat,
-            AnisotropicFilter anisotropicFilter = AnisotropicFilter.None)
+            TextureFilter minFilter,
+            TextureFilter magFilter,
+            MipmapFilter mipmapFilter,
+            TextureWrap wrapU,
+            TextureWrap wrapV,
+            TextureWrap wrapW,
+            AnisotropicFilter anisotropicFilter)
         {
             using SamplerDescriptor descriptor = SamplerDescriptor.Create();
-            descriptor.SetMinFilter(minFilter);
-            descriptor.SetMagFilter(magFilter);
-            descriptor.SetMipFilter(mipmapFilter);
-            descriptor.SetAddressModeS(wrapU);
-            descriptor.SetAddressModeT(wrapV);
-            descriptor.SetAddressModeR(wrapW);
-            descriptor.SetMaxAnisotropy(anisotropicFilter);
+            descriptor.SetMinFilter(GetFilter(minFilter));
+            descriptor.SetMagFilter(GetFilter(magFilter));
+            descriptor.SetMipFilter(GetMipmapFilter(mipmapFilter));
+            descriptor.SetAddressModeS(GetWrap(wrapU));
+            descriptor.SetAddressModeT(GetWrap(wrapV));
+            descriptor.SetAddressModeR(GetWrap(wrapW));
+            descriptor.SetMaxAnisotropy(GetAnisotropicFilter(anisotropicFilter));
 
             IntPtr handle = Send("newSamplerStateWithDescriptor:", descriptor);
             if (handle == IntPtr.Zero)
                 throw new RenderException("Metal could not create the texture sampler.");
             return new SamplerState(handle);
         }
-
-        public RenderPipelineState CreateTexturedPipeline() => CreatePipeline(VertexDescriptor.Create(), """
-                #include <metal_stdlib>
-                using namespace metal;
-
-                struct VertexOut {
-                    float4 position [[position]];
-                    float2 uv;
-                };
-
-                vertex VertexOut vertex_main(
-                    uint vertexId [[vertex_id]],
-                    device const float* vertices [[buffer(0)]],
-                    constant float4x4& mvp [[buffer(1)]]) {
-                    VertexOut out;
-                    uint offset = vertexId * 5;
-                    float3 position = float3(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-                    out.position = mvp * float4(position, 1.0);
-                    out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
-                    return out;
-                }
-
-                fragment float4 fragment_main(VertexOut in [[stage_in]],
-                    texture2d<float> colorTexture [[texture(0)]],
-                    sampler textureSampler [[sampler(0)]]) {
-                    return colorTexture.sample(textureSampler, in.uv);
-                }
-                """
-            );
 
         public Texture CreateTexture(uint width, uint height, TextureFormat textureFormat = TextureFormat.RGBA8Unorm)
         {
@@ -120,26 +91,6 @@ public static partial class Metal
             commandBuffer.Commit();
         }
 
-        public RenderPipelineState CreateSolidTrianglePipeline() => CreatePipeline(VertexDescriptor.Create(), """
-            #include <metal_stdlib>
-            using namespace metal;
-            struct VertexOut { float4 position [[position]]; float2 uv; };
-            vertex VertexOut vertex_main(uint vertexId [[vertex_id]],
-                device const float* vertices [[buffer(0)]],
-                constant float4x4& mvp [[buffer(1)]]) {
-                VertexOut out;
-                uint offset = vertexId * 5;
-                float3 position = float3(vertices[offset], vertices[offset + 1],
-                    vertices[offset + 2]);
-                out.position = mvp * float4(position, 1.0);
-                out.uv = float2(vertices[offset + 3], vertices[offset + 4]);
-                return out;
-            }
-            fragment float4 fragment_main(VertexOut in [[stage_in]]) {
-                return float4(0.1, 0.8, 0.3, 1.0);
-            }
-            """);
-
         public unsafe Buffer CreateBuffer<T>(T[] data) where T : unmanaged
         {
             if (data is null || data.Length == 0)
@@ -160,10 +111,21 @@ public static partial class Metal
             }
         }
 
-        public RenderPipelineState CreatePipeline(VertexDescriptor vertexDescriptor, string vertexSource, string fragmentSource, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main") =>
-            CreatePipeline(vertexDescriptor, vertexSource + "\n\n" + fragmentSource, vertexEntryPoint, fragmentEntryPoint);
+        public RenderPipelineState CreatePipeline(
+                VertexDescriptor vertexDescriptor, 
+                string vertexSource,
+                string fragmentSource,
+                string vertexEntryPoint,
+                string fragmentEntryPoint,
+                BlendDescription blendDescription) =>
+            CreatePipeline(vertexDescriptor, vertexSource + "\n\n" + fragmentSource, vertexEntryPoint, fragmentEntryPoint, blendDescription);
 
-        public RenderPipelineState CreatePipeline(VertexDescriptor vertexDescriptor, string source, string vertexEntryPoint = "vertex_main", string fragmentEntryPoint = "fragment_main")
+        public RenderPipelineState CreatePipeline(
+                VertexDescriptor vertexDescriptor,
+                string source,
+                string vertexEntryPoint,
+                string fragmentEntryPoint,
+                BlendDescription blendDescription)
         {
             using Library library = CompileLibrary(source);
 
@@ -176,7 +138,14 @@ public static partial class Metal
             descriptor.SetVertexDescriptor(vertexDescriptor);
 
             var colorAttachment = descriptor.ColorAttachments[0];
-            colorAttachment.SetPixelFormat(GetPixelFormat(TextureFormat.BGRA8Unorm));
+            colorAttachment.PixelFormat = GetPixelFormat(TextureFormat.BGRA8Unorm);
+            colorAttachment.BlendingEnabled = blendDescription.Enabled;
+            colorAttachment.SourceRGBBlendFactor = GetBlendFactor(blendDescription.SourceColor);
+            colorAttachment.DestinationRGBBlendFactor = GetBlendFactor(blendDescription.DestinationColor);
+            colorAttachment.RgbBlendOperation = GetColorOperation(blendDescription.ColorOperation);
+            colorAttachment.SourceAlphaBlendFactor = GetBlendFactor(blendDescription.SourceAlpha);
+            colorAttachment.DestinationAlphaBlendFactor = GetBlendFactor(blendDescription.DestinationAlpha);
+            colorAttachment.AlphaBlendOperation = GetColorOperation(blendDescription.AlphaOperation);
 
             IntPtr pipeline = Send("newRenderPipelineStateWithDescriptor:error:", descriptor.Handle, out IntPtr error);
             ThrowIfError(pipeline, error, "Metal render pipeline creation failed");

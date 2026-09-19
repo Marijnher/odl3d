@@ -13,34 +13,26 @@ public static partial class Metal
         public static SamplerDescriptor Create() =>
             new SamplerDescriptor(SendRaw(ClassPointer, "new"));
 
-        public void SetMinFilter(TextureFilter filter) =>
-            Send("setMinFilter:", (nuint)filter);
+        public void SetMinFilter(nuint filter) =>
+            Send("setMinFilter:", filter);
 
-        public void SetMagFilter(TextureFilter filter) =>
-            Send("setMagFilter:", (nuint)filter);
+        public void SetMagFilter(nuint filter) =>
+            Send("setMagFilter:", filter);
 
-        public void SetMipFilter(MipmapFilter filter) =>
-            Send("setMipFilter:", (nuint)filter);
+        public void SetMipFilter(nuint filter) =>
+            Send("setMipFilter:", filter);
 
-        public void SetAddressModeS(TextureWrap wrap) =>
-            Send("setSAddressMode:", AddressMode(wrap));
+        public void SetAddressModeS(nuint wrap) =>
+            Send("setSAddressMode:", wrap);
 
-        public void SetAddressModeT(TextureWrap wrap) =>
-            Send("setTAddressMode:", AddressMode(wrap));
+        public void SetAddressModeT(nuint wrap) =>
+            Send("setTAddressMode:", wrap);
 
-        public void SetAddressModeR(TextureWrap wrap) =>
-            Send("setRAddressMode:", AddressMode(wrap));
+        public void SetAddressModeR(nuint wrap) =>
+            Send("setRAddressMode:", wrap);
 
-        public void SetMaxAnisotropy(AnisotropicFilter filter) =>
-            Send("setMaxAnisotropy:", (nuint)filter);
-
-        private static nuint AddressMode(TextureWrap wrap) => wrap switch
-        {
-            TextureWrap.Clamp => 0,
-            TextureWrap.Repeat => 2,
-            TextureWrap.Mirror => 3,
-            _ => throw new ArgumentOutOfRangeException(nameof(wrap))
-        };
+        public void SetMaxAnisotropy(nuint filter) =>
+            Send("setMaxAnisotropy:", filter);
     }
 
     public sealed class SamplerState : ObjCObject

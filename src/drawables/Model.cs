@@ -30,9 +30,10 @@ public class ModelPart : Object3D
     /// <param name="mesh">The mesh for this part.</param>
     /// <param name="texture">The texture for this part.</param>
     /// <param name="localTransform">The local transformation matrix for this part.</param>
-    public ModelPart(Model parent, Scene<Object3D> scene, Mesh mesh, Texture? texture, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
+    public ModelPart(Model parent, Scene<Object3D> scene, Mesh mesh, Texture? texture, Sampler? sampler, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
     {
         Parent = parent;
+        Sampler = sampler ?? new Sampler();
         LocalTransform = localTransform;
     }
 
@@ -77,14 +78,14 @@ public class Model : Object3D
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public unsafe Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Matrix4x4[]? localTransforms = null) : base(scene)
+    public unsafe Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null) : base(scene)
     {
         for (int i = 0; i < meshes.Length; i++)
         {
             Matrix4x4 localTransform = localTransforms != null && i < localTransforms.Length
                 ? localTransforms[i]
                 : Matrix4x4.Identity;
-            Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], localTransform);
+            Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], samplers?[i], localTransform);
             Objects.Add(obj);
         }
         ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
@@ -105,8 +106,8 @@ public class Model : Object3D
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
         if (daeFolder == null) throw new ArgumentException("Invalid filename: " + filename);
-        (Mesh[] meshes, Texture?[] textures, Matrix4x4[] localTransforms) = DaeLoader.Load(filename, daeFolder);
-        return new Model(scene, meshes, textures, localTransforms);
+        (Mesh[] meshes, Texture?[] textures, Sampler?[] samplers, Matrix4x4[] localTransforms) = DaeLoader.Load(filename, daeFolder);
+        return new Model(scene, meshes, textures, samplers,localTransforms);
     }
 
     /// <summary>

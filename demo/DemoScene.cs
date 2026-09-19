@@ -33,8 +33,8 @@ class DemoScene : Scene3D
         {
             Position = new Vector3(-10, -1.5f, -10)
         };
-        ground.Texture!.WrapModeH = TextureWrap.Mirror;
-        ground.Texture!.WrapModeV = TextureWrap.Mirror;
+        ground.Sampler.WrapU = TextureWrap.Mirror;
+        ground.Sampler.WrapV = TextureWrap.Mirror;
 
         Text3D helloWorld = new Text3D(this, Font.Get("arial", 96))
         {

@@ -49,7 +49,8 @@ public class MetalRenderPipeline : IRenderPipeline
             vertexSource,
             fragmentSource,
             description.VertexShader.EntryPoint,
-            description.FragmentShader.EntryPoint
+            description.FragmentShader.EntryPoint,
+            description.Blend
         );
         PrimitiveType = description.PrimitiveType;
     }

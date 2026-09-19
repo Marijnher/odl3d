@@ -8,12 +8,10 @@ fragment float4 fragment_main(
                     sampler sampler [[sampler(0)]]
                 )
 {
-    float4 color = float4(0, 0, 1.0, 1.0);
+    float4 color = object.objColor;
     if (object.useTexture) {
         color = object.texColor * texture.sample(sampler, in.texCoord);
     }
-    else {
-        color = object.objColor;
-    }
+    if (color.a == 0) discard_fragment();
     return color;
 }

@@ -92,15 +92,12 @@ public abstract class RasterizedText : Text
                 FillBar(composed, (int)MathF.Round(baselineY - Font.Ascender * 0.35f), barThickness, barX0, barX1);
         }
 
-        composed.FilterMode = TextureFilter.Linear;
+        Sampler.MinFilter = TextureFilter.Linear;
+        Sampler.MagFilter = TextureFilter.Linear;
 
         Texture = composed;
         old?.Dispose();
-        OnTextureRebuilt();
     }
-
-    /// <summary>Called after the composed Texture has been replaced, so subclasses can resize their quad.</summary>
-    protected virtual void OnTextureRebuilt() { }
 
     private void BlitGlyph(Texture dest, AtlasGlyph glyph, int destX, int destY)
     {

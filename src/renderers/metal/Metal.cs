@@ -148,6 +148,65 @@ public static partial class Metal
         _ => throw new RenderException("Unsupported texture format.")
     };
 
+    public static nuint GetBlendFactor(BlendFactor blendFactor) => blendFactor switch
+    {
+        BlendFactor.Zero => 0,
+        BlendFactor.One => 1,
+        BlendFactor.SourceColor => 2,
+        BlendFactor.OneMinusSourceColor => 3,
+        BlendFactor.SourceAlpha => 4,
+        BlendFactor.OneMinusSourceAlpha => 5,
+        BlendFactor.DestinationColor => 6,
+        BlendFactor.OneMinusDestinationColor => 7,
+        BlendFactor.DestinationAlpha => 8,
+        BlendFactor.OneMinusDestinationAlpha => 9,
+        _ => throw new RenderException("Unsupported blend factor.")
+    };
+
+    public static nuint GetColorOperation(BlendOperation blendOperation) => blendOperation switch
+    {
+        BlendOperation.Add => 0,
+        BlendOperation.Subtract => 1,
+        BlendOperation.ReverseSubtract => 2,
+        BlendOperation.Min => 3,
+        BlendOperation.Max => 4,
+        _ => throw new RenderException("Unsupported blend operation.")
+    };
+
+    public static nuint GetFilter(TextureFilter filter) => filter switch
+    {
+        TextureFilter.Nearest => 0,
+        TextureFilter.Linear => 1,
+        _ => throw new RenderException("Unsupported texture filter.")
+    };
+
+    public static nuint GetMipmapFilter(MipmapFilter filter) => filter switch
+    {
+        MipmapFilter.None => 0,
+        MipmapFilter.Nearest => 1,
+        MipmapFilter.Linear => 2,
+        _ => throw new RenderException("Unsupported mipmap filter.")
+    };
+
+    public static nuint GetWrap(TextureWrap wrap) => wrap switch
+    {
+        TextureWrap.Repeat => 2,
+        TextureWrap.Clamp => 0,
+        TextureWrap.Mirror => 3,
+        _ => throw new RenderException("Unsupported texture wrap.")
+    };
+
+    public static nuint GetAnisotropicFilter(AnisotropicFilter filter) => filter switch
+    {
+        0 => 1,
+        AnisotropicFilter.None => 1,
+        AnisotropicFilter.X2 => 2,
+        AnisotropicFilter.X4 => 4,
+        AnisotropicFilter.X8 => 8,
+        AnisotropicFilter.X16 => 16,
+        _ => throw new RenderException($"Unsupported anisotropic filter: {filter}.")
+    };
+
     [StructLayout(LayoutKind.Sequential)]
     public struct MTLRegion
     {

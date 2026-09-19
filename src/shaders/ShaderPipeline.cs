@@ -37,7 +37,17 @@ public class ShaderPipeline : IDisposable
             VertexShader = vertexShader.ShaderModule,
             FragmentShader = fragmentShader.ShaderModule,
             ColorFormat = TextureFormat.RGBA32Float,
-            VertexLayout = vertexLayout
+            VertexLayout = vertexLayout,
+            Blend = new BlendDescription()
+            {
+                Enabled = true,
+                SourceColor = BlendFactor.SourceAlpha,
+                DestinationColor = BlendFactor.OneMinusSourceAlpha,
+                ColorOperation = BlendOperation.Add,
+                SourceAlpha = BlendFactor.One,
+                DestinationAlpha = BlendFactor.Zero,
+                AlphaOperation = BlendOperation.Add
+            }
         });
         if (autoDisposeSource)
         {

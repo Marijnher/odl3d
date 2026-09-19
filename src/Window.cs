@@ -125,8 +125,6 @@ public class Window : InputHost
 
         // GLFW.glfwMakeContextCurrent(Handle);
 
-        // Renderer.SetAlphaBlending(true);
-
         // Default non-moveable camera
         Camera = new Camera(this);
     }

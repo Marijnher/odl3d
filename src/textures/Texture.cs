@@ -10,12 +10,6 @@ namespace odl3d;
 /// </summary>
 public class Texture : IDisposable
 {
-    public static TextureWrap DefaultWrapModeH = TextureWrap.Repeat;
-    public static TextureWrap DefaultWrapModeV = TextureWrap.Repeat;
-    public static TextureFilter DefaultFilterMode = TextureFilter.Nearest;
-    public static MipmapFilter DefaultMipmapMode = MipmapFilter.None;
-    public static AnisotropicFilter DefaultAnisotropicMode = AnisotropicFilter.None;
-
     protected IRenderDevice Renderer => Window.Renderer;
 
     public ITexture RenderTexture;
@@ -44,33 +38,6 @@ public class Texture : IDisposable
     /// True if the pixel data has been uploaded to the active renderer; false if Upload() has not yet been called or if the texture has been modified since the last upload.
     /// </summary>
     public bool Uploaded { get; private set; } = false;
-
-    /// <summary>
-    /// Horizontal wrap mode of the texture. Determines how the texture is sampled when texture coordinates are outside the [0, 1] range.
-    /// </summary>
-    public TextureWrap WrapModeH = DefaultWrapModeH;
-
-    /// <summary>
-    /// Vertical wrap mode of the texture. Determines how the texture is sampled when texture coordinates are outside the [0, 1] range.
-    /// </summary>
-    public TextureWrap WrapModeV = DefaultWrapModeV;
-
-    /// <summary>
-    /// The mipmap filter mode determines what mipmap (if any) is used when sampling the texture.
-    /// </summary>
-    public MipmapFilter Mipmap = DefaultMipmapMode;
-
-    /// <summary>
-    /// Filtering mode used when sampling this texture at a size other than its native resolution. Defaults to
-    /// Nearest (crisp, suited to pixel art); set to Linear for smoother results with anti-aliased content such
-    /// as rasterized text.
-    /// </summary>
-    public TextureFilter FilterMode = DefaultFilterMode;
-    
-    /// <summary>
-    /// The anisotropic filtering mode used when sampling this texture. Defaults to None.
-    /// </summary>
-    public AnisotropicFilter AnisotropicFilter = DefaultAnisotropicMode;
 
     /// <summary>
     /// Indicates whether this texture has been disposed and its resources released. After disposing, the texture should not be used again.
