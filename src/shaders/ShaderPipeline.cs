@@ -154,7 +154,7 @@ public class ShaderPipeline : IDisposable
         return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout);
     }
 
-    private static string defaultVertexMetal = @$"demo/shaders/msl/simple_vertex.metal";
+    private static string defaultVertexMetal = @$"demo/shaders/msl/vertex.metal";
 
-    private static string defaultFragmentMetal = @$"demo/shaders/msl/simple_fragment.metal";
+    private static string defaultFragmentMetal = @$"demo/shaders/msl/fragment.metal";
 }
