@@ -75,8 +75,9 @@ public class Window : InputHost
     private double? previousTime;
 
     public ShaderPipeline PipelineNoNormals { get; protected set; }
-
     public ShaderPipeline PipelineWithNormals { get; protected set; }
+    public ShaderPipeline PipelineWireframeNoNormals { get; protected set; }
+    public ShaderPipeline PipelineWireframeWithNormals { get; protected set; }
 
     private IDepthStencilState OpaqueStencil;
     private IDepthStencilState TransparentStencil;
@@ -120,8 +121,10 @@ public class Window : InputHost
             DepthCompareFunction = CompareFunction.Less
         });
 
-        PipelineNoNormals = ShaderPipeline.CreateDefault(false);
-        PipelineWithNormals = ShaderPipeline.CreateDefault(true);
+        PipelineNoNormals = ShaderPipeline.CreateDefault(hasNormals: false);
+        PipelineWithNormals = ShaderPipeline.CreateDefault(hasNormals: true);
+        PipelineWireframeNoNormals = ShaderPipeline.CreateDefault(hasNormals: false, wireframe: true);
+        PipelineWireframeWithNormals = ShaderPipeline.CreateDefault(hasNormals: true, wireframe: true);
 
         // GLFW.glfwMakeContextCurrent(Handle);
 
@@ -168,7 +171,6 @@ public class Window : InputHost
     public void SetWireFrame(bool enabled)
     {
         Wireframe = enabled;
-        // Renderer.SetWireFrame(enabled);
     }
 
     public void SetShaderPipeline(ShaderPipeline pipeline)
@@ -301,7 +303,6 @@ public class Window : InputHost
             Color = new ColorAttachmentDescription { ClearColor = BackgroundColor },
             Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear, StoreAction = StoreAction.DontCare}
         });
-        pass.SetRenderPipeline(PipelineNoNormals.Pipeline);
         pass.SetViewport(new Rect(0, 0, RenderSurface.Width, RenderSurface.Height));
         pass.SetDepthStencilState(OpaqueStencil);
 
