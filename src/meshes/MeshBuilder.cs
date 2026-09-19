@@ -94,7 +94,7 @@ public class MeshBuilder
         var backTopRight        = new Vertex(w, h, d);
 
         builder.AddQuad(frontBottomLeft, frontBottomRight, frontTopRight, frontTopLeft, u, v); // Front
-        builder.AddQuad(backBottomLeft, frontBottomLeft, frontTopLeft, backBottomLeft, u, v); // Left
+        builder.AddQuad(backBottomLeft, frontBottomLeft, frontTopLeft, backTopLeft, u, v); // Left
         builder.AddQuad(frontBottomRight, backBottomRight, backTopRight, frontTopRight, u, v); // Right
         builder.AddQuad(frontTopLeft, frontTopRight, backTopRight, backTopLeft, u, v); // Top
         builder.AddQuad(frontBottomLeft, frontBottomRight, backBottomRight, backBottomLeft, u, v); // Bottom
@@ -153,7 +153,7 @@ public class MeshBuilder
             }
         }
 
-        return builder.Build(hasNormals: true);
+        return builder.Build(true);
     }
 }
 

@@ -12,6 +12,7 @@ public interface IRenderPass : IDisposable
     void SetDepthStencilState(IDepthStencilState state);
 
     void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged;
+    void SetFragmentBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged;
     void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged;
     void SetUniformBuffer<T>(int slot, IBuffer<T> buffer, uint offset = 0) where T : unmanaged;
 

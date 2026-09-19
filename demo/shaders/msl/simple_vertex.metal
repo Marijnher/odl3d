@@ -16,6 +16,9 @@ struct SceneData
 struct ObjectData
 {
     float4x4 model;
+    float4 texColor;
+    float4 objColor;
+    uint useTexture;
 };
 
 struct VertexOut

@@ -26,8 +26,6 @@ public class Object3D : Drawable
 
     protected IRenderDevice Renderer => Window.Renderer;
 
-    protected ObjectShaderData ShaderData = new ObjectShaderData();
-
     /// <summary>
     /// The texture to use when drawing this object, or null to draw without a texture.
     /// </summary>
@@ -127,12 +125,18 @@ public class Object3D : Drawable
         Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
         Matrix4x4.CreateTranslation(Position + Scene.Position);
 
-    public virtual float[] GetShaderData()
-     {
-        ShaderData.Model = GetModelMatrix();
-        return ShaderData.ToFloats();
+    public virtual ObjectShaderData GetShaderData()
+    {
+        var shaderData = new ObjectShaderData
+        {
+            Model = GetModelMatrix(),
+            UseTexture = (uint) (Texture != null && !Texture.Disposed ? 1 : 0),
+            TexColor = TextureColor.ToVector4(),
+            ObjColor = Color.ToVector4()
+        };
+        return shaderData;
     }
-
+    
     /// <summary>
     /// True if this object must be alpha-blended against whatever has already been drawn behind it (e.g. a soft shadow decal), as opposed to being fully opaque or a hard 0/255 alpha cutout. Transparent objects are rendered in a second pass, after all opaque objects, without writing to the depth buffer, so they blend correctly regardless of scene/model ordering.
     /// </summary>
@@ -149,9 +153,16 @@ public class Object3D : Drawable
         if (!Visible || Disposed || Mesh == null || Mesh.Disposed) return;
         if (passType == RenderPass.Transparent != IsTransparent) return;
 
+        ShaderPipeline pipeline = Mesh.HasNormals ? Scene.Window.PipelineWithNormals : Scene.Window.PipelineNoNormals;
+        pass.SetRenderPipeline(pipeline.Pipeline);
+
         pass.SetVertexBuffer(Mesh.Vertices);
         pass.SetIndexBuffer(Mesh.Indices);
-        if (Texture != null && !Texture.Disposed) pass.SetTexture(Texture.RenderTexture);
+        if (Texture != null && !Texture.Disposed)
+        {
+            if (!Texture.Uploaded) Texture.Upload();
+            pass.SetTexture(Texture.RenderTexture);
+        }
         pass.SetSampler(Sampler.RenderSampler);
         pass.DrawIndexed();
 
@@ -165,7 +176,6 @@ public class Object3D : Drawable
         // shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
         // if (Mesh.HasNormals) shader.SetMatrix("uModel", model);
 
-        // if (Texture != null && !Texture.Uploaded) Texture.Upload();
         // Renderer.BindTexture(Texture);
 
         // Mesh.Draw();
@@ -196,21 +206,3 @@ public class Object3D : Drawable
     }
 }
 
-public struct ObjectShaderData
-{
-    public Matrix4x4 Model;
-
-    public float[] ToFloats()
-    {
-        float[] array =
-        [
-            Model.M11, Model.M21, Model.M31, Model.M41,
-            Model.M12, Model.M22, Model.M32, Model.M42,
-            Model.M13, Model.M23, Model.M33, Model.M34,
-            Model.M14, Model.M24, Model.M34, Model.M44
-        ];
-        return array;
-    }
-
-    public static int NumFloats => 16;
-}

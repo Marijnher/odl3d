@@ -80,6 +80,12 @@ public class MetalRenderPass : IRenderPass
         VertexBuffer = (MetalBuffer<T>) buffer;
         Encoder.SetVertexBuffer(VertexBuffer.Buffer, (nuint) slot, offset);
     }
+
+    public void SetFragmentBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
+    {
+        var fragmentBuffer = (MetalBuffer<T>) buffer;
+        Encoder.SetFragmentBuffer(fragmentBuffer.Buffer, (nuint) slot, offset);
+    }
     public void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged
     {
         IndexBuffer = (MetalBuffer<T>) buffer;

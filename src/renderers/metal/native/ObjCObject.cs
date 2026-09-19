@@ -140,11 +140,10 @@ public static partial class Metal
         protected T Send<T>(string selectorName, IntPtr arg1, nuint arg2, nuint arg3) where T : ObjCObject =>
             Convert<T>(Send(selectorName, arg1, arg2, arg3));
 
-        protected IntPtr Send(string selectorName, int level, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) =>
-            objc_msgSendRegion(Handle, GetSelector(selectorName),
-                new() { Width = width, Height = height, Depth = 1 }, (nuint) level, bytes, bytesPerRow);
-        protected T Send<T>(string selectorName, IntPtr bytes, nuint bytesPerRow, nuint width, nuint height) where T : ObjCObject =>
-            Convert<T>(Send(selectorName, bytes, bytesPerRow, width, height));
+        protected IntPtr Send(string selectorName, MTLRegion region, nuint level, IntPtr bytes, nuint bytesPerRow) =>
+            objc_msgSendRegion(Handle, GetSelector(selectorName), region, (nuint) level, bytes, bytesPerRow);
+        protected T Send<T>(string selectorName, MTLRegion region, nuint level, IntPtr bytes, nuint bytesPerRow) where T : ObjCObject =>
+            Convert<T>(Send(selectorName, region, level, bytes, bytesPerRow));
 
         protected IntPtr Send(string selectorName, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset) =>
             objc_msgSendThreeUInt64PtrUInt64(Handle, GetSelector(selectorName), primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset);

@@ -121,6 +121,8 @@ public class Texture : IDisposable
             Width = Width,
             Height = Height
         }, Pixels);
+        // The renderer texture above was just created from the current (initial) Pixels contents.
+        Uploaded = true;
     }
 
     /// <summary>
@@ -139,6 +141,18 @@ public class Texture : IDisposable
             Width = Width,
             Height = Height
         }, Pixels);
+        // The renderer texture above was just created from the current (initial) Pixels contents.
+        Uploaded = true;
+    }
+
+    /// <summary>
+    /// Uploads the current contents of the Pixels buffer to the renderer texture. This must be called after modifying Pixels (directly, via SetPixel, or via any of the factory methods) for the change to become visible when the texture is drawn; until then, the renderer texture retains whatever was last uploaded.
+    /// </summary>
+    public void Upload()
+    {
+        if (Disposed) return;
+        RenderTexture.Upload(Pixels);
+        Uploaded = true;
     }
 
     ~Texture()
@@ -167,6 +181,7 @@ public class Texture : IDisposable
             texture.Pixels[o + 2] = b;
             texture.Pixels[o + 3] = a;
         }
+        texture.Upload();
         return texture;
     }
 
@@ -207,6 +222,7 @@ public class Texture : IDisposable
                 texture.Pixels[o + 3] = 255;
             }
         }
+        texture.Upload();
         return texture;
     }
 
@@ -248,6 +264,7 @@ public class Texture : IDisposable
                 texture.Pixels[o + 3] = (byte) Math.Round(f1 * c1.A + f2 * c2.A + f3 * c3.A + f4 * c4.A);
             }
         }
+        texture.Upload();
         return texture;
     }
 

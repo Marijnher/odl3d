@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using odl3d.Loaders;
 using odl3d.Renderer;
+using System.Linq;
 
 namespace odl3d;
 
@@ -52,7 +53,7 @@ public class Model : Object3D
     /// </summary>
     protected List<Object3D> Objects = new List<Object3D>();
 
-    private IBuffer<float> ObjectShaderDataBuffer;
+    private IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
 
     /// <summary>
     /// The total number of vertices rendered by this model's mesh parts.
@@ -76,7 +77,7 @@ public class Model : Object3D
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Matrix4x4[]? localTransforms = null) : base(scene)
+    public unsafe Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Matrix4x4[]? localTransforms = null) : base(scene)
     {
         for (int i = 0; i < meshes.Length; i++)
         {
@@ -86,9 +87,9 @@ public class Model : Object3D
             Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], localTransform);
             Objects.Add(obj);
         }
-        ObjectShaderDataBuffer = Renderer.CreateBuffer<float>(new BufferDescription
+        ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
         {
-            Size = ObjectShaderData.NumFloats * meshes.Length,
+            Size = meshes.Length,
             Usage = BufferUsage.Uniform
         });
     }
@@ -149,12 +150,10 @@ public class Model : Object3D
 
     protected void BindObjectData()
     {
-        float[] shaderData = new float[ObjectShaderDataBuffer.Size];
-        for (int i = 0; i < Objects.Count; i++)
-        {
-            Array.Copy(Objects[i].GetShaderData(), 0, shaderData, i * ObjectShaderData.NumFloats, ObjectShaderData.NumFloats);
-        }
-        ObjectShaderDataBuffer.SetData(shaderData);
+        List<ObjectShaderData> shaderData = Objects.Select(o => o.GetShaderData()).ToList();
+        int diff = ObjectShaderDataBuffer.Size - shaderData.Count;
+        if (diff > 0) shaderData.AddRange(Enumerable.Repeat(default(ObjectShaderData), diff));
+        ObjectShaderDataBuffer.SetData(shaderData.ToArray());
     }
 
     /// <summary>
@@ -163,7 +162,7 @@ public class Model : Object3D
     /// <param name="shader">The shader to use for rendering the model.</param>
     /// <param name="viewProjection">The combined view-projection matrix for the current camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; sub-objects not belonging to this pass are skipped.</param>
-    public override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
+    public unsafe override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         for (int i = 0; i < Objects.Count; i++)
         {
@@ -172,7 +171,13 @@ public class Model : Object3D
             if (Texture != null) obj.Texture = Texture;
             obj.Color = Color;
             obj.TextureColor = TextureColor;
-            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * ObjectShaderData.NumFloats));
+        }
+        BindObjectData();
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            var obj = Objects[i];
+            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
+            pass.SetFragmentBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
             obj.Draw(pass, passType);
         }
     }

@@ -8,7 +8,7 @@ namespace odl3d.Renderer;
 /// <summary>
 /// Provides an OpenGL implementation of the IRenderer interface, which defines methods for creating and managing graphics resources, rendering operations, and shader programs. The OpenGL class encapsulates the functionality of the OpenGL graphics API, allowing for efficient rendering of 3D scenes and objects. It includes methods for initializing the renderer, creating and deleting buffers, textures, and shaders, binding resources, setting data, and performing draw calls. The OpenGL class is responsible for handling the specifics of the OpenGL API while providing a consistent interface for rendering operations.
 /// </summary>
-public partial class OpenGL : IRendererOld
+public partial class OpenGL
 {
     public void ConfigureWindow()
     {

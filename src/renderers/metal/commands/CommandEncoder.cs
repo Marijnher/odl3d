@@ -39,6 +39,9 @@ public static partial class Metal
         public void SetVertexBuffer(Buffer buffer, nuint index = 0, uint offset = 0) =>
             Send("setVertexBuffer:offset:atIndex:", buffer.Handle, offset, index);
 
+        public void SetFragmentBuffer(Buffer buffer, nuint index = 0, uint offset = 0) =>
+            Send("setFragmentBuffer:offset:atIndex:", buffer.Handle, offset, index);
+
         public void SetFragmentTexture(Texture texture, nuint index = 0) =>
             Send("setFragmentTexture:atIndex:", texture.Handle, index);
 

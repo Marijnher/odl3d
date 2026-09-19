@@ -74,7 +74,9 @@ public class Window : InputHost
     /// </summary>
     private double? previousTime;
 
-    public ShaderPipeline Pipeline { get; protected set; }
+    public ShaderPipeline PipelineNoNormals { get; protected set; }
+
+    public ShaderPipeline PipelineWithNormals { get; protected set; }
 
     private IDepthStencilState OpaqueStencil;
     private IDepthStencilState TransparentStencil;
@@ -85,9 +87,9 @@ public class Window : InputHost
     /// <param name="height">Window height in pixels.</param>
     /// <param name="title">Window title.</param>
     /// </summary>
-    public Window(int width, int height, string title)
+    public Window(int width, int height, string title, RenderTarget renderTarget = RenderTarget.Metal)
     {
-        _renderer = new MetalRenderDevice();
+        _renderer = RenderFactory.Create(renderTarget);
         
         Width = width;
         Height = height;
@@ -118,7 +120,8 @@ public class Window : InputHost
             DepthCompareFunction = CompareFunction.Less
         });
 
-        Pipeline = ShaderPipeline.CreateDefault();
+        PipelineNoNormals = ShaderPipeline.CreateDefault(false);
+        PipelineWithNormals = ShaderPipeline.CreateDefault(true);
 
         // GLFW.glfwMakeContextCurrent(Handle);
 
@@ -172,7 +175,7 @@ public class Window : InputHost
 
     public void SetShaderPipeline(ShaderPipeline pipeline)
     {
-        Pipeline = pipeline;
+        PipelineNoNormals = pipeline;
     }
 
     /// <summary>
@@ -300,10 +303,9 @@ public class Window : InputHost
             Color = new ColorAttachmentDescription { ClearColor = BackgroundColor },
             Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear, StoreAction = StoreAction.DontCare}
         });
-        pass.SetRenderPipeline(Pipeline.Pipeline);
+        pass.SetRenderPipeline(PipelineNoNormals.Pipeline);
         pass.SetViewport(new Rect(0, 0, RenderSurface.Width, RenderSurface.Height));
         pass.SetDepthStencilState(OpaqueStencil);
-        pass.SetVertexBuffer(Camera.ViewProjBuffer, 1);
 
         foreach (Scene3D scene in Scenes3D)
         {
@@ -387,7 +389,8 @@ public class Window : InputHost
         OpaqueStencil.Dispose();
         TransparentStencil.Dispose();
         Renderer.Dispose();
-        Pipeline.Dispose();
+        PipelineNoNormals.Dispose();
+        PipelineWithNormals.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;

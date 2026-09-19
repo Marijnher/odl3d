@@ -44,20 +44,17 @@ public class Scene2D : Scene<Object3D>
             Viewport = new Rect(0, 0, Window.Width, Window.Height);
     }
 
-    /// <summary>
-    /// Calculates and returns the orthographic projection matrix for the scene based on its viewport rectangle. The projection matrix maps pixel coordinates within the viewport to normalized device coordinates for rendering.
-    /// Depth range is deliberately wide so sprites can use Position.Z purely as a draw-order index (see Sprite2D) without being clipped.
-    /// </summary>
-    /// <returns>The orthographic projection matrix for the scene.</returns>
-    public Matrix4x4 GetProjectionMatrix() =>
+    protected override Matrix4x4 GetProjectionMatrix() =>
         Matrix4x4.CreateOrthographicOffCenter(0, Viewport.Width, Viewport.Height, 0, -1000, 1000);
+
+    protected override Matrix4x4 GetViewMatrix() => Matrix4x4.Identity;
 
     /// <summary>
     /// Draws all sprites in the scene using the given shader. The projection matrix is calculated based on the scene's viewport, and each sprite is drawn in pixel coordinates relative to the top-left of the viewport.
     /// </summary>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
+    public unsafe override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
         
@@ -68,10 +65,13 @@ public class Scene2D : Scene<Object3D>
         int vpWidth = (int) (Viewport.Width * scaleX);
         int vpHeight = (int) (Viewport.Height * scaleY);
         pass.SetViewport(new Rect(vpX, Window.RenderSurface.Height - vpY - vpHeight, vpWidth, vpHeight));
+        UpdateViewProjBuffer(pass);
+
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
         {
-            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * ObjectShaderData.NumFloats));
+            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
+            pass.SetFragmentBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
             Objects[i].Draw(pass, passType);
         }
     }

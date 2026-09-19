@@ -4,7 +4,7 @@ using static odl3d.GL;
 
 namespace odl3d.Renderer;
 
-public partial class OpenGL : IRendererOld
+public partial class OpenGL
 {
     public uint CreateVertexArray()
     {

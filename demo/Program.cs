@@ -27,13 +27,10 @@ public static class Program
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
-        Scene3D scene = new Scene3D(window);
-
-        //Mesh mesh = MeshBuilder.CreateSphere(1);
-        Mesh mesh = MeshBuilder.CreatePlane(1, 1, 0.1f);
-        Texture grassTexture = new Texture("assets/grass.png");
-        Object3D obj = new Object3D(scene, mesh, null);
-
+        UIScene uiScene = new UIScene(window);
+        DemoScene demoScene = new DemoScene(window);
+        ModelScene modelScene = new ModelScene(window);
+        
         while (!window.ShouldClose)
         {
             window.Update(0f);

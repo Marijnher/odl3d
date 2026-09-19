@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using odl3d.Renderer;
@@ -93,36 +94,52 @@ public class ShaderPipeline : IDisposable
         Disposed = true;
     }
 
-    public static ShaderPipeline CreateDefault()
+    public static ShaderPipeline CreateDefault(bool hasNormals = false)
     {
         var defaultVertex = new Shader(defaultVertexMetal, ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
         var defaultFragment = new Shader(defaultFragmentMetal, ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
+
+        var attributes = new List<VertexAttributeDescription>
+        {
+            new VertexAttributeDescription // Atribute 0 (position, float3)
+            {
+                AttributeIndex = 0,
+                Format = VertexFormat.Float3,
+                Offset = 0,
+                BufferSlot = 0
+            },
+            new VertexAttributeDescription // Attribute 1 (texCoord, float2)
+            {
+                AttributeIndex = 1,
+                Format = VertexFormat.Float2,
+                Offset = 3 * sizeof(float),
+                BufferSlot = 0
+            }
+        };
+        int strideFloats = 5;
+        if (hasNormals)
+        {
+            attributes.Add(new VertexAttributeDescription // Attribute 2 (normal, float3)
+            {
+                AttributeIndex = 2,
+                Format = VertexFormat.Float3,
+                Offset = 5 * sizeof(float),
+                BufferSlot = 0
+            });
+            strideFloats = 8;
+        }
+
         var vertexLayout = new VertexLayoutDescription
         {
             Buffers = [
                 new VertexBufferLayoutDescription // Buffer 0
                 {
                     BufferIndex = 0,
-                    Stride = 5 * sizeof(float),
+                    Stride = (uint) (strideFloats * sizeof(float)),
                     StepFunction = StepMode.PerVertex
                 }
             ],
-            Attributes = [
-                new VertexAttributeDescription // Atribute 0 (position, float3)
-                {
-                    AttributeIndex = 0,
-                    Format = VertexFormat.Float3,
-                    Offset = 0,
-                    BufferSlot = 0
-                },
-                new VertexAttributeDescription // Attribute 1 (texCoord, float2)
-                {
-                    AttributeIndex = 1,
-                    Format = VertexFormat.Float2,
-                    Offset = 3 * sizeof(float),
-                    BufferSlot = 0
-                }
-            ]
+            Attributes = attributes.ToArray()
         };
         return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout);
     }

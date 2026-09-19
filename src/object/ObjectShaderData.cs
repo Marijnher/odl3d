@@ -1,0 +1,12 @@
+using System;
+using System.Numerics;
+using System.Runtime.InteropServices;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ObjectShaderData
+{
+    public Matrix4x4 Model;
+    public Vector4 TexColor;
+    public Vector4 ObjColor;
+    public uint UseTexture;
+}

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.Numerics;
 using odl3d.Renderer;
+using System.Linq;
 
 namespace odl3d;
 
@@ -24,15 +25,29 @@ public abstract class Scene<T> : Drawable where T : Object3D
     protected Camera Camera => Window.Camera;
 
     /// <summary>
+    /// The list of objects contained in the scene. This list can be modified by adding or removing objects, and the Draw method will render all objects in this list.
+    /// </summary>
+    public List<T> Objects { get; } = new List<T>();
+
+    protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
+
+    private readonly IBuffer<float> ViewProjBuffer;
+
+    /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
     /// </summary>
     /// <param name="window">The window associated with the scene, used to determine the rendering context and other properties.</param>
-    protected Scene(Window window)
+    protected unsafe Scene(Window window)
     {
         this.Window = window;
-        ObjectShaderDataBuffer = Renderer.CreateBuffer<float>(new BufferDescription
+        ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
         {
-            Size = ObjectShaderData.NumFloats * 100,
+            Size = 100,
+            Usage = BufferUsage.Uniform
+        });
+        ViewProjBuffer = Renderer.CreateBuffer<float>(new BufferDescription
+        {
+            Size = 32,
             Usage = BufferUsage.Uniform
         });
     }
@@ -41,13 +56,6 @@ public abstract class Scene<T> : Drawable where T : Object3D
     {
         if (!Disposed) Console.WriteLine("Warning: Scene was not disposed before being finalized. This may cause a renderer resource leak.");
     }
-
-    /// <summary>
-    /// The list of objects contained in the scene. This list can be modified by adding or removing objects, and the Draw method will render all objects in this list.
-    /// </summary>
-    public List<T> Objects { get; } = new List<T>();
-
-    protected IBuffer<float> ObjectShaderDataBuffer;
 
     /// <summary>
     /// Enables or disables input handling for the scene. When enabled, the scene will create a ProxyInputManager to handle input events. When disabled, the ProxyInputManager will be disposed and input events will no longer be processed for this scene. This method allows the user to control whether the scene should respond to user input.
@@ -84,12 +92,29 @@ public abstract class Scene<T> : Drawable where T : Object3D
 
     public void UpdateObjectModelBuffer()
     {
-        float[] shaderData = new float[ObjectShaderDataBuffer.Size];
-        for (int i = 0; i < Objects.Count; i++)
-        {
-            Array.Copy(Objects[i].GetShaderData(), 0, shaderData, i * ObjectShaderData.NumFloats, ObjectShaderData.NumFloats);
-        }
-        ObjectShaderDataBuffer.SetData(shaderData);
+        List<ObjectShaderData> shaderData = Objects.Select(o => o.GetShaderData()).ToList();
+        int diff = ObjectShaderDataBuffer.Size - shaderData.Count;
+        if (diff > 0) shaderData.AddRange(Enumerable.Repeat(default(ObjectShaderData), diff));
+        ObjectShaderDataBuffer.SetData(shaderData.ToArray());
+    }
+
+    protected abstract Matrix4x4 GetViewMatrix();
+
+    protected abstract Matrix4x4 GetProjectionMatrix();
+
+    /// <summary>
+    /// Recalculates the scene's view and projection matrices and uploads them to ViewProjBuffer, then binds that buffer to shader buffer slot 1. This should be called before drawing the scene's objects so they are transformed using this scene's own view/projection rather than another scene's.
+    /// </summary>
+    /// <param name="pass">The render pass to bind the buffer to.</param>
+    protected void UpdateViewProjBuffer(IRenderPass pass)
+    {
+        float[] viewProjData = new float[32];
+        var view = GetViewMatrix();
+        var proj = GetProjectionMatrix();
+        view.ToArray().CopyTo(viewProjData, 0);
+        proj.ToArray().CopyTo(viewProjData, 16);
+        ViewProjBuffer.SetData(viewProjData);
+        pass.SetVertexBuffer(ViewProjBuffer, 1);
     }
 
     /// <summary>
@@ -120,6 +145,8 @@ public abstract class Scene<T> : Drawable where T : Object3D
             // Child automatically removes itself from object list upon disposal
             Objects[0].Dispose();
         }
+        ObjectShaderDataBuffer.Dispose();
+        ViewProjBuffer.Dispose();
         base.Dispose();
         Window.RemoveScene(this);
         Disposed = true;

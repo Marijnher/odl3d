@@ -50,6 +50,14 @@ class UIScene : Scene2D
                 if (sceneObject.Visible) vertexCount += sceneObject.VertexCount;
             }
         }
+        foreach (Scene2D scene2D in Window.Scenes2D)
+        {
+            if (!scene2D.Visible) continue;
+            foreach (Object3D sceneObject in scene2D.Objects)
+            {
+                if (sceneObject.Visible) vertexCount += sceneObject.VertexCount;
+            }
+        }
         return vertexCount;
     }
 
