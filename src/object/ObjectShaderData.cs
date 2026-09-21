@@ -9,4 +9,5 @@ public struct ObjectShaderData
     public Vector4 TexColor;
     public Vector4 ObjColor;
     public uint UseTexture;
+    public uint HasNormals;
 }

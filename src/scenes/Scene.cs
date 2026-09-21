@@ -29,6 +29,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// </summary>
     public List<T> Objects { get; } = new List<T>();
 
+    protected ObjectShaderData[] ObjectShaderDataArray;
     protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
 
     private readonly IBuffer<float> ViewProjBuffer;
@@ -37,12 +38,13 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
     /// </summary>
     /// <param name="window">The window associated with the scene, used to determine the rendering context and other properties.</param>
-    protected unsafe Scene(Window window)
+    protected unsafe Scene(Window window, int maxObjects = 100)
     {
-        this.Window = window;
+        Window = window;
+        ObjectShaderDataArray = new ObjectShaderData[maxObjects];
         ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
         {
-            Size = 100,
+            Size = maxObjects,
             Usage = BufferUsage.Uniform
         });
         ViewProjBuffer = Renderer.CreateBuffer<float>(new BufferDescription
@@ -92,10 +94,11 @@ public abstract class Scene<T> : Drawable where T : Object3D
 
     public void UpdateObjectModelBuffer()
     {
-        List<ObjectShaderData> shaderData = Objects.Select(o => o.GetShaderData()).ToList();
-        int diff = ObjectShaderDataBuffer.Size - shaderData.Count;
-        if (diff > 0) shaderData.AddRange(Enumerable.Repeat(default(ObjectShaderData), diff));
-        ObjectShaderDataBuffer.SetData(shaderData.ToArray());
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            ObjectShaderDataArray[i] = Objects[i].GetShaderData();
+        }
+        ObjectShaderDataBuffer.SetData(ObjectShaderDataArray, 0, Objects.Count);
     }
 
     protected abstract Matrix4x4 GetViewMatrix();
@@ -114,7 +117,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
         view.ToArray().CopyTo(viewProjData, 0);
         proj.ToArray().CopyTo(viewProjData, 16);
         ViewProjBuffer.SetData(viewProjData);
-        pass.SetVertexBuffer(ViewProjBuffer, 1);
+        pass.SetUniformBuffer(ViewProjBuffer, 1);
     }
 
     /// <summary>

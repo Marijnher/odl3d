@@ -70,8 +70,7 @@ public class Scene2D : Scene<Object3D>
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
         {
-            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
-            pass.SetFragmentBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
+            pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
             Objects[i].Draw(pass, passType);
         }
     }

@@ -19,6 +19,7 @@ struct ObjectData
     float4 texColor;
     float4 objColor;
     uint useTexture;
+    uint hasNormals;
 };
 
 struct VertexOut
@@ -29,8 +30,8 @@ struct VertexOut
 
 vertex VertexOut vertex_main(
                     VertexIn in [[stage_in]],
-                    constant SceneData& scene [[buffer(1)]],
-                    constant ObjectData& object [[buffer(2)]]
+                    constant ObjectData& object [[buffer(0)]],
+                    constant SceneData& scene [[buffer(1)]]
                 )
 {
     float4x4 mvp = scene.projection * scene.view * object.model;

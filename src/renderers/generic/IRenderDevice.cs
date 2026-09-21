@@ -4,6 +4,7 @@ namespace odl3d.Renderer;
 
 public interface IRenderDevice : IDisposable
 {
+    RenderTarget RenderTarget { get; }
     string Name { get; }
 
     IRenderCapabilities Capabilities { get; }

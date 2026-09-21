@@ -3,7 +3,7 @@ using namespace metal;
 
 fragment float4 fragment_main(
                     VertexOut in [[stage_in]],
-                    constant ObjectData& object [[buffer(2)]],
+                    constant ObjectData& object [[buffer(0)]],
                     texture2d<float> texture [[texture(0)]],
                     sampler sampler [[sampler(0)]]
                 )

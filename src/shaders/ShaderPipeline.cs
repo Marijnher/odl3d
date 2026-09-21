@@ -74,8 +74,8 @@ public class ShaderPipeline : IDisposable
 
     public static ShaderPipeline CreateDefault(bool hasNormals = false, bool wireframe = false)
     {
-        var defaultVertex = new Shader(defaultVertexMetal, ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
-        var defaultFragment = new Shader(defaultFragmentMetal, ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
+        using var defaultVertex = new Shader(GetDefaultVertexShaderFilename(), ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
+        using var defaultFragment = new Shader(GetDefaultFragmentShaderFilename(), ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
 
         var attributes = new List<VertexAttributeDescription>
         {
@@ -122,7 +122,17 @@ public class ShaderPipeline : IDisposable
         return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout, autoDisposeSource: true, wireframe: wireframe);
     }
 
-    private static string defaultVertexMetal = @$"demo/shaders/msl/vertex.metal";
+    private static string GetDefaultVertexShaderFilename() => Window.Renderer.RenderTarget switch
+    {
+        RenderTarget.OpenGL => "demo/shaders/glsl/shader.vert",
+        RenderTarget.Metal => "demo/shaders/msl/vertex.metal",
+        _ => throw new RenderException("Unsupported render target")
+    };
 
-    private static string defaultFragmentMetal = @$"demo/shaders/msl/fragment.metal";
+    private static string GetDefaultFragmentShaderFilename() => Window.Renderer.RenderTarget switch
+    {
+        RenderTarget.OpenGL => "demo/shaders/glsl/shader.frag",
+        RenderTarget.Metal => "demo/shaders/msl/fragment.metal",
+        _ => throw new RenderException("Unsupported render target")
+    };
 }

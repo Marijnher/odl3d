@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using odl3d.Renderer;
-using odl3d.Renderer.MetalAdapter;
 namespace odl3d;
 
 /// <summary>
@@ -95,8 +94,6 @@ public class Window : InputHost
         Width = width;
         Height = height;
 
-        // Renderer.ConfigureWindow(); // OpenGL hints
-
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
         Handle = GLFW.glfwCreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
         if (Handle == IntPtr.Zero)
@@ -111,22 +108,18 @@ public class Window : InputHost
         OpaqueStencil = Renderer.CreateDepthStencilState(new DepthStencilDescription
         {
             DepthTestEnabled = true,
-            DepthWriteEnabled = true,
-            DepthCompareFunction = CompareFunction.Less
+            DepthWriteEnabled = true
         });
         TransparentStencil = Renderer.CreateDepthStencilState(new DepthStencilDescription
         {
             DepthTestEnabled = true,
-            DepthWriteEnabled = false,
-            DepthCompareFunction = CompareFunction.Less
+            DepthWriteEnabled = false
         });
 
         PipelineNoNormals = ShaderPipeline.CreateDefault(hasNormals: false);
         PipelineWithNormals = ShaderPipeline.CreateDefault(hasNormals: true);
         PipelineWireframeNoNormals = ShaderPipeline.CreateDefault(hasNormals: false, wireframe: true);
         PipelineWireframeWithNormals = ShaderPipeline.CreateDefault(hasNormals: true, wireframe: true);
-
-        // GLFW.glfwMakeContextCurrent(Handle);
 
         // Default non-moveable camera
         Camera = new Camera(this);
@@ -253,14 +246,6 @@ public class Window : InputHost
     }
 
     /// <summary>
-    /// Swaps the front and back buffers, displaying the rendered scene to the window. This should be called after Render().
-    /// </summary>
-    public void SwapBuffers()
-    {
-        // Renderer.Present(Handle);
-    }
-
-    /// <summary>
     /// Marks the window to close, which will cause ShouldClose to return true. The window is not immediately destroyed; it is up to the application to check ShouldClose and call Dispose() when appropriate.
     /// </summary>
     public void Close() => GLFW.glfwSetWindowShouldClose(Handle, GLFW.GLFW_TRUE);
@@ -282,16 +267,6 @@ public class Window : InputHost
     public static double GetTime() => GLFW.glfwGetTime();
 
     /// <summary>
-    /// Clears the window's color and depth buffers using the BackgroundColor property. This should be called at the start of each frame before rendering any scenes.
-    /// </summary>
-    public void Clear()
-    {
-        // Renderer.ClearColor(BackgroundColor);
-        // Renderer.ClearColorBuffer();
-        // Renderer.ClearDepthBuffer();
-    }
-
-    /// <summary>
     /// Renders all 3D and 2D scenes in the window using the specified shader. This method clears the window's color and depth buffers, sets the viewport, and then draws each scene in the order they were added. The depth buffer is cleared between the 3D and 2D groups so 2D scenes are always in front of 3D scenes. Within the 3D group, opaque objects across all scenes are drawn before any scene's transparent objects, so transparent objects (e.g. soft shadow decals) always blend against fully-drawn opaque geometry regardless of which scene either belongs to.
     /// </summary>
     public void Render()
@@ -300,8 +275,8 @@ public class Window : InputHost
         if (frame == null) throw new RenderException("Failed to acquire frame.");
         IRenderPass pass = frame.CreateRenderPass(new RenderPassDescription
         {
-            Color = new ColorAttachmentDescription { ClearColor = BackgroundColor },
-            Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear, StoreAction = StoreAction.DontCare}
+            Color = new ColorAttachmentDescription { ClearColor = BackgroundColor, LoadAction = LoadAction.Clear },
+            Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear }
         });
         pass.SetViewport(new Rect(0, 0, RenderSurface.Width, RenderSurface.Height));
         pass.SetDepthStencilState(OpaqueStencil);

@@ -94,6 +94,8 @@ internal static class GLFW
     public delegate void GLFWmousebuttonfun(IntPtr window, int button, int action, int mods);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_glfwSetCursorPosCallback(IntPtr window, GLFWcursorposfun? callback);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_glfwGetWindowContentScale(IntPtr window, out float xscale, out float yscale);
     public delegate void GLFWcursorposfun(IntPtr window, double xpos, double ypos);
 
 #pragma warning disable CS8618
@@ -125,6 +127,7 @@ internal static class GLFW
     public static d_glfwSetKeyCallback glfwSetKeyCallback;
     public static d_glfwSetMouseButtonCallback glfwSetMouseButtonCallback;
     public static d_glfwSetCursorPosCallback glfwSetCursorPosCallback;
+    public static d_glfwGetWindowContentScale glfwGetWindowContentScale;
 #pragma warning restore CS8618
 
     private static IntPtr _library;
@@ -177,6 +180,7 @@ internal static class GLFW
         glfwSetKeyCallback = GetFunction<d_glfwSetKeyCallback>("glfwSetKeyCallback");
         glfwSetMouseButtonCallback = GetFunction<d_glfwSetMouseButtonCallback>("glfwSetMouseButtonCallback");
         glfwSetCursorPosCallback = GetFunction<d_glfwSetCursorPosCallback>("glfwSetCursorPosCallback");
+        glfwGetWindowContentScale = GetFunction<d_glfwGetWindowContentScale>("glfwGetWindowContentScale");
         
         if (glfwInit() == GLFW_FALSE)
             throw new RenderException("Failed to initialize GLFW.");

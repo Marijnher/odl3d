@@ -75,22 +75,47 @@ public class MetalRenderPass : IRenderPass
         Encoder.SetDepthStencilState(metalDepthStencil.DepthStencilState);
     }
 
+    /// <summary>
+    /// Sets the vertex buffer for the render pass. Slots 0..3 map to 27..30 in the MSL shader.
+    /// </summary>
+    /// <typeparam name="T">The type of the vertex buffer elements.</typeparam>
+    /// <param name="buffer">The vertex buffer to set.</param>
+    /// <param name="slot">The slot to bind the vertex buffer to.</param>
+    /// <param name="offset">The offset within the vertex buffer.</param>
     public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
         VertexBuffer = (MetalBuffer<T>) buffer;
-        Encoder.SetVertexBuffer(VertexBuffer.Buffer, (nuint) slot, offset);
+        Encoder.SetVertexBuffer(VertexBuffer.Buffer, GetVertexSlot(slot), offset);
     }
 
-    public void SetFragmentBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
+    private static uint GetVertexSlot(int slot)
     {
-        var fragmentBuffer = (MetalBuffer<T>) buffer;
-        Encoder.SetFragmentBuffer(fragmentBuffer.Buffer, (nuint) slot, offset);
+        return (uint) (31 - BufferSlots.MaxVertexBuffers + slot);
     }
+
+    /// <summary>
+    /// Sets the index buffer for the render pass.
+    /// </summary>
+    /// <typeparam name="T">The type of the index buffer elements.</typeparam>
+    /// <param name="buffer">The index buffer to set.</param>
     public void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged
     {
         IndexBuffer = (MetalBuffer<T>) buffer;
     }
-    public void SetUniformBuffer<T>(int slot, IBuffer<T> buffer, uint offset = 0) where T : unmanaged => throw new NotImplementedException();
+
+    /// <summary>
+    /// Sets the uniform buffer for the render pass. This binds the buffer to both the vertex and fragment stages. Slots 0..15 map to the corresponding slots in the MSL shader.
+    /// </summary>
+    /// <typeparam name="T">The type of the uniform buffer elements.</typeparam>
+    /// <param name="buffer">The uniform buffer to set.</param>
+    /// <param name="slot">The slot to bind the uniform buffer to.</param>
+    /// <param name="offset">The offset within the uniform buffer.</param>
+    public void SetUniformBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
+    {
+        var buf = (MetalBuffer<T>) buffer;
+        Encoder.SetVertexBuffer(buf.Buffer, (nuint) slot, offset);
+        Encoder.SetFragmentBuffer(buf.Buffer, (nuint) slot, offset);
+    }
 
     public void SetTexture(ITexture texture, int slot = 0)
     {

@@ -50,12 +50,14 @@ public partial class OpenGL
     public void BindBuffer(BufferTarget target, uint buffer) => glBindBuffer(GetGLBufferTarget(target), buffer);
 
     public void SetBufferData(BufferTarget target, uint buffer, float[] data, BufferHint hint) =>
-        glBufferDataFloat(GetGLBufferTarget(target), data.Length * sizeof(float), data, GetGLBufferHint(hint));
+        throw new NotImplementedException();
+        //glBufferDataFloat(GetGLBufferTarget(target), data.Length * sizeof(float), data, GetGLBufferHint(hint));
 
     public void SetBufferData(BufferTarget target, uint buffer, uint[] data, BufferHint hint) =>
-        glBufferDataUInt(GetGLBufferTarget(target), data.Length * sizeof(uint), data, GetGLBufferHint(hint));
+        throw new NotImplementedException();
+        //glBufferDataUInt(GetGLBufferTarget(target), data.Length * sizeof(uint), data, GetGLBufferHint(hint));
 
-    public void EnableVertexAttribute(int index) => glEnableVertexAttribArray((uint) index);
+    public void EnableVertexAttribute(int index) => glEnableVertexAttribArray(index);
 
     public void AddVertexAttribute(int index, int size, int stride, int offset) =>
         glVertexAttribPointer((uint) index, size, GL_FLOAT, 0, stride, (nint) offset * sizeof(float));

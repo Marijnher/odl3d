@@ -9,6 +9,7 @@ public class MetalRenderPipeline : IRenderPipeline
     private Metal.Device Device;
 
     public PrimitiveType PrimitiveType { get; }
+    public VertexLayoutDescription VertexLayout { get; }
     public Metal.RenderPipelineState Pipeline { get; }
 
     public bool Disposed { get; private set; }
@@ -23,7 +24,7 @@ public class MetalRenderPipeline : IRenderPipeline
             var attrDescr = description.VertexLayout.Attributes[i];
             var attrib = attribs[(int) attrDescr.AttributeIndex];
             attrib.Format = attrDescr.Format;
-            attrib.BufferIndex = attrDescr.BufferSlot;
+            attrib.BufferIndex = MetalBufferSlots.VertexIndex(attrDescr.BufferSlot);
             attrib.Offset = attrDescr.Offset;
         }
 
@@ -31,28 +32,20 @@ public class MetalRenderPipeline : IRenderPipeline
         for (int i = 0; i < description.VertexLayout.Buffers.Length; i++)
         {
             var bufDescr = description.VertexLayout.Buffers[i];
-            var layout = layouts[(int) bufDescr.BufferIndex];
+            var layout = layouts[(int) MetalBufferSlots.VertexIndex(bufDescr.BufferIndex)];
             layout.Stride = bufDescr.Stride;
             layout.StepFunction = bufDescr.StepFunction;
         }
-
-        string vertexSource = description.VertexShader.Source;
-        if (description.VertexShader.SourceAsFilename)
-            vertexSource = File.ReadAllText(vertexSource);
-
-        string fragmentSource = description.FragmentShader.Source;
-        if (description.FragmentShader.SourceAsFilename)
-            fragmentSource = File.ReadAllText(fragmentSource);
-
         Pipeline = Device.CreatePipeline(
             vertexDescriptor,
-            vertexSource,
-            fragmentSource,
+            description.VertexShader.Source,
+            description.FragmentShader.Source,
             description.VertexShader.EntryPoint,
             description.FragmentShader.EntryPoint,
             description.Blend
         );
         PrimitiveType = description.PrimitiveType;
+        VertexLayout = description.VertexLayout;
     }
 
     public void Dispose()

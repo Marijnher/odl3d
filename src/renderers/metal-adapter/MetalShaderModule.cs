@@ -18,6 +18,7 @@ public class MetalShaderModule : IShaderModule
         SourceAsFilename = description.SourceAsFilename;
         EntryPoint = description.EntryPoint;
         ShaderLanguage = description.ShaderLanguage;
+        if (SourceAsFilename) Source = System.IO.File.ReadAllText(Source);
     }
 
     public void Dispose() => Disposed = true;

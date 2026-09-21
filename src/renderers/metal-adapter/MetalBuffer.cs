@@ -6,7 +6,8 @@ public abstract class MetalBuffer
 {
     public int Size { get; protected set; }
     public BufferUsage Usage { get; protected set; }
-    public BufferType Type { get; protected set; }
+    public BufferHint Hint { get; protected set; }
+    
     public bool Disposed { get; protected set; }
 
     public abstract Metal.Buffer Buffer { get; }
@@ -27,6 +28,7 @@ public class MetalBuffer<T> : MetalBuffer, IBuffer<T> where T : unmanaged
     {
         Size = description.Size;
         Usage = description.Usage;
+        Hint = description.Hint;
         if (initialData != null && initialData.Length != Size) throw new RenderException("Provided data is not the same size as the buffer.");
         Buffer = device.CreateBuffer(initialData ?? new T[description.Size]);
     }
@@ -34,6 +36,12 @@ public class MetalBuffer<T> : MetalBuffer, IBuffer<T> where T : unmanaged
     public void SetData(T[] data)
     {
         if (data.Length != Size) throw new RenderException("Provided data is not the same size as the buffer.");
-        Buffer.Update(data);
+        Buffer.Update(data, 0, data.Length);
+    }
+
+    public void SetData(T[] data, int offset, int count)
+    {
+        if (offset < 0 || count < 0 || offset + count > Size) throw new RenderException("Invalid offset or count for buffer update.");
+        Buffer.Update(data, offset, count);
     }
 }

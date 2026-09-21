@@ -4,10 +4,13 @@ namespace odl3d.Renderer.MetalAdapter;
 
 public class MetalRenderDevice : IRenderDevice
 {
+    public RenderTarget RenderTarget => RenderTarget.Metal;
     public Metal.Device Device;
 
     public string Name => "Metal";
     public IRenderCapabilities Capabilities => new MetalRenderCapabilities();
+
+    public bool Disposed { get; private set;}
 
     public MetalRenderDevice()
     {
@@ -36,5 +39,10 @@ public class MetalRenderDevice : IRenderDevice
     public IRenderPipeline CreateRenderPipeline(RenderPipelineDescription description) =>
         new MetalRenderPipeline(Device, description);
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        if (Disposed) return;
+        Device.Dispose();
+        Disposed = true;
+    }
 }

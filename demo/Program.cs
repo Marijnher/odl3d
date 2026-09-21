@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Threading;
 using odl3d;
 using odl3d.Renderer;
-using odl3d.Renderer.MetalAdapter;
+using odl3d.Renderer.OpenGLAdapter;
 
 namespace odl3ddemo;
 
@@ -17,7 +17,7 @@ public static class Program
 
         GLFW.Load();
         
-        using Window window = new Window(width, height, "odl3d");
+        using Window window = new Window(width, height, "odl3d", RenderTarget.OpenGL);
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window)
         {
@@ -26,6 +26,18 @@ public static class Program
         window.SetCursorCapture(true);
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
+
+        Scene3D scene3D = new Scene3D(window);
+
+        Mesh mesh = MeshBuilder.CreateQuad();
+        Object3D obj = new Object3D(scene3D, mesh);
+
+        while (!window.ShouldClose)
+        {
+            window.Update(0f);
+            window.Render();
+        }
+        return;
 
         UIScene uiScene = new UIScene(window);
         DemoScene demoScene = new DemoScene(window);

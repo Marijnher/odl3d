@@ -27,10 +27,7 @@ public static class RenderFactory
         _ => throw new RenderException($"Unknown renderer target: {target}")
     };
 
-    private static IRenderDevice CreateOpenGLRenderer()
-    {
-        throw new NotImplementedException();
-    }
+    private static IRenderDevice CreateOpenGLRenderer() => new Renderer.OpenGLAdapter.OpenGLRenderDevice();
 
     private static IRenderDevice CreateMetalRenderer() => new Renderer.MetalAdapter.MetalRenderDevice();
 }

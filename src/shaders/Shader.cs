@@ -6,7 +6,7 @@ namespace odl3d;
 /// <summary>
 /// Represents a shader program used by the active renderer to encapsulate the state of vertex and fragment shaders for rendering. The Shader class provides methods for creating, compiling, and managing shader programs, allowing developers to define custom rendering behavior through programmable shaders.
 /// </summary>
-public class Shader
+public class Shader : IDisposable
 {
     /// <summary>
     /// The renderer-backed shader program handle for this shader; contains the state of the vertex and fragment shaders. The shader program is used to encapsulate the shader configuration and is managed by the renderer for efficient rendering.

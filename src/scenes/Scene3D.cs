@@ -30,8 +30,7 @@ public class Scene3D : Scene<Object3D>
         for (int i = 0; i < Objects.Count; i++)
         {
             Object3D obj = Objects[i];
-            pass.SetVertexBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
-            pass.SetFragmentBuffer(ObjectShaderDataBuffer, 2, (uint) (i * sizeof(ObjectShaderData)));
+            pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
             obj.Draw(pass, passType);
         }
     }

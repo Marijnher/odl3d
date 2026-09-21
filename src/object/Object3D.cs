@@ -130,9 +130,10 @@ public class Object3D : Drawable
         var shaderData = new ObjectShaderData
         {
             Model = GetModelMatrix(),
-            UseTexture = (uint) (Texture != null && !Texture.Disposed ? 1 : 0),
+            UseTexture = (Texture != null && !Texture.Disposed) ? 1u : 0u,
             TexColor = TextureColor.ToVector4(),
-            ObjColor = Color.ToVector4()
+            ObjColor = Color.ToVector4(),
+            HasNormals = (Mesh?.HasNormals ?? false) ? 1u : 0u
         };
         return shaderData;
     }
@@ -166,20 +167,6 @@ public class Object3D : Drawable
         }
         pass.SetSampler(Sampler.RenderSampler);
         pass.DrawIndexed();
-
-        // shader.Use();
-        // shader.SetMatrix("uMVP", model * viewProjection);
-        // shader.SetInt("uTexture", 0);
-        // shader.SetInt("uUseTexture", Texture == null ? 0 : 1);
-        // shader.SetColor("uColor", Color);
-        // shader.SetColor("texColor", TextureColor);
-        // Lighting uniforms are only meaningful for meshes that carry normals; shaders without them ignore these.
-        // shader.SetInt("uLit", Mesh.HasNormals ? 1 : 0);
-        // if (Mesh.HasNormals) shader.SetMatrix("uModel", model);
-
-        // Renderer.BindTexture(Texture);
-
-        // Mesh.Draw();
     }
 
     /// <summary>
