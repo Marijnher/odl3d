@@ -10,6 +10,8 @@ internal static class GL
 {
     public const uint GL_FALSE = 0;
     public const int GL_NONE = 0;
+    public const int GL_ZERO = 0;
+    public const int GL_ONE = 1;
     public const uint GL_TRUE = 1;
     public const int GL_NEVER = 0x0200;
     public const int GL_LESS = 0x0201;
@@ -24,8 +26,28 @@ internal static class GL
     public const uint GL_DEPTH_TEST = 0x0B71;
     public const uint GL_SCISSOR_TEST = 0x0C11;
     public const uint GL_BLEND = 0x0BE2;
+    public const uint GL_CONSTANT_COLOR = 0x8001;
+    public const uint GL_ONE_MINUS_CONSTANT_COLOR = 0x8002;
+    public const uint GL_CONSTANT_ALPHA = 0x8003;
+    public const uint GL_ONE_MINUS_CONSTANT_ALPHA = 0x8004;
     public const uint GL_SRC_ALPHA = 0x0302;
     public const uint GL_ONE_MINUS_SRC_ALPHA = 0x0303;
+    public const uint GL_DST_COLOR = 0x0306;
+    public const uint GL_ONE_MINUS_DST_COLOR = 0x0307;
+    public const uint GL_DST_ALPHA = 0x0304;
+    public const uint GL_ONE_MINUS_DST_ALPHA = 0x0305;
+    public const uint GL_SRC_COLOR = 0x0300;
+    public const uint GL_ONE_MINUS_SRC_COLOR = 0x0301;
+    public const uint GL_SRC_ALPHA_SATURATE = 0x0308;
+    public const uint GL_SRC1_COLOR = 0x88F9;
+    public const uint GL_ONE_MINUS_SRC1_COLOR = 0x88FA;
+    public const uint GL_SRC1_ALPHA = 0x8589;
+    public const uint GL_ONE_MINUS_SRC1_ALPHA = 0x88FB;
+    public const uint GL_FUNC_ADD = 0x8006;
+    public const uint GL_FUNC_SUBTRACT = 0x800A;
+    public const uint GL_FUNC_REVERSE_SUBTRACT = 0x800B;
+    public const uint GL_MIN = 0x8007;
+    public const uint GL_MAX = 0x8008;
     public const uint GL_VERTEX_SHADER = 0x8B31;
     public const uint GL_FRAGMENT_SHADER = 0x8B30;
     public const uint GL_COMPUTE_SHADER = 0x91B9;
@@ -152,6 +174,8 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendFunc(uint sfactor, uint dfactor);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDepthMask(uint flag);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDepthFunc(uint func);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendFuncSeparate(uint sfactorRGB, uint dfactorRGB, uint sfactorAlpha, uint dfactorAlpha);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendEquationSeparate(uint modeRGB, uint modeAlpha);
 
 #pragma warning disable CS8618
     public static d_glClearColor glClearColor;
@@ -216,6 +240,8 @@ internal static class GL
     public static d_glBlendFunc glBlendFunc;
     public static d_glDepthMask glDepthMask;
     public static d_glDepthFunc glDepthFunc;
+    public static d_glBlendFuncSeparate glBlendFuncSeparate;
+    public static d_glBlendEquationSeparate glBlendEquationSeparate;
 #pragma warning restore CS8618
 
     public static float MaxAnisotropy { get; private set; }
@@ -262,9 +288,6 @@ internal static class GL
         glGenBuffers = Get<d_glGenBuffers>("glGenBuffers");
         glBindBuffer = Get<d_glBindBuffer>("glBindBuffer");
         glDeleteBuffers = Get<d_glDeleteBuffers>("glDeleteBuffers");
-        glBlendFunc = Get<d_glBlendFunc>("glBlendFunc");
-        glDepthMask = Get<d_glDepthMask>("glDepthMask");
-        glDepthFunc = Get<d_glDepthFunc>("glDepthFunc");
         glBufferData = Get<d_glBufferData>("glBufferData");
         glEnableVertexAttribArray = Get<d_glEnableVertexAttribArray>("glEnableVertexAttribArray");
         glDisableVertexAttribArray = Get<d_glDisableVertexAttribArray>("glDisableVertexAttribArray");
@@ -287,6 +310,12 @@ internal static class GL
         glDeleteSamplers = Get<d_glDeleteSamplers>("glDeleteSamplers");
         glSamplerParameteri = Get<d_glSamplerParameteri>("glSamplerParameteri");
         glBindSampler = Get<d_glBindSampler>("glBindSampler");
+
+        glBlendFunc = Get<d_glBlendFunc>("glBlendFunc");
+        glDepthMask = Get<d_glDepthMask>("glDepthMask");
+        glDepthFunc = Get<d_glDepthFunc>("glDepthFunc");
+        glBlendFuncSeparate = Get<d_glBlendFuncSeparate>("glBlendFuncSeparate");
+        glBlendEquationSeparate = Get<d_glBlendEquationSeparate>("glBlendEquationSeparate");
 
         glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, out float maxAnisotropy);
         MaxAnisotropy = maxAnisotropy;

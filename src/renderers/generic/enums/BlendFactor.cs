@@ -12,5 +12,16 @@ public enum BlendFactor
     SourceAlpha,
     OneMinusSourceAlpha,
     DestinationAlpha,
-    OneMinusDestinationAlpha
+    OneMinusDestinationAlpha,
+    
+    BlendColor,
+    OneMinusBlendColor,
+    BlendAlpha,
+    OneMinusBlendAlpha,
+    SourceAlphaSaturated,
+
+    Source1Color,
+    OneMinusSource1Color,
+    Source1Alpha,
+    OneMinusSource1Alpha
 }

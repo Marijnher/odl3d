@@ -89,6 +89,7 @@ public class Window : InputHost
     /// </summary>
     public Window(int width, int height, string title, RenderTarget renderTarget = RenderTarget.Metal)
     {
+        GLFW.Load();
         _renderer = RenderFactory.Create(renderTarget);
         
         Width = width;

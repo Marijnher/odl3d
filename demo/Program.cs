@@ -15,8 +15,6 @@ public static class Program
         int width = 800;
         int height = 600;
 
-        GLFW.Load();
-        
         using Window window = new Window(width, height, "odl3d", RenderTarget.OpenGL);
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window)
@@ -27,30 +25,14 @@ public static class Program
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
-        UIScene uiScene = new UIScene(window);
-        DemoScene demoScene = new DemoScene(window);
-        ModelScene modelScene = new ModelScene(window);
+        using UIScene uiScene = new UIScene(window);
+        using DemoScene demoScene = new DemoScene(window);
+        using ModelScene modelScene = new ModelScene(window);
         
         while (!window.ShouldClose)
         {
             window.Update(0f);
             window.Render();
         }
-
-        return;
-
-        // DemoScene demoScene1 = new DemoScene(window);
-        // UIScene uiScene = new UIScene(window);
-        // ModelScene daeScene = new ModelScene(window);
-
-        // while (!window.ShouldClose)
-        // {
-        //     window.Update(0);
-        //     window.Render(shader);
-        //     window.SwapBuffers();
-        // }
-
-        // window.Dispose();
-        //shader.Dispose();
     }
 }

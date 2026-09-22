@@ -57,7 +57,7 @@ public class OpenGLRenderPass : IRenderPass
     public void SetRenderPipeline(IRenderPipeline shaderPipeline)
     {
         _renderPipeline = (OpenGLRenderPipeline) shaderPipeline;
-        GL.glUseProgram(_renderPipeline.Handle);
+        _renderPipeline.Use();
         _vertexStateDirty = true;
     }
     public void SetDepthStencilState(IDepthStencilState state)
@@ -155,7 +155,16 @@ public class OpenGLRenderPass : IRenderPass
         _vertexStateDirty = false;
     }
 
-    public void End() { }
+    public void End()
+    {
+        GL.glDisable(GL.GL_BLEND);
+        GL.glBindTexture(GL.GL_TEXTURE_2D, 0);
+        GL.glBindSampler(0, 0);
+        GL.glBindBuffer(GL.GL_UNIFORM_BUFFER, 0);
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0);
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GL.glUseProgram(0);
+    }
 
     public void Dispose()
     {

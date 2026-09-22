@@ -160,6 +160,15 @@ public static partial class Metal
         BlendFactor.OneMinusDestinationColor => 7,
         BlendFactor.DestinationAlpha => 8,
         BlendFactor.OneMinusDestinationAlpha => 9,
+        BlendFactor.SourceAlphaSaturated => 10,
+        BlendFactor.BlendColor => 11,
+        BlendFactor.OneMinusBlendColor => 12,
+        BlendFactor.BlendAlpha => 13,
+        BlendFactor.OneMinusBlendAlpha => 14,
+        BlendFactor.Source1Color => 15,
+        BlendFactor.OneMinusSource1Color => 16,
+        BlendFactor.Source1Alpha => 17,
+        BlendFactor.OneMinusSource1Alpha => 18,
         _ => throw new RenderException("Unsupported blend factor.")
     };
 
