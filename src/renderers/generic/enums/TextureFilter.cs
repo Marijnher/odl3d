@@ -5,9 +5,13 @@ namespace odl3d.Renderer;
 /// </summary>
 public enum TextureFilter
 {
-    /// <summary>Samples the single nearest texel; blocky but crisp, suited to pixel art.</summary>
+    /// <summary>
+    /// Samples the single nearest texel; blocky but crisp, suited to pixel art.
+    /// </summary>
     Nearest,
 
-    /// <summary>Bilinearly interpolates between neighboring texels; smoother, suited to anti-aliased content like text.</summary>
+    /// <summary>
+    /// Bilinearly interpolates between neighboring texels; smoother, suited to anti-aliased content like text.
+    /// </summary>
     Linear
 }
