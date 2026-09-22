@@ -21,7 +21,7 @@ public class Window : InputHost
     /// </summary>
     public static IRenderDevice Renderer => _renderer ?? throw new RenderException("Cannot access the global renderer until a Window has been created.");
 
-    public IRenderSurface RenderSurface;
+    private IRenderSurface RenderSurface;
 
     /// <summary>
     /// The current width of the window in pixels.
@@ -75,17 +75,23 @@ public class Window : InputHost
     /// <summary>
     /// Indicates whether the window is currently rendering in wireframe mode. When set to true, all geometry is rendered as wireframes instead of filled polygons.
     /// </summary>
-    public bool Wireframe { get; protected set; } = false;
+    public bool Wireframe
+    {
+        get => ShaderPipeline.Wireframe;
+        set 
+        {
+            ShaderPipeline.Wireframe = value;
+            ShaderPipelineWithNormals.Wireframe = value;
+        }
+    }
 
     /// <summary>
     /// The time at the previous frame, used to calculate delta time between frames. This is updated each frame during the window's update loop.
     /// </summary>
     private double? previousTime;
 
-    public ShaderPipeline PipelineNoNormals { get; protected set; }
-    public ShaderPipeline PipelineWithNormals { get; protected set; }
-    public ShaderPipeline PipelineWireframeNoNormals { get; protected set; }
-    public ShaderPipeline PipelineWireframeWithNormals { get; protected set; }
+    public ShaderPipeline ShaderPipeline { get; set; }
+    public ShaderPipeline ShaderPipelineWithNormals { get; set; }
 
     private IDepthStencilState Stencil3DOpaque;
     private IDepthStencilState Stencil3DTransparent;
@@ -132,10 +138,8 @@ public class Window : InputHost
             DepthWriteEnabled = false
         });
 
-        PipelineNoNormals = ShaderPipeline.CreateDefault(hasNormals: false);
-        PipelineWithNormals = ShaderPipeline.CreateDefault(hasNormals: true);
-        PipelineWireframeNoNormals = ShaderPipeline.CreateDefault(hasNormals: false, wireframe: true);
-        PipelineWireframeWithNormals = ShaderPipeline.CreateDefault(hasNormals: true, wireframe: true);
+        ShaderPipeline = ShaderPipeline.CreateDefault(hasNormals: false);
+        ShaderPipelineWithNormals = ShaderPipeline.CreateDefault(hasNormals: true);
 
         // Default non-moveable camera
         Camera = new Camera(this);
@@ -150,7 +154,7 @@ public class Window : InputHost
     /// Enables or disables input handling for the window. When enabled, the window will create an input manager to handle keyboard and mouse events. When disabled, the input manager will be disposed and input handling will be turned off.
     /// </summary>
     /// <param name="enable">True to enable input handling, false to disable it.</param>
-    public override void SetEnableInput(bool enable)
+    public override void SetInputEnabled(bool enable)
     {
         if (enable && InputManager == null)
         {
@@ -161,20 +165,6 @@ public class Window : InputHost
             InputManager.Dispose();
             InputManager = null;
         }
-    }
-
-    /// <summary>
-    /// Sets the window to render in wireframe mode if enabled is true, or in filled polygon mode if enabled is false.
-    /// </summary>
-    /// <param name="enabled">True to enable wireframe mode, false to render filled polygons.</param>
-    public void SetWireFrame(bool enabled)
-    {
-        Wireframe = enabled;
-    }
-
-    public void SetShaderPipeline(ShaderPipeline pipeline)
-    {
-        PipelineNoNormals = pipeline;
     }
 
     /// <summary>
@@ -369,10 +359,8 @@ public class Window : InputHost
         Stencil3DTransparent.Dispose();
         Stencil2D.Dispose();
         Renderer.Dispose();
-        PipelineNoNormals.Dispose();
-        PipelineWithNormals.Dispose();
-        PipelineWireframeNoNormals.Dispose();
-        PipelineWireframeWithNormals.Dispose();
+        ShaderPipeline.Dispose();
+        ShaderPipelineWithNormals.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;

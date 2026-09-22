@@ -132,10 +132,10 @@ public static partial class Metal
             using RenderPipelineDescriptor descriptor = RenderPipelineDescriptor.Create();
             using ObjCObject vertexFunction = library.NewFunctionWithName(vertexEntryPoint);
             using ObjCObject fragmentFunction = library.NewFunctionWithName(fragmentEntryPoint);
-            descriptor.SetVertexFunction(vertexFunction);
-            descriptor.SetFragmentFunction(fragmentFunction);
-            descriptor.SetDepthAttachmentPixelFormat(GetPixelFormat(TextureFormat.Depth32Float));
-            descriptor.SetVertexDescriptor(vertexDescriptor);
+            descriptor.VertexFunction = vertexFunction;
+            descriptor.FragmentFunction = fragmentFunction;
+            descriptor.DepthAttachmentPixelFormat = GetPixelFormat(TextureFormat.Depth32Float);
+            descriptor.VertexDescriptor = vertexDescriptor;
 
             var colorAttachment = descriptor.ColorAttachments[0];
             colorAttachment.PixelFormat = GetPixelFormat(TextureFormat.BGRA8Unorm);

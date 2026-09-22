@@ -6,6 +6,30 @@ public static partial class Metal
 {
     public class RenderPipelineDescriptor : ObjCObject
     {
+        public ObjCObject VertexFunction
+        {
+            get => Get<ObjCObject>("vertexFunction");
+            set => Send("setVertexFunction:", value);
+        }
+
+        public ObjCObject FragmentFunction
+        {
+            get => Get<ObjCObject>("fragmentFunction");
+            set => Send("setFragmentFunction:", value);
+        }
+
+        public nuint DepthAttachmentPixelFormat
+        {
+            get => GetUInt32("depthAttachmentPixelFormat");
+            set => Send("setDepthAttachmentPixelFormat:", value);
+        }
+
+        public VertexDescriptor VertexDescriptor
+        {
+            get => Get<VertexDescriptor>("vertexDescriptor");
+            set => Send("setVertexDescriptor:", value);
+        }
+
         private static IntPtr ClassPointer => Class("MTLRenderPipelineDescriptor");
 
         public RenderPipelineColorAttachmentArray ColorAttachments =>
@@ -15,17 +39,5 @@ public static partial class Metal
 
         public static RenderPipelineDescriptor Create() =>
             new RenderPipelineDescriptor(SendRaw(ClassPointer, "new"));
-
-        public void SetVertexFunction(ObjCObject vertexFunction) =>
-            Send("setVertexFunction:", vertexFunction);
-
-        public void SetFragmentFunction(ObjCObject fragmentFunction) =>
-            Send("setFragmentFunction:", fragmentFunction);
-
-        public void SetDepthAttachmentPixelFormat(nuint pixelFormat) =>
-            Send("setDepthAttachmentPixelFormat:", pixelFormat);
-
-        public void SetVertexDescriptor(VertexDescriptor vertexDescriptor) =>
-            Send("setVertexDescriptor:", vertexDescriptor);
     }
 }

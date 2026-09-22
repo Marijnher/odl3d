@@ -6,4 +6,5 @@ public interface IRenderPipeline : IGPUResource
 {
     public PrimitiveType PrimitiveType { get; }
     public VertexLayoutDescription VertexLayout { get; }
+    public bool Wireframe { get; set; }
 }

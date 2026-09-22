@@ -60,7 +60,7 @@ public class MetalRenderPass : IRenderPass
     {
         Pipeline = (MetalRenderPipeline) shaderPipeline;
         Encoder.SetRenderPipelineState(Pipeline.Pipeline);
-        MetalPrimitiveType = Pipeline.PrimitiveType switch
+        MetalPrimitiveType = Pipeline.Wireframe ? Metal.PrimitiveType.LineStrip : Pipeline.PrimitiveType switch
         {
             Renderer.PrimitiveType.LineList => Metal.PrimitiveType.Line,
             Renderer.PrimitiveType.LineStrip => Metal.PrimitiveType.LineStrip,

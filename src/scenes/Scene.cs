@@ -31,16 +31,18 @@ public abstract class Scene<T> : Drawable where T : Object3D
 
     protected ObjectShaderData[] ObjectShaderDataArray;
     protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
-
     private readonly IBuffer<float> ViewProjBuffer;
+
+    protected int MaxObjects;
 
     /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
     /// </summary>
     /// <param name="window">The window associated with the scene, used to determine the rendering context and other properties.</param>
-    protected unsafe Scene(Window window, int maxObjects = 100)
+    protected Scene(Window window, int maxObjects = 100)
     {
         Window = window;
+        MaxObjects = maxObjects;
         ObjectShaderDataArray = new ObjectShaderData[maxObjects];
         ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
         {
@@ -82,8 +84,9 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// <param name="sceneObject">The object to add to the scene.</param>
     public void Add(T sceneObject) 
     {
+        if (Objects.Count >= MaxObjects)
+            throw new RenderException($"Cannot add more than {MaxObjects} objects to the scene.");
         Objects.Add(sceneObject);
-        if (Objects.Count >= 95) Console.WriteLine($"WARNING: Shader data may not support more than 100 objects.");
     }
 
     /// <summary>

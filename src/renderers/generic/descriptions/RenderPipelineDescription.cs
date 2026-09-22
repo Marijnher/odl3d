@@ -12,6 +12,8 @@ public sealed record RenderPipelineDescription
     public required TextureFormat ColorFormat { get; init; }
     public TextureFormat? DepthFormat { get; init; }
 
+    public bool Wireframe { get; init; }
+
     public PrimitiveType PrimitiveType { get; init; } = PrimitiveType.TriangleList;
 
     public int SampleCount { get; init; } = 1;

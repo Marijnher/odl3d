@@ -11,12 +11,14 @@ public class MetalRenderPipeline : IRenderPipeline
     public PrimitiveType PrimitiveType { get; }
     public VertexLayoutDescription VertexLayout { get; }
     public Metal.RenderPipelineState Pipeline { get; }
+    public bool Wireframe { get; set; }
 
     public bool Disposed { get; private set; }
 
     public MetalRenderPipeline(Metal.Device device, RenderPipelineDescription description)
     {
         Device = device;
+        Wireframe = description.Wireframe;
         var vertexDescriptor = Metal.VertexDescriptor.Create();
         var attribs = vertexDescriptor.Attributes;
         for (int i = 0; i < description.VertexLayout.Attributes.Length; i++)

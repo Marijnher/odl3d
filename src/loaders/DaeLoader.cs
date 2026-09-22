@@ -14,6 +14,8 @@ namespace odl3d.Loaders;
 /// </summary>
 public static class DaeLoader
 {
+    public static TextureWrap DefaultTextureWrap { get; set; } = TextureWrap.Repeat;
+
     private readonly record struct VertexKey(int Position, int TexCoord);
 
     private sealed class SourceData
@@ -38,8 +40,8 @@ public static class DaeLoader
     private sealed class MaterialData
     {
         public string? TexturePath;
-        public TextureWrap WrapS = TextureWrap.Repeat;
-        public TextureWrap WrapT = TextureWrap.Repeat;
+        public TextureWrap WrapS = DefaultTextureWrap;
+        public TextureWrap WrapT = DefaultTextureWrap;
         public bool Transparent;
     }
 
@@ -590,7 +592,7 @@ public static class DaeLoader
             "MIRROR" => TextureWrap.Mirror,
             "CLAMP" => TextureWrap.Clamp,
             "BORDER" => throw new FileLoadException("Border wrap mode is not supported."),
-            _ => TextureWrap.Repeat
+            _ => DefaultTextureWrap
         };
     }
 

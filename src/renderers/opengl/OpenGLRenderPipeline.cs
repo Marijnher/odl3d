@@ -11,6 +11,7 @@ public class OpenGLRenderPipeline : IRenderPipeline
     public PrimitiveType PrimitiveType { get; }
     public VertexLayoutDescription VertexLayout { get; }
     public BlendDescription Blend { get; }
+    public bool Wireframe { get; set; }
 
     public bool Disposed { get; private set; }
 

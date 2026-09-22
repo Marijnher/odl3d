@@ -136,14 +136,16 @@ public class OpenGLRenderPass : IRenderPass
     {
         FlushVertexState();
         PreDraw();
-        GL.glDrawArrays(GetPrimitiveType(_renderPipeline!.PrimitiveType), startIndex, vertexCount);
+        PrimitiveType primitiveType = _renderPipeline!.Wireframe ? PrimitiveType.LineStrip : _renderPipeline!.PrimitiveType;
+        GL.glDrawArrays(GetPrimitiveType(primitiveType), startIndex, vertexCount);
     }
     public void DrawIndexed(int startIndex, int indexCount)
     {
         FlushVertexState();
         _vertexState.BindIndexBuffer(_indexBufferHandle);
         PreDraw();
-        GL.glDrawElements(GetPrimitiveType(_renderPipeline!.PrimitiveType), indexCount, _indexType,
+        PrimitiveType primitiveType = _renderPipeline!.Wireframe ? PrimitiveType.LineStrip : _renderPipeline!.PrimitiveType;
+        GL.glDrawElements(GetPrimitiveType(primitiveType), indexCount, _indexType,
                         startIndex * _indexSize);
     }
     public void DrawIndexed() => DrawIndexed(0, _indexCount);

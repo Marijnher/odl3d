@@ -18,6 +18,12 @@ public class ShaderPipeline : IDisposable
 
     protected IRenderDevice Renderer => Window.Renderer;
 
+    public bool Wireframe
+    {
+        get => Pipeline.Wireframe;
+        set => Pipeline.Wireframe = value;
+    }
+
     /// <summary>
     /// Indicates whether this shader has been disposed and its resources released. After disposing, the shader should not be used again. The Disposed property is set to true when Dispose() is called, and it can be checked to prevent multiple disposals or usage of a disposed shader.
     /// </summary>
@@ -30,7 +36,7 @@ public class ShaderPipeline : IDisposable
     /// <param name="fragmentShader">The fragment shader to link.</param>
     /// <param name="autoDisposeSource">Indicates whether to automatically dispose the source shaders after linking.</param>
     /// <exception cref="ShaderException">Thrown if the shader program fails to link.</exception>
-    public ShaderPipeline(Shader vertexShader, Shader fragmentShader, VertexLayoutDescription vertexLayout, bool autoDisposeSource = true, bool wireframe = false)
+    public ShaderPipeline(Shader vertexShader, Shader fragmentShader, VertexLayoutDescription vertexLayout, bool autoDisposeSource = true) 
     {
         Pipeline = Renderer.CreateRenderPipeline(new RenderPipelineDescription
         {
@@ -48,7 +54,7 @@ public class ShaderPipeline : IDisposable
                 DestinationAlpha = BlendFactor.Zero,
                 AlphaOperation = BlendOperation.Add
             },
-            PrimitiveType = wireframe ? PrimitiveType.LineStrip : PrimitiveType.TriangleList
+            PrimitiveType = PrimitiveType.TriangleList
         });
         if (autoDisposeSource)
         {
@@ -72,7 +78,7 @@ public class ShaderPipeline : IDisposable
         Disposed = true;
     }
 
-    public static ShaderPipeline CreateDefault(bool hasNormals = false, bool wireframe = false)
+    public static ShaderPipeline CreateDefault(bool hasNormals = false)
     {
         using var defaultVertex = new Shader(GetDefaultVertexShaderFilename(), ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
         using var defaultFragment = new Shader(GetDefaultFragmentShaderFilename(), ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
@@ -119,7 +125,7 @@ public class ShaderPipeline : IDisposable
             ],
             Attributes = attributes.ToArray()
         };
-        return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout, autoDisposeSource: true, wireframe: wireframe);
+        return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout, autoDisposeSource: true);
     }
 
     private static string GetDefaultVertexShaderFilename() => Window.Renderer.RenderTarget switch

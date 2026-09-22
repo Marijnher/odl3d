@@ -154,8 +154,7 @@ public class Object3D : Drawable
         if (!Visible || Disposed || Mesh == null || Mesh.Disposed) return;
         if (passType == RenderPass.Transparent != IsTransparent) return;
 
-        ShaderPipeline pipeline = Mesh.HasNormals ? Scene.Window.PipelineWithNormals : Scene.Window.PipelineNoNormals;
-        if (Scene.Window.Wireframe) pipeline = Mesh.HasNormals ? Scene.Window.PipelineWireframeWithNormals : Scene.Window.PipelineWireframeNoNormals;
+        ShaderPipeline pipeline = Mesh.HasNormals ? Scene.Window.ShaderPipelineWithNormals : Scene.Window.ShaderPipeline;
         pass.SetRenderPipeline(pipeline.Pipeline);
 
         pass.SetVertexBuffer(Mesh.Vertices);
