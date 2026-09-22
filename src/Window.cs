@@ -33,10 +33,19 @@ public class Window : InputHost
     /// </summary>
     public int Height { get; protected set; }
 
+    private bool _cursorCapture;
     /// <summary>
     /// Indicates whether the cursor is currently captured (hidden and locked to the window for camera control). When false, the cursor is visible and free to move within the window.
     /// </summary>
-    public bool CursorCaptured { get; protected set; } = false;
+    public bool CursorCapture
+    {
+        get => _cursorCapture;
+        set
+        {
+            GLFW.glfwSetInputMode(Handle, GLFW.GLFW_CURSOR, value ? GLFW.GLFW_CURSOR_DISABLED : GLFW.GLFW_CURSOR_NORMAL);
+            _cursorCapture = value;
+        }
+    }
 
     /// <summary>
     /// The background color used when clearing the window's color buffer. This is set at creation and can be changed at any time. The default is black (0,0,0).
@@ -78,8 +87,9 @@ public class Window : InputHost
     public ShaderPipeline PipelineWireframeNoNormals { get; protected set; }
     public ShaderPipeline PipelineWireframeWithNormals { get; protected set; }
 
-    private IDepthStencilState OpaqueStencil;
-    private IDepthStencilState TransparentStencil;
+    private IDepthStencilState Stencil3DOpaque;
+    private IDepthStencilState Stencil3DTransparent;
+    private IDepthStencilState Stencil2D;
 
     /// <summary>
     /// Creates a new window with the specified width, height, and title. The window is centered on the primary monitor and its renderer context is made current. The cursor is hidden and locked to the window so mouse movement can drive camera look.
@@ -87,7 +97,7 @@ public class Window : InputHost
     /// <param name="height">Window height in pixels.</param>
     /// <param name="title">Window title.</param>
     /// </summary>
-    public Window(int width, int height, string title, RenderTarget renderTarget = RenderTarget.Metal)
+    public Window(int width, int height, string title, RenderTarget? renderTarget = null)
     {
         GLFW.Load();
         _renderer = RenderFactory.Create(renderTarget);
@@ -106,14 +116,19 @@ public class Window : InputHost
 
         RenderSurface = Renderer.CreateSurface(Handle);
 
-        OpaqueStencil = Renderer.CreateDepthStencilState(new DepthStencilDescription
+        Stencil3DOpaque = Renderer.CreateDepthStencilState(new DepthStencilDescription
         {
             DepthTestEnabled = true,
             DepthWriteEnabled = true
         });
-        TransparentStencil = Renderer.CreateDepthStencilState(new DepthStencilDescription
+        Stencil3DTransparent = Renderer.CreateDepthStencilState(new DepthStencilDescription
         {
             DepthTestEnabled = true,
+            DepthWriteEnabled = false
+        });
+        Stencil2D = Renderer.CreateDepthStencilState(new DepthStencilDescription
+        {
+            DepthTestEnabled = false,
             DepthWriteEnabled = false
         });
 
@@ -129,16 +144,6 @@ public class Window : InputHost
     ~Window()
     {
         if (!Disposed) Console.WriteLine("Warning: Window was not disposed before being finalized. This may cause a GLFW resource leak.");
-    }
-
-    /// <summary>
-    /// Captures or releases the cursor. When captured, the cursor is hidden and locked to the window, allowing mouse movement to control camera look. When released, the cursor is visible and free to move within the window.
-    /// </summary>
-    /// <param name="enabled">True to capture the cursor, false to release it.</param>
-    public void SetCursorCapture(bool capture)
-    {
-        GLFW.glfwSetInputMode(Handle, GLFW.GLFW_CURSOR, capture ? GLFW.GLFW_CURSOR_DISABLED : GLFW.GLFW_CURSOR_NORMAL);
-        CursorCaptured = capture;
     }
 
     /// <summary>
@@ -280,26 +285,25 @@ public class Window : InputHost
             Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear }
         });
         pass.SetViewport(new Rect(0, 0, RenderSurface.Width, RenderSurface.Height));
-        pass.SetDepthStencilState(OpaqueStencil);
-
+        // Draw opaque objects and remember their depth for subsequent transparent objects.
+        pass.SetDepthStencilState(Stencil3DOpaque);
         foreach (Scene3D scene in Scenes3D)
         {
             scene.UpdateObjectModelBuffer();
             scene.Draw(pass, RenderPass.Opaque);
         }
-        // Draw transparent objects after opaque ones without writing to the depth buffer
-        // pass.SetDepthStencilState(TransparentStencil);
+        // Draw transparent objects after opaque ones without writing to the depth buffer.
+        pass.SetDepthStencilState(Stencil3DTransparent);
         foreach (Scene3D scene in Scenes3D)
         {
             scene.Draw(pass, RenderPass.Transparent);
         }
-        // Clear depth buffer again so all 2D scenes are always in front of 3D scenes
-        // pass.SetDepthStencilState(OpaqueStencil);
+        // Draw 2D scenes on top of the 3D scenes without considering the depth buffer.
+        pass.SetDepthStencilState(Stencil2D);
         foreach (Scene2D scene in Scenes2D)
         {
             scene.UpdateObjectModelBuffer();
             scene.Draw(pass, RenderPass.Opaque);
-            // Depth mask is not important for 2D scenes so we don't need to disable it.
             scene.Draw(pass, RenderPass.Transparent);
         }
         pass.End();
@@ -361,11 +365,14 @@ public class Window : InputHost
             Scenes2D[0].Dispose();
         }
         base.Dispose();
-        OpaqueStencil.Dispose();
-        TransparentStencil.Dispose();
+        Stencil3DOpaque.Dispose();
+        Stencil3DTransparent.Dispose();
+        Stencil2D.Dispose();
         Renderer.Dispose();
         PipelineNoNormals.Dispose();
         PipelineWithNormals.Dispose();
+        PipelineWireframeNoNormals.Dispose();
+        PipelineWireframeWithNormals.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         GLFW.glfwTerminate();
         Disposed = true;

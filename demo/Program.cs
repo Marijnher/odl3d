@@ -12,16 +12,13 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        int width = 800;
-        int height = 600;
-
-        using Window window = new Window(width, height, "odl3d", RenderTarget.OpenGL);
+        using Window window = new Window(800, 600, "odl3d", RenderTarget.OpenGL);
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window)
         {
             Position = new Vector3(0, 0, 2f)
         };
-        window.SetCursorCapture(true);
+        window.CursorCapture = true;
         window.RegisterKeyPress(Key.Escape, window.Close);
         window.RegisterKeyPress(Key.M, () => window.SetWireFrame(!window.Wireframe));
 
