@@ -24,11 +24,5 @@ public class ModelScene : Scene3D
 
         Model lacunosa = Model.LoadDAE(this, "assets/lacunosa/Lacunosa town.dae");
         lacunosa.Position = new Vector3(14f, -1.25f, -2f);
-
-        RegisterKeyDown(Key.C, () => {
-            Console.WriteLine("Rotation...");
-            orasCenter.Rotation.Y += 1f;
-        });
-
     }
 }

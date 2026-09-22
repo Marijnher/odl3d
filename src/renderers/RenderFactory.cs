@@ -20,12 +20,19 @@ public static class RenderFactory
     /// <param name="id">The identifier of the renderer to create.</param>
     /// <returns>The created renderer instance.</returns>
     /// <exception cref="RenderException">Thrown when the specified renderer identifier is not supported.</exception>
-    public static IRenderDevice Create(RenderTarget target) => _instance = target switch
+    public static IRenderDevice Create(RenderTarget? target = null) => _instance = target switch
     {
         RenderTarget.OpenGL => CreateOpenGLRenderer(),
         RenderTarget.Metal => CreateMetalRenderer(),
+        null => CreateDefaultRenderer(),
         _ => throw new RenderException($"Unknown renderer target: {target}")
     };
+
+    private static IRenderDevice CreateDefaultRenderer()
+    {
+        if (OperatingSystem.IsMacOS()) return CreateMetalRenderer();
+        return CreateOpenGLRenderer();
+    }
 
     private static IRenderDevice CreateOpenGLRenderer() => new Renderer.OpenGLAdapter.OpenGLRenderDevice();
 

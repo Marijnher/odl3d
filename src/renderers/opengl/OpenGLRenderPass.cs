@@ -33,10 +33,10 @@ public class OpenGLRenderPass : IRenderPass
             GL.glClearColor(col.X, col.Y, col.Z, col.W);
             clearFlags |= GL.GL_COLOR_BUFFER_BIT;
         }
-        if (description.Depth?.LoadAction == LoadAction.Clear)
+        if (description.Depth == null || description.Depth.LoadAction == LoadAction.Clear)
         {
             GL.glDepthMask(GL.GL_TRUE);
-            GL.glClearDepth(description.Depth.ClearDepth);
+            GL.glClearDepth(description.Depth?.ClearDepth ?? 1.0);
             clearFlags |= GL.GL_DEPTH_BUFFER_BIT;
         }
         if (clearFlags != 0) GL.glClear(clearFlags);
