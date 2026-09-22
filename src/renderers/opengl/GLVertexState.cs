@@ -29,7 +29,7 @@ public sealed class GLVertexState
         {
             ref readonly var want = ref pending[a.Slot];
             ref readonly var have = ref _slots[a.Slot];   // compared against pre-update state
-            if (!layoutChanged && have.Offset == want.Offset)
+            if (!layoutChanged && have.ID == want.ID && have.Offset == want.Offset)
                 continue;
 
             if (_arrayBuffer != want.ID)
