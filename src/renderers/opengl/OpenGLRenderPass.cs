@@ -18,6 +18,9 @@ public class OpenGLRenderPass : IRenderPass
     int _indexSize;
     int _indexCount;
 
+    private OpenGLTexture? Texture;
+    private OpenGLSampler? Sampler;
+
     public OpenGLRenderPass(OpenGLRenderSurface renderSurface, GLVertexState vertexState, RenderPassDescription description)
     {
         RenderSurface = renderSurface;
@@ -109,21 +112,37 @@ public class OpenGLRenderPass : IRenderPass
         GL.glBindBufferRange(GL.GL_UNIFORM_BUFFER, (uint) slot, b.Handle, (nint) offset, size);
     }
 
-    public void SetTexture(ITexture texture, int slot = 0) => throw new NotImplementedException();
-    public void SetSampler(ISampler sampler, int slot = 0)
+    public void SetTexture(ITexture texture, uint slot = 0)
     {
-        Console.WriteLine("TODO: SetSampler");
+        Texture = (OpenGLTexture) texture;
+        GL.glActiveTexture(GL.GL_TEXTURE0 + slot);
+        GL.glBindTexture(GL.GL_TEXTURE_2D, Texture.Handle);
+    }
+    public void SetSampler(ISampler sampler, uint slot = 0)
+    {
+        Sampler = (OpenGLSampler) sampler;
+        GL.glBindSampler(slot, Sampler.Handle);
+    }
+
+    void PreDraw()
+    {
+        if (Texture != null && Sampler != null && Sampler.MipmapFilter != MipmapFilter.None)
+        {
+            Texture.ValidateMipmaps();
+        }
     }
 
     public void Draw(int startIndex, int vertexCount)
     {
         FlushVertexState();
+        PreDraw();
         GL.glDrawArrays(GetPrimitiveType(_renderPipeline!.PrimitiveType), startIndex, vertexCount);
     }
     public void DrawIndexed(int startIndex, int indexCount)
     {
         FlushVertexState();
         _vertexState.BindIndexBuffer(_indexBufferHandle);
+        PreDraw();
         GL.glDrawElements(GetPrimitiveType(_renderPipeline!.PrimitiveType), indexCount, _indexType,
                         startIndex * _indexSize);
     }

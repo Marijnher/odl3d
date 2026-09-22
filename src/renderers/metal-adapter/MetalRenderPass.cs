@@ -117,15 +117,15 @@ public class MetalRenderPass : IRenderPass
         Encoder.SetFragmentBuffer(buf.Buffer, (nuint) slot, offset);
     }
 
-    public void SetTexture(ITexture texture, int slot = 0)
+    public void SetTexture(ITexture texture, uint slot = 0)
     {
         Texture = (MetalTexture) texture;
-        Encoder.SetFragmentTexture(Texture.Texture, (nuint) slot);
+        Encoder.SetFragmentTexture(Texture.Texture, slot);
     }
-    public void SetSampler(ISampler sampler, int slot = 0)
+    public void SetSampler(ISampler sampler, uint slot = 0)
     {
         Sampler = (MetalSampler) sampler;
-        Encoder.SetFragmentSamplerState(Sampler.Sampler, (nuint) slot);
+        Encoder.SetFragmentSamplerState(Sampler.Sampler, slot);
     }
 
     void PreDraw()

@@ -30,7 +30,8 @@ public static class Program
         Scene3D scene3D = new Scene3D(window);
 
         Mesh mesh = MeshBuilder.CreateQuad();
-        Object3D obj = new Object3D(scene3D, mesh);
+        Texture text = new Texture("assets/grass.png");
+        Object3D obj = new Object3D(scene3D, mesh, text);
 
         while (!window.ShouldClose)
         {

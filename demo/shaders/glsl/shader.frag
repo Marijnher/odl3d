@@ -21,5 +21,6 @@ void main()
         color = object.texColor * texture(tex, vTexCoord);
 
     if (color.a == 0.0) discard;
+    //fragColor = vec4(vTexCoord, 1.0, 1.0);
     fragColor = color;
 }

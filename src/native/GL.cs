@@ -9,15 +9,16 @@ namespace odl3d;
 internal static class GL
 {
     public const uint GL_FALSE = 0;
+    public const int GL_NONE = 0;
     public const uint GL_TRUE = 1;
-    public const uint GL_NEVER = 0x0200;
-    public const uint GL_LESS = 0x0201;
-    public const uint GL_EQUAL = 0x0202;
-    public const uint GL_LEQUAL = 0x0203;
-    public const uint GL_GREATER = 0x0204;
-    public const uint GL_NOTEQUAL = 0x0205;
-    public const uint GL_GEQUAL = 0x0206;
-    public const uint GL_ALWAYS = 0x0207;
+    public const int GL_NEVER = 0x0200;
+    public const int GL_LESS = 0x0201;
+    public const int GL_EQUAL = 0x0202;
+    public const int GL_LEQUAL = 0x0203;
+    public const int GL_GREATER = 0x0204;
+    public const int GL_NOTEQUAL = 0x0205;
+    public const int GL_GEQUAL = 0x0206;
+    public const int GL_ALWAYS = 0x0207;
     public const uint GL_COLOR_BUFFER_BIT = 0x4000;
     public const uint GL_DEPTH_BUFFER_BIT = 0x0100;
     public const uint GL_DEPTH_TEST = 0x0B71;
@@ -39,6 +40,7 @@ internal static class GL
     public const uint GL_UNSIGNED_SHORT = 0x1403;
     public const uint GL_INT = 0x1404;
     public const uint GL_UNSIGNED_INT = 0x1405;
+    public const uint GL_UNSIGNED_INT_24_8 = 0x84FA;
     public const uint GL_FLOAT = 0x1406;
     public const uint GL_HALF_FLOAT = 0x140B;
     public const uint GL_TRIANGLES = 0x0004;
@@ -57,8 +59,25 @@ internal static class GL
     public const int GL_LINEAR = 0x2601;
     public const uint GL_TEXTURE_WRAP_S = 0x2802;
     public const uint GL_TEXTURE_WRAP_T = 0x2803;
+    public const uint GL_TEXTURE_WRAP_R = 0x2804;
     public const int GL_CLAMP_TO_EDGE = 0x812F;
+    public const int GL_DEPTH_COMPONENT16 = 0x81A5;
+    public const int GL_DEPTH24_STENCIL8 = 0x88F0;
+    public const int GL_DEPTH_COMPONENT32F = 0x8CAC;
     public const int GL_RGBA = 0x1908;
+    public const int GL_BGRA = 0x80E1;
+    public const int GL_RGBA8 = 0x8058;
+    public const int GL_RGBA8_SNORM = 0x8F97;
+    public const int GL_RGBA16 = 0x805B;
+    public const int GL_RGBA16_SNORM = 0x8F9B;
+    public const int GL_RGBA16F = 0x881A;
+    public const int GL_RGBA32F = 0x8814;
+    public const int GL_RG16F = 0x822F;
+    public const int GL_R16F = 0x822D;
+    public const int GL_RG32F = 0x8230;
+    public const int GL_RG8 = 0x822B;
+    public const int GL_R32F = 0x822E;
+    public const int GL_R8 = 0x8229;
     public const int GL_REPEAT = 0x2901;
     public const int GL_MIRRORED_REPEAT = 0x8370;
     public const uint GL_TEXTURE0 = 0x84C0;
@@ -67,6 +86,7 @@ internal static class GL
     public const uint GL_FILL = 0x1B02;
     public const uint GL_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
     public const uint GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
+    public const uint GL_TEXTURE_COMPARE_FUNC = 0x884D;
     public const uint GL_UNIFORM_BUFFER = 0x8A11;
     public const uint GL_INVALID_INDEX = 0xFFFFFFFF;
 
@@ -121,9 +141,13 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDeleteTextures(int n, ref uint textures);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexParameteri(uint target, uint pname, int param);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexParameterf(uint target, uint pname, float param);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexImage2D(uint target, int level, int internalFormat, int width, int height, int border, uint format, uint type, byte[] pixels);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glTexImage2D(uint target, int level, uint internalFormat, int width, int height, int border, uint format, uint type, byte[] pixels);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glActiveTexture(uint texture);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenerateMipmap(uint target);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenSamplers(int n, out uint samplers);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDeleteSamplers(int n, ref uint samplers);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glSamplerParameteri(uint sampler, uint pname, int param);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBindSampler(uint unit, uint sampler);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendFunc(uint sfactor, uint dfactor);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDepthMask(uint flag);
@@ -184,6 +208,10 @@ internal static class GL
     public static d_glTexImage2D glTexImage2D;
     public static d_glActiveTexture glActiveTexture;
     public static d_glGenerateMipmap glGenerateMipmap;
+    public static d_glGenSamplers glGenSamplers;
+    public static d_glDeleteSamplers glDeleteSamplers;
+    public static d_glSamplerParameteri glSamplerParameteri;
+    public static d_glBindSampler glBindSampler;
 
     public static d_glBlendFunc glBlendFunc;
     public static d_glDepthMask glDepthMask;
@@ -255,6 +283,10 @@ internal static class GL
         glTexImage2D = Get<d_glTexImage2D>("glTexImage2D");
         glActiveTexture = Get<d_glActiveTexture>("glActiveTexture");
         glGenerateMipmap = Get<d_glGenerateMipmap>("glGenerateMipmap");
+        glGenSamplers = Get<d_glGenSamplers>("glGenSamplers");
+        glDeleteSamplers = Get<d_glDeleteSamplers>("glDeleteSamplers");
+        glSamplerParameteri = Get<d_glSamplerParameteri>("glSamplerParameteri");
+        glBindSampler = Get<d_glBindSampler>("glBindSampler");
 
         glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, out float maxAnisotropy);
         MaxAnisotropy = maxAnisotropy;

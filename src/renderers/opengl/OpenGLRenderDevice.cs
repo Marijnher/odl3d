@@ -27,7 +27,7 @@ public class OpenGLRenderDevice : IRenderDevice
         new OpenGLBuffer<T>(description, initialData);
 
     public ITexture CreateTexture(TextureDescription description, byte[]? initialData = null) =>
-        throw new NotImplementedException();
+        new OpenGLTexture(description, initialData);
     
     public ISampler CreateSampler(SamplerDescription? description = null) =>
         new OpenGLSampler(description ?? new SamplerDescription());

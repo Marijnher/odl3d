@@ -35,7 +35,6 @@ public class MetalTexture : ITexture
     {
         nuint mipWidth = Math.Max(1, Width >> mipLevel);
         nuint mipHeight = Math.Max(1, Height >> mipLevel);
-        nuint mipSize = mipWidth * mipHeight;
         Texture.Upload(data, (nuint) mipLevel, mipWidth * 4, mipWidth, mipHeight);
         HasValidMipmaps = false;
     }

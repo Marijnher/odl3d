@@ -15,8 +15,8 @@ public interface IRenderPass : IDisposable
     void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged;
     void SetUniformBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged;
 
-    void SetTexture(ITexture texture, int slot = 0);
-    void SetSampler(ISampler sampler, int slot = 0);
+    void SetTexture(ITexture texture, uint slot = 0);
+    void SetSampler(ISampler sampler, uint slot = 0);
 
     void Draw(int startIndex, int vertexCount);
     void DrawIndexed(int startIndex, int indexCount);
