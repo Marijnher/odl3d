@@ -17,7 +17,10 @@ public class Sprite3D : Object3D
     /// <param name="texture">The texture to use for the sprite.</param>
     public Sprite3D(Scene<Object3D> scene, Texture? texture = null) : base(scene, MeshBuilder.CreateQuad(), texture) { }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the model matrix for the sprite, which defines its position, rotation, and scale in the 3D world.
+    /// </summary>
+    /// <returns>The model matrix representing the sprite's transformation in the 3D world.</returns>
     public override Matrix4x4 GetModelMatrix() =>
         Matrix4x4.CreateScale(Scale) *
         Matrix4x4.CreateRotationX(MathF.PI / 180 * Rotation.X) *

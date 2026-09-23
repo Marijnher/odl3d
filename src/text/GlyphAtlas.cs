@@ -27,9 +27,15 @@ public sealed class GlyphAtlas
     private readonly List<(int Y, int Height, int NextX)> _shelves = new();
     private int _bottom;
 
-    /// <summary>The shared CPU-side atlas buffer that glyph coverage bitmaps are packed into.</summary>
+    /// <summary>
+    /// The shared CPU-side atlas buffer that glyph coverage bitmaps are packed into.
+    /// </summary>
     public Texture Texture { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the GlyphAtlas class with the specified initial size.
+    /// </summary>
+    /// <param name="initialSize">The initial size of the atlas texture in pixels.</param>
     public GlyphAtlas(uint initialSize = 512)
     {
         Texture = new Texture(initialSize, initialSize);
@@ -39,6 +45,10 @@ public sealed class GlyphAtlas
     /// Returns the atlas placement + metrics for the given glyph, rasterizing and packing it on first use and
     /// returning the cached placement on every subsequent call.
     /// </summary>
+    /// <param name="font">The font to retrieve the glyph from.</param>
+    /// <param name="style">The style of the font.</param>
+    /// <param name="codepoint">The Unicode codepoint of the glyph.</param>
+    /// <returns>The atlas placement and metrics for the specified glyph.</returns>
     internal AtlasGlyph GetOrAdd(Font font, FontStyle style, int codepoint)
     {
         (Font font, FontStyle style, int codepoint) key = (font, style, codepoint);
@@ -105,8 +115,9 @@ public sealed class GlyphAtlas
     private void Grow()
     {
         Texture old = Texture;
-        Texture = new Texture(old.Width, old.Height * 2);
-        Array.Copy(old.Pixels, Texture.Pixels, old.Pixels.Length);
+        byte[] newPixels = new byte[old.Width * old.Height * 2 * 4];
+        Array.Copy(old.Pixels, newPixels, old.Pixels.Length);
+        Texture = new Texture(old.Width, old.Height * 2, newPixels);
         old.Dispose();
     }
 }

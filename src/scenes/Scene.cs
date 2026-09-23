@@ -17,6 +17,9 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// </summary>
     public Window Window { get; }
 
+    /// <summary>
+    /// The renderer associated with the window of the scene. This property provides access to the rendering context and other features necessary for rendering the scene's objects. It is read-only for subclasses and is derived from the associated window.
+    /// </summary>
     protected IRenderDevice Renderer => Window.Renderer;
 
     /// <summary>
@@ -29,11 +32,25 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// </summary>
     public List<T> Objects { get; } = new List<T>();
 
-    protected ObjectShaderData[] ObjectShaderDataArray;
-    protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
-    private readonly IBuffer<float> ViewProjBuffer;
-
+    /// <summary>
+    /// The maximum number of objects that the scene can contain. This value is used to allocate the object shader data array and GPU buffer, and it can be configured in the constructor.
+    /// </summary>
     protected int MaxObjects;
+
+    /// <summary>
+    /// The array of object shader data for all objects in the scene. This array is used to store the latest shader data for each object before it is uploaded to the GPU buffer.
+    /// </summary>
+    protected ObjectShaderData[] ObjectShaderDataArray;
+
+    /// <summary>
+    /// The GPU buffer that stores the object shader data for all objects in the scene. This buffer is updated with the latest data from the ObjectShaderDataArray before rendering.
+    /// </summary>
+    protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
+    
+    /// <summary>
+    /// The GPU buffer that stores the view-projection matrix for the scene. This buffer is updated with the latest view-projection matrix before rendering.
+    /// </summary>
+    protected readonly IBuffer<float> ViewProjBuffer;
 
     /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
@@ -95,7 +112,10 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// <param name="sceneObject">The object to remove from the scene.</param>
     public void Remove(T sceneObject) => Objects.Remove(sceneObject);
 
-    public void UpdateObjectModelBuffer()
+    /// <summary>
+    /// Binds the object shader data to the GPU buffer, updating it with the latest data from all objects in the scene.
+    /// </summary>
+    internal void BindObjectShaderData()
     {
         for (int i = 0; i < Objects.Count; i++)
         {
@@ -104,8 +124,16 @@ public abstract class Scene<T> : Drawable where T : Object3D
         ObjectShaderDataBuffer.SetData(ObjectShaderDataArray, 0, Objects.Count);
     }
 
+    /// <summary>
+    /// Gets the view matrix for the scene, which defines the camera's position and orientation in the 3D world.
+    /// </summary>
+    /// <returns>The view matrix for the scene.</returns>
     protected abstract Matrix4x4 GetViewMatrix();
 
+    /// <summary>
+    /// Gets the projection matrix for the scene, which defines how 3D points are projected onto the 2D screen.
+    /// </summary>
+    /// <returns>The projection matrix for the scene.</returns>
     protected abstract Matrix4x4 GetProjectionMatrix();
 
     /// <summary>

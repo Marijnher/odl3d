@@ -8,7 +8,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var renderer = RenderTarget.OpenGL;
+        var renderer = RenderTarget.Metal;
         using Window window = new Window(800, 600, "odl3d", renderer);
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window)

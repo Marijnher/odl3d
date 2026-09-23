@@ -83,5 +83,9 @@ public struct Color
         A = a;
     }
 
+    /// <summary>
+    /// Converts the color to a Vector4 representation, with each component normalized to the range [0, 1]. The resulting vector contains the red, green, blue, and alpha components in that order.
+    /// </summary>
+    /// <returns>A Vector4 containing the normalized RGBA components of the color.</returns>
     public Vector4 ToVector4() => new Vector4(R / 255f, G / 255f, B / 255f, A / 255f);
 }

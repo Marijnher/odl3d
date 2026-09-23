@@ -34,10 +34,14 @@ public class TextBillboard : RasterizedText
     /// </summary>
     public bool FaceCamera = true;
 
-    /// <summary>The width of this text in world units.</summary>
+    /// <summary>
+    /// The width of this text in world units.
+    /// </summary>
     public float Width => PixelWidth / PixelsPerWorldUnit;
 
-    /// <summary>The height of this text in world units.</summary>
+    /// <summary>
+    /// The height of this text in world units.
+    /// </summary>
     public float Height => PixelHeight / PixelsPerWorldUnit;
 
     /// <summary>

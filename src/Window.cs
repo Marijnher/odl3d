@@ -21,7 +21,10 @@ public class Window : InputHost
     /// </summary>
     public static IRenderDevice Renderer => _renderer ?? throw new RenderException("Cannot access the global renderer until a Window has been created.");
 
-    internal IRenderSurface RenderSurface;
+    /// <summary>
+    /// The render surface associated with the window. This surface is used by the renderer to draw the window's contents. It is initialized when the window is created and should not be modified directly.
+    /// </summary>
+    public IRenderSurface RenderSurface;
 
     /// <summary>
     /// The current width of the window in pixels.
@@ -90,7 +93,14 @@ public class Window : InputHost
     /// </summary>
     private double? previousTime;
 
+    /// <summary>
+    /// The shader pipeline used for rendering 3D objects without normals. This pipeline is created with default settings and can be customized as needed.
+    /// </summary>
     public ShaderPipeline ShaderPipeline { get; set; }
+
+    /// <summary>
+    /// The shader pipeline used for rendering 3D objects with normals. This pipeline is created with default settings and can be customized as needed.
+    /// </summary>
     public ShaderPipeline ShaderPipelineWithNormals { get; set; }
 
     private IDepthStencilState Stencil3DOpaque;
@@ -208,6 +218,9 @@ public class Window : InputHost
             monitorY + (monitorHeight - windowHeight) / 2);
     }
 
+    /// <summary>
+    /// Updates the window's size and related render dimensions. This method is called internally whenever the window size changes.
+    /// </summary>
     private void UpdateWindowSize()
     {
         GLFW.glfwGetWindowSize(Handle, out int width, out int height);
@@ -279,7 +292,7 @@ public class Window : InputHost
         pass.SetDepthStencilState(Stencil3DOpaque);
         foreach (Scene3D scene in Scenes3D)
         {
-            scene.UpdateObjectModelBuffer();
+            scene.BindObjectShaderData();
             scene.Draw(pass, RenderPass.Opaque);
         }
         // Draw transparent objects after opaque ones without writing to the depth buffer.
@@ -292,7 +305,7 @@ public class Window : InputHost
         pass.SetDepthStencilState(Stencil2D);
         foreach (Scene2D scene in Scenes2D)
         {
-            scene.UpdateObjectModelBuffer();
+            scene.BindObjectShaderData();
             scene.Draw(pass, RenderPass.Opaque);
             scene.Draw(pass, RenderPass.Transparent);
         }

@@ -8,9 +8,19 @@ namespace odl3d;
 /// </summary>
 public partial class Mesh : IDisposable
 {
+    /// <summary>
+    /// Gets the renderer associated with this mesh, which is used to create and manage GPU resources.
+    /// </summary>
     protected IRenderDevice Renderer => Window.Renderer;
 
+    /// <summary>
+    /// Gets the vertex buffer containing the mesh's vertex data, including positions, texture coordinates, and optionally normals.
+    /// </summary>
     public IBuffer<float> Vertices { get; protected set; }
+
+    /// <summary>
+    /// Gets the index buffer containing the mesh's index data, which defines the triangles to draw using the vertices.
+    /// </summary>
     public IBuffer<uint> Indices { get; protected set; }
 
     /// <summary>
@@ -19,6 +29,9 @@ public partial class Mesh : IDisposable
     /// </summary>
     public bool HasNormals { get; }
 
+    /// <summary>
+    /// Gets the number of vertices in this mesh.
+    /// </summary>
     public int VertexCount { get; private set; }
 
     /// <summary>

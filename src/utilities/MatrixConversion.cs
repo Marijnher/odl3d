@@ -3,8 +3,16 @@ using System.Numerics;
 
 namespace odl3d;
 
+/// <summary>
+/// Provides extension methods for converting Matrix4x4 instances to different representations.
+/// </summary>
 public static class MatrixConversion
 {
+    /// <summary>
+    /// Converts the given Matrix4x4 instance to a one-dimensional float array in row-major order.
+    /// </summary>
+    /// <param name="matrix">The Matrix4x4 instance to convert.</param>
+    /// <returns>A float array containing the matrix elements in row-major order.</returns>
     public static float[] ToArray(this Matrix4x4 matrix)
     {
         return [

@@ -42,22 +42,34 @@ public sealed unsafe class Font : IDisposable
     private readonly FaceHandle? _italic;
     private readonly FaceHandle? _boldItalic;
 
-    /// <summary>The fixed pixel size at which this font rasterizes and measures glyphs.</summary>
+    /// <summary>
+    /// The fixed pixel size at which this font rasterizes and measures glyphs.
+    /// </summary>
     public int PixelSize { get; }
 
-    /// <summary>Distance from the baseline to the top of the font's tallest glyphs, in pixels.</summary>
+    /// <summary>
+    /// Distance from the baseline to the top of the font's tallest glyphs, in pixels.
+    /// </summary>
     public float Ascender { get; }
 
-    /// <summary>Distance from the baseline to the bottom of the font's lowest-hanging glyphs, in pixels (positive).</summary>
+    /// <summary>
+    /// Distance from the baseline to the bottom of the font's lowest-hanging glyphs, in pixels (positive).
+    /// </summary>
     public float Descender { get; }
 
-    /// <summary>Recommended distance between baselines of consecutive lines, in pixels.</summary>
+    /// <summary>
+    /// Recommended distance between baselines of consecutive lines, in pixels.
+    /// </summary>
     public float LineHeight { get; }
 
-    /// <summary>Distance from the baseline to where an underline should be drawn, in pixels (positive, downward).</summary>
+    /// <summary>
+    /// Distance from the baseline to where an underline should be drawn, in pixels (positive, downward).
+    /// </summary>
     public float UnderlinePosition { get; }
 
-    /// <summary>Recommended thickness of an underline/strikethrough bar, in pixels.</summary>
+    /// <summary>
+    /// Recommended thickness of an underline/strikethrough bar, in pixels.
+    /// </summary>
     public float UnderlineThickness { get; }
 
     public bool Disposed { get; private set; }
@@ -92,7 +104,9 @@ public sealed unsafe class Font : IDisposable
         return font;
     }
 
-    /// <summary>Disposes every cached font. Any Text still referencing one of them must be rebuilt afterwards.</summary>
+    /// <summary>
+    /// Disposes every cached font. Any Text still referencing one of them must be rebuilt afterwards.
+    /// </summary>
     public static void ClearCache()
     {
         foreach (Font font in new List<Font>(_cache.Values)) font.Dispose();
@@ -139,8 +153,14 @@ public sealed unsafe class Font : IDisposable
 
     private long SyntheticBoldStrength() => (long)(PixelSize / 24.0 * 64);
 
-    // Applies the transform (for synthetic italic) and loads the glyph outline (with synthetic embolden for
-    // bold applied to the outline, before any rasterization happens). Does not render a bitmap.
+    /// <summary>
+    /// Applies the transform (for synthetic italic) and loads the glyph outline (with synthetic embolden for bold applied to the outline, before any rasterization happens). Does not render a bitmap.
+    /// </summary>
+    /// <param name="handle">The font face handle to load the glyph from.</param>
+    /// <param name="glyphIndex">The index of the glyph to load.</param>
+    /// <param name="syntheticBold">Whether to apply synthetic bold to the glyph outline.</param>
+    /// <param name="syntheticItalic">Whether to apply synthetic italic to the glyph outline.</param>
+    /// <param name="boldStrength">The strength of the synthetic bold applied to the glyph outline.</param>
     private void LoadGlyph(FaceHandle handle, uint glyphIndex, bool syntheticBold, bool syntheticItalic, out long boldStrength)
     {
         boldStrength = 0;
@@ -174,9 +194,11 @@ public sealed unsafe class Font : IDisposable
     }
 
     /// <summary>
-    /// Kerning adjustment (in pixels, positive or negative) to apply between two adjacent codepoints in this
-    /// style, e.g. when laying out glyphs one at a time to match the pen positions MeasureString accounts for.
+    /// Kerning adjustment (in pixels, positive or negative) to apply between two adjacent codepoints in this style, e.g. when laying out glyphs one at a time to match the pen positions MeasureString accounts for.
     /// </summary>
+    /// <param name="leftCodepoint">The Unicode codepoint of the left character.</param>
+    /// <param name="rightCodepoint">The Unicode codepoint of the right character.</param>
+    /// <param name="style">The font style to use when measuring kerning.</param>
     public float GetKerning(int leftCodepoint, int rightCodepoint, FontStyle style = FontStyle.Regular)
     {
         (FaceHandle handle, _, _) = ResolveFace(style);
@@ -189,6 +211,8 @@ public sealed unsafe class Font : IDisposable
     /// Splits text into its individual lines, treating \n, \r\n and \r all as line breaks. Always returns at
     /// least one (possibly empty) line, so an empty string still occupies a single line's height.
     /// </summary>
+    /// <param name="text">The text to split into lines.</param>
+    /// <returns>An array of strings, each representing a line of text.</returns>
     public static string[] SplitLines(string text) => text.ReplaceLineEndings("\n").Split('\n');
 
     /// <summary>
@@ -196,6 +220,9 @@ public sealed unsafe class Font : IDisposable
     /// breaks are honored: the width is that of the widest line and the height is one LineHeight per line.
     /// Iterates by Unicode scalar value, so text outside the BMP (e.g. emoji) is measured correctly.
     /// </summary>
+    /// <param name="text">The text to measure.</param>
+    /// <param name="style">The font style to use when measuring the text.</param>
+    /// <returns>A Vector2 representing the width and height of the text block.</returns>
     public Vector2 MeasureString(string text, FontStyle style = FontStyle.Regular)
     {
         string[] lines = SplitLines(text);
@@ -208,6 +235,9 @@ public sealed unsafe class Font : IDisposable
     /// Measures the advance width of a single line of text in the given style. Any line breaks in the input
     /// are measured as ordinary glyphs, so callers with multi-line text should use MeasureString instead.
     /// </summary>
+    /// <param name="line">The line of text to measure.</param>
+    /// <param name="style">The font style to use when measuring the line.</param>
+    /// <returns>The advance width of the line in pixels.</returns>
     public float MeasureLine(string line, FontStyle style = FontStyle.Regular)
     {
         (FaceHandle handle, bool syntheticBold, bool syntheticItalic) = ResolveFace(style);
@@ -235,6 +265,9 @@ public sealed unsafe class Font : IDisposable
     /// Intended to be called by GlyphAtlas on a cache miss; callers that just need sizing should use
     /// MeasureString instead, which never rasterizes.
     /// </summary>
+    /// <param name="codepoint">The Unicode codepoint to rasterize.</param>
+    /// <param name="style">The font style to use when rasterizing the codepoint.</param>
+    /// <returns>A RasterizedGlyph containing the bitmap and metrics of the rasterized codepoint.</returns>
     internal RasterizedGlyph RasterizeCodepoint(int codepoint, FontStyle style)
     {
         (FaceHandle handle, bool syntheticBold, bool syntheticItalic) = ResolveFace(style);
@@ -273,6 +306,9 @@ public sealed unsafe class Font : IDisposable
     /// cached per (codepoint, style). Intended for building extruded 3D text; callers must treat the returned
     /// contours as read-only. Synthetic bold and italic are baked in exactly as they are for rasterization.
     /// </summary>
+    /// <param name="codepoint">The Unicode codepoint of the glyph to retrieve the outline for.</param>
+    /// <param name="style">The font style to use when retrieving the glyph outline.</param>
+    /// <returns>A GlyphOutline representing the flattened contours and advance of the glyph.</returns>
     internal GlyphOutline GetGlyphOutline(int codepoint, FontStyle style)
     {
         if (_outlineCache.TryGetValue((codepoint, style), out GlyphOutline cached)) return cached;
@@ -294,6 +330,9 @@ public sealed unsafe class Font : IDisposable
         if (!Disposed) Console.WriteLine("Warning: Font was not disposed before being finalized. This may cause a native resource leak.");
     }
 
+    /// <summary>
+    /// Disposes the font and releases all associated native resources. After calling this method, the font should not be used again.
+    /// </summary>
     public void Dispose()
     {
         if (Disposed) return;

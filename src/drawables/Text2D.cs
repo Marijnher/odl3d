@@ -27,7 +27,10 @@ public class Text2D : RasterizedText
         Rebuild();
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the model matrix for the 2D text, which defines its position, rotation, and scale in screen space.
+    /// </summary>
+    /// <returns>The model matrix representing the text's transformation in screen space.</returns>
     public override Matrix4x4 GetModelMatrix()
     {
         float width = Texture?.Width ?? 0f;

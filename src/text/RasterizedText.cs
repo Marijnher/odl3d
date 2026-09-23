@@ -12,6 +12,16 @@ namespace odl3d;
 /// </summary>
 public abstract class RasterizedText : Text
 {
+    /// <summary>
+    /// The width of the composed texture in pixels, or 0 before the first build.
+    /// </summary>
+    public uint PixelWidth => Texture?.Width ?? 0;
+
+    /// <summary>
+    /// The height of the composed texture in pixels, or 0 before the first build.
+    /// </summary>
+    public uint PixelHeight => Texture?.Height ?? 0;
+
     private readonly GlyphAtlas _atlas;
 
     /// <summary>
@@ -30,13 +40,9 @@ public abstract class RasterizedText : Text
         _atlas = atlas ?? GlyphAtlas.Shared;
     }
 
-    /// <summary>The width of the composed texture in pixels, or 0 before the first build.</summary>
-    public uint PixelWidth => Texture?.Width ?? 0;
-
-    /// <summary>The height of the composed texture in pixels, or 0 before the first build.</summary>
-    public uint PixelHeight => Texture?.Height ?? 0;
-
-    /// <inheritdoc/>
+    /// <summary>
+    /// Rebuilds the composed texture by rasterizing all glyphs and arranging them according to the current text content, style, and alignment.
+    /// </summary>
     protected override void Rebuild()
     {
         Texture? old = Texture;

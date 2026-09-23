@@ -16,6 +16,8 @@ internal static class PolygonTessellator
     /// <summary>
     /// Triangulates the given contour set.
     /// </summary>
+    /// <param name="outer">The outer contour of the polygon, wound counter-clockwise.</param>
+    /// <param name="holes">A list of hole contours, each wound clockwise.</param>
     /// <returns>
     /// The merged ring, containing every outer and hole vertex (bridge vertices appear twice), and the
     /// triangle list as index triplets into that ring.
@@ -35,7 +37,12 @@ internal static class PolygonTessellator
         return (polygon, EarClip(polygon));
     }
 
-    /// <summary>Twice the signed area; positive for counter-clockwise contours in a Y-up coordinate system.</summary>
+    /// <summary>
+    /// Computes twice the signed area of the given contour.
+    /// Positive for counter-clockwise contours in a Y-up coordinate system.
+    /// </summary>
+    /// <param name="contour">The contour for which to compute the signed area.</param>
+    /// <returns>Twice the signed area of the contour. Positive for counter-clockwise contours in a Y-up coordinate system.</returns>
     public static float SignedArea(List<Vector2> contour)
     {
         float area = 0f;
@@ -44,7 +51,13 @@ internal static class PolygonTessellator
         return area;
     }
 
-    /// <summary>Crossing-number test; points exactly on the boundary may report either result.</summary>
+    /// <summary>
+    /// Determines whether the given point lies inside the specified contour using the crossing-number test.
+    /// Points exactly on the boundary may report either result.
+    /// </summary>
+    /// <param name="contour">The contour to test against.</param>
+    /// <param name="point">The point to test for containment.</param>
+    /// <returns>True if the point lies inside the contour, false otherwise.</returns>
     public static bool ContainsPoint(List<Vector2> contour, Vector2 point)
     {
         bool inside = false;
@@ -89,6 +102,9 @@ internal static class PolygonTessellator
     /// Finds a polygon vertex that can see <paramref name="origin"/> (the hole's rightmost point): the
     /// polygon edge first hit by a ray cast to the right, refined by any reflex vertex that blocks it.
     /// </summary>
+    /// <param name="polygon">The outer polygon contour.</param>
+    /// <param name="origin">The rightmost point of the hole to connect.</param>
+    /// <returns>The index of the bridge vertex in the polygon, or -1 if no suitable vertex is found.</returns>
     private static int FindBridgeVertex(List<Vector2> polygon, Vector2 origin)
     {
         int count = polygon.Count;

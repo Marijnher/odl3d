@@ -24,6 +24,7 @@ internal static class OutlineDecomposer
     /// </summary>
     /// <param name="outline">Pointer to the FT_Outline of a loaded glyph slot.</param>
     /// <param name="flatness">Maximum allowed deviation, in font pixels, between a curve and its polyline.</param>
+    /// <returns>A list of contours, each represented as a list of 2D points.</returns>
     public static List<List<Vector2>> Decompose(IntPtr outline, float flatness)
     {
         List<List<Vector2>> contours = new();

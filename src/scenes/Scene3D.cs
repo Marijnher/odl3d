@@ -15,7 +15,7 @@ public class Scene3D : Scene<Object3D>
     /// <param name="window">The window associated with the scene, used to determine the rendering context and other properties.</param>
     public Scene3D(Window window) : base(window)
     {
-        this.Window.AddScene(this);
+        Window.AddScene(this);
     }
 
     /// <summary>
@@ -35,10 +35,16 @@ public class Scene3D : Scene<Object3D>
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the view matrix for the 3D scene, which is obtained from the camera.
+    /// </summary>
+    /// <returns>The view matrix for the 3D scene.</returns>
     protected override Matrix4x4 GetViewMatrix() => Camera.GetViewMatrix();
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the projection matrix for the 3D scene, which is obtained from the camera.
+    /// </summary>
+    /// <returns>The projection matrix for the 3D scene.</returns>
     protected override Matrix4x4 GetProjectionMatrix() => Camera.GetProjectionMatrix();
 }
 

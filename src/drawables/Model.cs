@@ -54,7 +54,15 @@ public class Model : Object3D
     /// </summary>
     protected List<Object3D> Objects = new List<Object3D>();
 
-    private IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
+    /// <summary>
+    /// The array of object shader data for all sub-objects in the model. This array is used to store the latest shader data for each sub-object before it is uploaded to the GPU buffer.
+    /// </summary>
+    protected ObjectShaderData[] ObjectShaderDataArray;
+
+    /// <summary>
+    /// The GPU buffer that stores the object shader data for all sub-objects in the model. This buffer is updated with the latest data from the ObjectShaderDataArray before rendering.
+    /// </summary>
+    protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
 
     /// <summary>
     /// The total number of vertices rendered by this model's mesh parts.
@@ -78,7 +86,7 @@ public class Model : Object3D
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public unsafe Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null) : base(scene)
+    public Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null) : base(scene)
     {
         for (int i = 0; i < meshes.Length; i++)
         {
@@ -88,6 +96,7 @@ public class Model : Object3D
             Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], samplers?[i], localTransform);
             Objects.Add(obj);
         }
+        ObjectShaderDataArray = new ObjectShaderData[meshes.Length];
         ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
         {
             Size = meshes.Length,
@@ -149,12 +158,16 @@ public class Model : Object3D
         return new Model(scene, meshes, textures);
     }
 
-    protected void BindObjectData()
+    /// <summary>
+    /// Binds the object shader data to the GPU buffer, updating it with the latest data from all objects in the model.
+    /// </summary>
+    public void BindObjectShaderData()
     {
-        List<ObjectShaderData> shaderData = Objects.Select(o => o.GetShaderData()).ToList();
-        int diff = ObjectShaderDataBuffer.Size - shaderData.Count;
-        if (diff > 0) shaderData.AddRange(Enumerable.Repeat(default(ObjectShaderData), diff));
-        ObjectShaderDataBuffer.SetData(shaderData.ToArray());
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            ObjectShaderDataArray[i] = Objects[i].GetShaderData();
+        }
+        ObjectShaderDataBuffer.SetData(ObjectShaderDataArray, 0, Objects.Count);
     }
 
     /// <summary>
@@ -173,7 +186,7 @@ public class Model : Object3D
             obj.Color = Color;
             obj.TextureColor = TextureColor;
         }
-        BindObjectData();
+        BindObjectShaderData();
         for (int i = 0; i < Objects.Count; i++)
         {
             var obj = Objects[i];

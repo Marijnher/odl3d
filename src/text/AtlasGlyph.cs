@@ -7,11 +7,38 @@ namespace odl3d;
 /// </summary>
 internal struct AtlasGlyph
 {
+    /// <summary>
+    /// The X coordinate of the glyph's coverage bitmap within the atlas texture.
+    /// </summary>
     public int X;
+
+    /// <summary>
+    /// The Y coordinate of the glyph's coverage bitmap within the atlas texture.
+    /// </summary>
     public int Y;
+
+    /// <summary>
+    /// The width of the glyph's coverage bitmap.
+    /// </summary>
     public int Width;
+
+    /// <summary>
+    /// The height of the glyph's coverage bitmap.
+    /// </summary>
     public int Height;
+
+    /// <summary>
+    /// The horizontal distance from the pen position to the left edge of the glyph's coverage bitmap.
+    /// </summary>
     public int BearingX;
+
+    /// <summary>
+    /// The vertical distance from the pen position to the top edge of the glyph's coverage bitmap.
+    /// </summary>
     public int BearingY;
+    
+    /// <summary>
+    /// The distance to advance the pen position after rendering this glyph.
+    /// </summary>
     public float Advance;
 }

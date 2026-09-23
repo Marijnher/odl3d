@@ -14,6 +14,9 @@ namespace odl3d.Loaders;
 /// </summary>
 public static class DaeLoader
 {
+    /// <summary>
+    /// Gets or sets the default texture wrap mode to use when loading textures from DAE files.
+    /// </summary>
     public static TextureWrap DefaultTextureWrap { get; set; } = TextureWrap.Repeat;
 
     private readonly record struct VertexKey(int Position, int TexCoord);

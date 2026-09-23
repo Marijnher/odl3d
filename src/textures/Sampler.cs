@@ -3,13 +3,25 @@ using odl3d.Renderer;
 
 namespace odl3d;
 
+/// <summary>
+/// Represents a texture sampler, which defines how textures are sampled and filtered during rendering.
+/// </summary>
 public class Sampler
 {
+    /// <summary>
+    /// Gets the renderer associated with the current window.
+    /// </summary>
     protected IRenderDevice Renderer => Window.Renderer;
 
-    public ISampler RenderSampler;
+    /// <summary>
+    /// Gets the underlying render sampler used by the renderer.
+    /// </summary>
+    internal ISampler RenderSampler;
 
     private TextureFilter _minFilter;
+    /// <summary>
+    /// Gets or sets the minification filter for the texture sampler.
+    /// </summary>
     public TextureFilter MinFilter
     {
         get => _minFilter;
@@ -21,6 +33,9 @@ public class Sampler
         }
     }
     private TextureFilter _magFilter;
+    /// <summary>
+    /// Gets or sets the magnification filter for the texture sampler.
+    /// </summary>
     public TextureFilter MagFilter
     {
         get => _magFilter;
@@ -32,6 +47,9 @@ public class Sampler
         }
     }
     private MipmapFilter _mipmapFilter;
+    /// <summary>
+    /// Gets or sets the mipmap filter for the texture sampler.
+    /// </summary>
     public MipmapFilter MipmapFilter
     {
         get => _mipmapFilter;
@@ -44,6 +62,9 @@ public class Sampler
     }
 
     private TextureWrap _wrapU;
+    /// <summary>
+    /// Gets or sets the wrap mode for the U (horizontal) texture coordinate.
+    /// </summary>
     public TextureWrap WrapU
     {
         get => _wrapU;
@@ -55,6 +76,9 @@ public class Sampler
         }
     }
     private TextureWrap _wrapV;
+    /// <summary>
+    /// Gets or sets the wrap mode for the V (vertical) texture coordinate.
+    /// </summary>
     public TextureWrap WrapV
     {
         get => _wrapV;
@@ -66,6 +90,9 @@ public class Sampler
         }
     }
     private TextureWrap _wrapW;
+    /// <summary>
+    /// Gets or sets the wrap mode for the W (depth) texture coordinate.
+    /// </summary>
     public TextureWrap WrapW
     {
         get => _wrapW;
@@ -78,6 +105,9 @@ public class Sampler
     }
 
     private AnisotropicFilter _anistropy;
+    /// <summary>
+    /// Gets or sets the anisotropic filter for the texture sampler.
+    /// </summary>
     public AnisotropicFilter Anisotropy
     {
         get => _anistropy;
@@ -90,6 +120,9 @@ public class Sampler
     }
 
     private CompareFunction? _comparison;
+    /// <summary>
+    /// Gets or sets the comparison function for the texture sampler.
+    /// </summary>
     public CompareFunction? Comparison
     {
         get => _comparison;
@@ -101,26 +134,36 @@ public class Sampler
         }
     }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Sampler"/> class.
+    /// </summary>
     public Sampler()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     {
-        InvalidateSampler();
+        RenderSampler = CreateSampler();
     }
 
+    /// <summary>
+    /// Invalidates the current sampler and creates a new one.
+    /// </summary>
     private void InvalidateSampler()
     {
         RenderSampler?.Dispose();
-        RenderSampler = Renderer.CreateSampler(new SamplerDescription
-        {
-            MinFilter = MinFilter,
-            MagFilter = MagFilter,
-            MipmapFilter = MipmapFilter,
-            WrapU = WrapU,
-            WrapV = WrapV,
-            WrapW = WrapW,
-            Anisotropy = Anisotropy,
-            Comparison = Comparison
-        });
+        RenderSampler = CreateSampler();
     }
+
+    /// <summary>
+    /// Creates a new texture sampler based on the current sampler settings.
+    /// </summary>
+    /// <returns>A new instance of <see cref="ISampler"/> based on the current sampler settings.</returns>
+    private ISampler CreateSampler() => Renderer.CreateSampler(new SamplerDescription
+    {
+        MinFilter = MinFilter,
+        MagFilter = MagFilter,
+        MipmapFilter = MipmapFilter,
+        WrapU = WrapU,
+        WrapV = WrapV,
+        WrapW = WrapW,
+        Anisotropy = Anisotropy,
+        Comparison = Comparison
+    });
 }

@@ -5,13 +5,18 @@ using odl3d.Renderer;
 namespace odl3d;
 
 /// <summary>
-/// A single concept for both CPU-side pixel data and its uploaded renderer handle;
-/// there is no separate "bitmap" type — patterns are drawn directly into a Texture.
+/// Represents a texture that contains both CPU-side pixel data and its corresponding renderer handle.
 /// </summary>
 public class Texture : IDisposable
 {
+    /// <summary>
+    /// Represents a texture that contains both CPU-side pixel data and its corresponding renderer handle.
+    /// </summary>
     protected IRenderDevice Renderer => Window.Renderer;
 
+    /// <summary>
+    /// The renderer handle of the texture. This is the actual GPU resource that corresponds to the texture's pixel data.
+    /// </summary>
     public ITexture RenderTexture;
     
     /// <summary>
@@ -45,7 +50,6 @@ public class Texture : IDisposable
     public bool Disposed { get; private set; }
 
     private bool? hasPartialAlpha;
-
     /// <summary>
     /// True if any pixel in this texture has an alpha value other than 0 or 255 (i.e. genuine partial transparency, such as a soft shadow). Textures whose alpha is always fully opaque or fully transparent (hard cutouts) return false, since those are handled by discarding transparent fragments rather than blending. The full pixel buffer is scanned only once and cached; SetPixel updates the cached result directly instead of forcing a rescan, so per-pixel edits stay O(1).
     /// </summary>
@@ -77,11 +81,16 @@ public class Texture : IDisposable
     /// </summary>
     /// <param name="width">Width of the texture in pixels.</param>
     /// <param name="height">Height of the texture in pixels.</param>
-    public Texture(uint width, uint height)
+    /// <param name="initialPixels">Optional initial pixel data in RGBA order. If not provided, a new buffer of the appropriate size will be allocated.</param>
+    public Texture(uint width, uint height, byte[]? initialPixels = null)
     {
+        initialPixels ??= new byte[width * height * 4];
+        if (width * height * 4 != initialPixels.Length)
+            throw new ArgumentException("Initial pixel array length does not match texture dimensions.");
+
         Width = width;
         Height = height;
-        Pixels = new byte[width * height * 4];
+        Pixels = initialPixels;
         RenderTexture = Renderer.CreateTexture(new TextureDescription
         {
             Format = TextureFormat.RGBA8Unorm,

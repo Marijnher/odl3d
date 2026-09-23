@@ -6,11 +6,6 @@ namespace odl3d;
 
 /// <summary>
 /// Minimal dynamic bindings for the FreeType native library (face loading, metrics and glyph rasterization only).
-/// Field offsets below are computed manually at class-init time instead of via Marshal.PtrToStructure, because
-/// FT_Long/FT_Pos/FT_Fixed/FT_ULong are plain C "long": 4 bytes on Windows x64 (LLP64) but 8 bytes on Linux/macOS
-/// x64 (LP64). A struct hardcoding these as 8-byte fields works on Unix but silently misaligns every field on
-/// Windows, reading garbage (and eventually dereferencing an invalid pointer). Only fields actually read by
-/// Font.cs are computed; trailing native fields are simply never touched.
 /// </summary>
 internal static unsafe class FT
 {

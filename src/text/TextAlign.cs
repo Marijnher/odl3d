@@ -6,7 +6,18 @@ namespace odl3d;
 /// </summary>
 public enum TextAlign
 {
+    /// <summary>
+    /// Aligns the text to the left edge of the block.
+    /// </summary>
     Left,
+
+    /// <summary>
+    /// Aligns the text to the horizontal center of the block.
+    /// </summary>
     Center,
+
+    /// <summary>
+    /// Aligns the text to the right edge of the block.
+    /// </summary>
     Right
 }

@@ -38,15 +38,26 @@ public class Scene2D : Scene<Object3D>
     /// <param name="window">The window whose size defines the viewport for the scene.</param>
     public Scene2D(Window window) : this(window, new Rect(0, 0, window.Width, window.Height), true) { }
 
+    /// <summary>
+    /// Updates the viewport to match the current size of the window if the scene is set to fit the window.
+    /// </summary>
     internal void UpdateWindowSize()
     {
         if (fitToWindow)
             Viewport = new Rect(0, 0, Window.Width, Window.Height);
     }
 
+    /// <summary>
+    /// Gets the projection matrix for the 2D scene, which is an orthographic matrix based on the viewport.
+    /// </summary>
+    /// <returns>The orthographic projection matrix for the scene.</returns>
     protected override Matrix4x4 GetProjectionMatrix() =>
         Matrix4x4.CreateOrthographicOffCenter(0, Viewport.Width, Viewport.Height, 0, -1000, 1000);
 
+    /// <summary>
+    /// Gets the view matrix for the 2D scene, which is an identity matrix since the scene is rendered in screen space.
+    /// </summary>
+    /// <returns>The view matrix for the scene, which is an identity matrix.</returns>
     protected override Matrix4x4 GetViewMatrix() => Matrix4x4.Identity;
 
     /// <summary>

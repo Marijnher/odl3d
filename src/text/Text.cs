@@ -15,7 +15,9 @@ namespace odl3d;
 public abstract class Text : Object3D
 {
     private Font _font;
-    /// <summary>The font used to measure and build this text's glyphs.</summary>
+    /// <summary>
+    /// The font used to measure and build this text's glyphs.
+    /// </summary>
     public Font Font
     {
         get => _font;
@@ -23,7 +25,9 @@ public abstract class Text : Object3D
     }
 
     private string _content;
-    /// <summary>The text to display. Rebuilds immediately when changed.</summary>
+    /// <summary>
+    /// The text to display. Rebuilds immediately when changed.
+    /// </summary>
     public string Content
     {
         get => _content;
@@ -31,7 +35,9 @@ public abstract class Text : Object3D
     }
 
     private FontStyle _style;
-    /// <summary>Bold/Italic style to render this text with.</summary>
+    /// <summary>
+    /// Bold/Italic style to render this text with.
+    /// </summary>
     public FontStyle Style
     {
         get => _style;
@@ -39,7 +45,9 @@ public abstract class Text : Object3D
     }
 
     private TextAlign _align;
-    /// <summary>Horizontal alignment of each line within the text block. Only visible with multiple lines.</summary>
+    /// <summary>
+    /// Horizontal alignment of each line within the text block. Only visible with multiple lines.
+    /// </summary>
     public TextAlign Align
     {
         get => _align;
@@ -47,7 +55,9 @@ public abstract class Text : Object3D
     }
 
     private bool _underline;
-    /// <summary>Whether to draw an underline bar beneath the text.</summary>
+    /// <summary>
+    /// Whether to draw an underline bar beneath the text.
+    /// </summary>
     public bool Underline
     {
         get => _underline;
@@ -55,7 +65,9 @@ public abstract class Text : Object3D
     }
 
     private bool _strikethrough;
-    /// <summary>Whether to draw a strikethrough bar through the text.</summary>
+    /// <summary>
+    /// Whether to draw a strikethrough bar through the text.
+    /// </summary>
     public bool Strikethrough
     {
         get => _strikethrough;
@@ -84,6 +96,7 @@ public abstract class Text : Object3D
     /// Measures this text's Content in its current Font/Style in font pixels, without building anything,
     /// useful for positioning other elements without waiting on (or even needing) the built geometry.
     /// </summary>
+    /// <returns>The width and height of the text in font pixels.</returns>
     public Vector2 MeasureString() => Font.MeasureString(Content, Style);
 
     /// <summary>

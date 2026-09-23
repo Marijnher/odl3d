@@ -6,15 +6,6 @@ using odl3d.Renderer;
 namespace odl3d;
 
 /// <summary>
-/// Identifies which rendering pass is currently active for a Scene3D: opaque geometry is drawn first with normal depth writes, then transparent geometry is drawn with depth writes disabled so it blends correctly against whatever was drawn behind it, regardless of scene/model ordering.
-/// </summary>
-public enum RenderPass
-{
-    Opaque,
-    Transparent
-}
-
-/// <summary>
 /// Represents a 3D object in the scene, consisting of a mesh and an optional texture, with properties for position, rotation, scale, and color. The object can be drawn using a shader and a view-projection matrix, and it manages its own GPU resources.
 /// </summary>
 public class Object3D : Drawable
@@ -24,6 +15,9 @@ public class Object3D : Drawable
     /// </summary>
     public Scene<Object3D> Scene;
 
+    /// <summary>
+    /// The renderer instance used to draw this object. This is obtained from the window associated with the scene.
+    /// </summary>
     protected IRenderDevice Renderer => Window.Renderer;
 
     /// <summary>
@@ -31,6 +25,9 @@ public class Object3D : Drawable
     /// </summary>
     public Texture? Texture;
 
+    /// <summary>
+    /// The sampler to use when drawing this object. This controls how the texture is sampled, including filtering and wrapping modes.
+    /// </summary>
     public Sampler Sampler;
 
     /// <summary>
@@ -69,7 +66,7 @@ public class Object3D : Drawable
     public bool AutoDisposeMesh = true;
 
     /// <summary>
-    /// Creates a new Object with the given mesh and optional texture.
+    /// Creates a new Object3D with the given mesh and optional texture.
     /// </summary>
     /// <param name="scene">The scene to which this object belongs.</param>
     /// <param name="mesh">The mesh to use when drawing this object, or null to draw nothing.</param>
@@ -83,6 +80,13 @@ public class Object3D : Drawable
         scene.Add(this);
     }
 
+    /// <summary>
+    /// Creates a new Object3D with the given mesh and optional texture, and optionally adds it to the scene.
+    /// </summary>
+    /// <param name="scene">The scene to which this object belongs.</param>
+    /// <param name="mesh">The mesh to use when drawing this object, or null to draw nothing.</param>
+    /// <param name="texture">The texture to use when drawing this object, or null to draw without a texture.</param>
+    /// <param name="addToScene">True to add the object to the scene immediately; false to add it later manually.</param>
     protected Object3D(Scene<Object3D> scene, Mesh? mesh, Texture? texture, bool addToScene) 
     {
         Scene = scene;
@@ -125,15 +129,19 @@ public class Object3D : Drawable
         Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
         Matrix4x4.CreateTranslation(Position + Scene.Position);
 
+    /// <summary>
+    /// Returns the shader data for this object, which includes the model matrix, texture usage, colors, and normal information.
+    /// </summary>
+    /// <returns>An ObjectShaderData instance containing the relevant shader information for this object.</returns>
     public virtual ObjectShaderData GetShaderData()
     {
         var shaderData = new ObjectShaderData
         {
             Model = GetModelMatrix(),
-            UseTexture = (Texture != null && !Texture.Disposed) ? 1u : 0u,
+            UseTexture = Texture != null && !Texture.Disposed,
             TexColor = TextureColor.ToVector4(),
             ObjColor = Color.ToVector4(),
-            HasNormals = (Mesh?.HasNormals ?? false) ? 1u : 0u
+            HasNormals = Mesh?.HasNormals ?? false
         };
         return shaderData;
     }

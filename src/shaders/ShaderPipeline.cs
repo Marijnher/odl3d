@@ -16,8 +16,14 @@ public class ShaderPipeline : IDisposable
     /// </summary>
     public IRenderPipeline Pipeline { get; private set; }
 
+    /// <summary>
+    /// Gets the renderer associated with the window of this shader pipeline.
+    /// </summary>
     protected IRenderDevice Renderer => Window.Renderer;
 
+    /// <summary>
+    /// Gets or sets whether the shader pipeline should render in wireframe mode.
+    /// </summary>
     public bool Wireframe
     {
         get => Pipeline.Wireframe;
@@ -25,7 +31,7 @@ public class ShaderPipeline : IDisposable
     }
 
     /// <summary>
-    /// Indicates whether this shader has been disposed and its resources released. After disposing, the shader should not be used again. The Disposed property is set to true when Dispose() is called, and it can be checked to prevent multiple disposals or usage of a disposed shader.
+    /// Indicates whether this shader pipeline has been disposed and its resources released. After disposing, the shader pipeline should not be used again. The Disposed property is set to true when Dispose() is called, and it can be checked to prevent multiple disposals or usage of a disposed shader pipeline.
     /// </summary>
     public bool Disposed { get; private set; }
 
@@ -78,6 +84,11 @@ public class ShaderPipeline : IDisposable
         Disposed = true;
     }
 
+    /// <summary>
+    /// Creates a default shader pipeline with optional normal attributes. The default vertex and fragment shaders are used, and the vertex layout is configured based on whether normals are included.
+    /// </summary>
+    /// <param name="hasNormals">Indicates whether the vertex layout should include normal attributes.</param>
+    /// <returns>A new instance of ShaderPipeline configured with the default shaders and the specified vertex layout.</returns>
     public static ShaderPipeline CreateDefault(bool hasNormals = false)
     {
         using var defaultVertex = new Shader(GetDefaultVertexShaderFilename(), ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);

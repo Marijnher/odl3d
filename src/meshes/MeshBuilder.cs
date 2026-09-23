@@ -4,16 +4,36 @@ using System.Collections.Generic;
 
 namespace odl3d;
 
+/// <summary>
+/// Provides functionality for incrementally building a mesh by adding vertices and faces, and then constructing a Mesh object from the accumulated data.
+/// </summary>
 public class MeshBuilder
 {
+    /// <summary>
+    /// Gets the list of vertices that have been added to the mesh builder.
+    /// </summary>
     public List<Vertex> Vertices { get; private set; } = new();
+
+    /// <summary>
+    /// Gets the list of indices that have been added to the mesh builder.
+    /// </summary>
     public List<uint> Indices { get; private set; } = new();
 
+    /// <summary>
+    /// Adds a vertex to the mesh builder's list of vertices.
+    /// </summary>
+    /// <param name="vertex">The vertex to add to the mesh builder.</param>
     public void AddVertex(Vertex vertex)
     {
         Vertices.Add(vertex);
     }
 
+    /// <summary>
+    /// Adds a triangular face to the mesh builder using the specified vertices. If any of the vertices are not already in the mesh builder's vertex list, they will be added. The indices of the vertices are then added to the index list to define the triangle.
+    /// </summary>
+    /// <param name="v1">The first vertex of the triangular face.</param>
+    /// <param name="v2">The second vertex of the triangular face.</param>
+    /// <param name="v3">The third vertex of the triangular face.</param>
     public void AddFace(Vertex v1, Vertex v2, Vertex v3)
     {
         if (!Vertices.Contains(v1)) AddVertex(v1);
@@ -24,6 +44,12 @@ public class MeshBuilder
         Indices.Add((uint) Vertices.IndexOf(v3));
     }
 
+    /// <summary>
+    /// Adds a triangular face to the mesh builder using the specified vertex indices.
+    /// </summary>
+    /// <param name="i1">The index of the first vertex of the triangular face.</param>
+    /// <param name="i2">The index of the second vertex of the triangular face.</param>
+    /// <param name="i3">The index of the third vertex of the triangular face.</param>
     public void AddFace(uint i1, uint i2, uint i3)
     {
         Indices.Add(i1);
@@ -31,6 +57,15 @@ public class MeshBuilder
         Indices.Add(i3);
     }
 
+    /// <summary>
+    /// Adds a quadrilateral face to the mesh builder using the specified vertices. The quad is defined by four vertices and is split into two triangular faces internally. The texture coordinates for the quad can be specified using the optional u and v parameters.
+    /// </summary>
+    /// <param name="s1">The first vertex of the quadrilateral face.</param>
+    /// <param name="s2">The second vertex of the quadrilateral face.</param>
+    /// <param name="s3">The third vertex of the quadrilateral face.</param>
+    /// <param name="s4">The fourth vertex of the quadrilateral face.</param>
+    /// <param name="u">The horizontal texture coordinate scale for the quad.</param>
+    /// <param name="v">The vertical texture coordinate scale for the quad.</param>
     public void AddQuad(Vertex s1, Vertex s2, Vertex s3, Vertex s4, float u = 1, float v = 1)
     {
         var v1 = new Vertex(s1.Position, 0, 0);
@@ -41,6 +76,11 @@ public class MeshBuilder
         AddFace(v1, v3, v4);
     }
 
+    /// <summary>
+    /// Builds and returns a Mesh object based on the current state of the mesh builder. The mesh will include vertex normals if specified by the hasNormals parameter.
+    /// </summary>
+    /// <param name="hasNormals">True if the mesh should include vertex normals.</param>
+    /// <returns>The constructed Mesh object.</returns>
     public Mesh Build(bool hasNormals = false)
     {
         int floatsPerVertex = hasNormals ? 8 : 5;
@@ -64,6 +104,14 @@ public class MeshBuilder
         return new Mesh(vertices, Indices.ToArray(), hasNormals);
     }
 
+    /// <summary>
+    /// Creates a textured quadrilateral mesh with the specified width, height, and optional texture coordinate scaling.
+    /// </summary>
+    /// <param name="w">The width of the quad.</param>
+    /// <param name="h">The height of the quad.</param>
+    /// <param name="u">The horizontal texture coordinate scale for the quad.</param>
+    /// <param name="v">The vertical texture coordinate scale for the quad.</param>
+    /// <returns>The constructed Mesh object representing the quad.</returns>
     public static Mesh CreateQuad(float w = 1, float h = 1, float u = 1, float v = 1)
     {
         MeshBuilder builder = new MeshBuilder();
@@ -79,6 +127,15 @@ public class MeshBuilder
         return builder.Build();
     }
 
+    /// <summary>
+    /// Creates a textured plane mesh with the specified width, height, depth, and optional texture coordinate scaling.
+    /// </summary>
+    /// <param name="w">The width of the plane.</param>
+    /// <param name="h">The height of the plane.</param>
+    /// <param name="d">The depth of the plane.</param>
+    /// <param name="u">The horizontal texture coordinate scale for the plane.</param>
+    /// <param name="v">The vertical texture coordinate scale for the plane.</param>
+    /// <returns>The constructed Mesh object representing the plane.</returns>
     public static Mesh CreatePlane(float w, float h, float d, float u = 1, float v = 1)
     {
         MeshBuilder builder = new MeshBuilder();
@@ -155,32 +212,4 @@ public class MeshBuilder
 
         return builder.Build(true);
     }
-}
-
-public class Vertex
-{
-    public Vector3 Position { get; set; }
-    public Vector2 TexCoord { get; set; }
-    public Vector3 Normal { get; set; }
-
-    public Vertex(Vector3 position, Vector2 texCoord)
-    {
-        Position = position;
-        TexCoord = texCoord;
-    }
-
-    public Vertex(Vector3 position, float u, float v)
-    {
-        Position = position;
-        TexCoord = new Vector2(u, v);
-    }
-
-    public Vertex(Vector3 position, Vector3 normal, float u = 0, float v = 0) :
-        this(position, new Vector2(u, v))
-    {
-        Normal = normal;
-    }
-
-    public Vertex(float x, float y, float z, float u = 0, float v = 0) :
-        this(new Vector3(x, y, z), new Vector2(u, v)) { }
 }
