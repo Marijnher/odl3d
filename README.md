@@ -14,7 +14,7 @@ Applications create a window and renderer, add drawable objects to 2D or 3D scen
 
 ## Dependencies
 
-- **GLFW3** - Window management and native window/context creation
+- **GLFW3** - Window management
 - **Freetype** - Font rendering
 
 ## Building
@@ -36,7 +36,10 @@ Copyright © 2026 Marijn Herrebout
 ## Getting Started
 
 1. Clone the repository
-2. Ensure the native dependencies for your selected renderer/backend are installed and available (for example GLFW3)
+2. Ensure the native dependencies for your selected renderer/backend are available in `bin`:
+   * Windows: `freetype6.dll` and `glfw3.dll`
+   * macOS: `libfreetype.6.dylib` and `libglfw.3.dylib`
+   * Linux: `libfreetype.6.so` and `libglfw.3.so`
 3. Build the project:
    ```powershell
    dotnet build
@@ -45,4 +48,4 @@ Copyright © 2026 Marijn Herrebout
 
 ## Documentation
 
-For detailed usage information, refer to the source files in the `src/` directory
+For detailed usage information, refer to the source files in the `src/` directory.

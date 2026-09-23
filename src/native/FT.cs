@@ -214,29 +214,17 @@ internal static unsafe class FT
     /// <summary>Reads the 'x' (horizontal) component out of an FT_Vector buffer written by FT_Get_Kerning.</summary>
     public static float ReadKerningX(IntPtr buffer) => ReadFTLong(buffer) / 64f;
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Init_FreeType(out IntPtr alibrary);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Done_FreeType(IntPtr library);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_New_Face(IntPtr library, [MarshalAs(UnmanagedType.LPStr)] string filepathname, long face_index, out IntPtr aface);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Done_Face(IntPtr face);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Set_Pixel_Sizes(IntPtr face, uint pixel_width, uint pixel_height);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate uint d_FT_Get_Char_Index(IntPtr face, nuint charcode);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Load_Glyph(IntPtr face, uint glyph_index, int load_flags);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Render_Glyph(IntPtr slot, int render_mode);
-    // akerning is a raw pointer to a manually-packed FT_Vector buffer (see KerningBufferSize/ReadKerningX).
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Get_Kerning(IntPtr face, uint left_glyph, uint right_glyph, uint kern_mode, IntPtr akerning);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FT_Set_Transform(IntPtr face, IntPtr matrix, IntPtr delta);
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FT_Outline_Embolden(IntPtr outline, long strength);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Init_FreeType(out IntPtr alibrary);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Done_FreeType(IntPtr library);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_New_Face(IntPtr library, [MarshalAs(UnmanagedType.LPStr)] string filepathname, long face_index, out IntPtr aface);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Done_Face(IntPtr face);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Set_Pixel_Sizes(IntPtr face, uint pixel_width, uint pixel_height);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate uint d_FT_Get_Char_Index(IntPtr face, nuint charcode);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Load_Glyph(IntPtr face, uint glyph_index, int load_flags);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Render_Glyph(IntPtr slot, int render_mode);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Get_Kerning(IntPtr face, uint left_glyph, uint right_glyph, uint kern_mode, IntPtr akerning);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_FT_Set_Transform(IntPtr face, IntPtr matrix, IntPtr delta);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_FT_Outline_Embolden(IntPtr outline, long strength);
 
     public static d_FT_Init_FreeType FT_Init_FreeType;
     public static d_FT_Done_FreeType FT_Done_FreeType;

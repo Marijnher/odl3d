@@ -38,12 +38,18 @@
         <None Include="bin/libglfw.3.dylib" Condition="Exists('bin/libglfw.3.dylib')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Include="bin/libglfw.3.so" Condition="Exists('bin/libglfw.3.so')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
 
         <!-- Freetype -->
         <None Include="bin/freetype6.dll" Condition="Exists('bin/freetype6.dll')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="bin/libfreetype.6.dylib" Condition="Exists('bin/libfreetype.6.dylib')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="bin/libfreetype.6.so" Condition="Exists('bin/libfreetype.6.so')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
 
