@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalRenderDevice : IRenderDevice
+internal class MetalRenderDevice : IRenderDevice
 {
     public RenderTarget RenderTarget => RenderTarget.Metal;
     public Metal.Device Device;

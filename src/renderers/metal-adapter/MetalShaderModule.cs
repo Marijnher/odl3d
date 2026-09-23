@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalShaderModule : IShaderModule
+internal class MetalShaderModule : IShaderModule
 {
     public ShaderStage Stage { get; }
     public string Source { get; }

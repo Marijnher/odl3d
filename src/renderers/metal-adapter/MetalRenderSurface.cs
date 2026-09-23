@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalRenderSurface : IRenderSurface
+internal class MetalRenderSurface : IRenderSurface
 {
     private Metal.Device Device;
     private Metal.MetalLayer MetalLayer;

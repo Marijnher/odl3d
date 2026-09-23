@@ -4,7 +4,10 @@ using System.Runtime.InteropServices;
 
 namespace odl3d.Renderer;
 
-public static partial class Metal
+/// <summary>
+/// Provides interop with the Metal framework on macOS.
+/// </summary>
+internal static partial class Metal
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_MTLCreateSystemDefaultDevice();
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_sel_registerName([MarshalAs(UnmanagedType.LPStr)] string name);
@@ -66,8 +69,16 @@ public static partial class Metal
     private static IntPtr _metal;
     private static readonly Dictionary<string, IntPtr> _selectors = new();
 
+    /// <summary>
+    /// Indicates whether the Metal interop has been successfully loaded.
+    /// </summary>
     public static bool Loaded { get; private set; }
 
+    /// <summary>
+    /// Loads the Metal interop, initializing the necessary function pointers and ensuring that the Metal framework is available on the current macOS system.
+    /// </summary>
+    /// <exception cref="PlatformNotSupportedException">Thrown if the current platform is not macOS.</exception>
+    /// <exception cref="DllNotFoundException">Thrown if the Objective-C runtime or Metal framework could not be loaded.</exception>
     public static void Load()
     {
         if (Loaded) return;
@@ -214,6 +225,23 @@ public static partial class Metal
         AnisotropicFilter.X8 => 8,
         AnisotropicFilter.X16 => 16,
         _ => throw new RenderException($"Unsupported anisotropic filter: {filter}.")
+    };
+
+    public static nuint GetPrimitiveType(PrimitiveType primitiveType) => primitiveType switch
+    {
+        PrimitiveType.PointList => 0,
+        PrimitiveType.LineList => 1,
+        PrimitiveType.LineStrip => 2,
+        PrimitiveType.TriangleList => 3,
+        PrimitiveType.TriangleStrip => 4,
+        _ => throw new RenderException("Unsupported primitive type.")
+    };
+
+    public static nuint GetIndexType(IndexType indexType) => indexType switch
+    {
+        IndexType.UInt16 => 0,
+        IndexType.UInt32 => 1,
+        _ => throw new RenderException("Unsupported index type.")
     };
 
     [StructLayout(LayoutKind.Sequential)]

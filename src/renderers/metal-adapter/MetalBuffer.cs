@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public abstract class MetalBuffer
+internal abstract class MetalBuffer
 {
     public int Size { get; protected set; }
     public BufferUsage Usage { get; protected set; }
@@ -20,7 +20,7 @@ public abstract class MetalBuffer
     }
 }
 
-public class MetalBuffer<T> : MetalBuffer, IBuffer<T> where T : unmanaged
+internal class MetalBuffer<T> : MetalBuffer, IBuffer<T> where T : unmanaged
 {
     public override Metal.Buffer Buffer { get; }
 

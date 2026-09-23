@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalSampler : ISampler
+internal class MetalSampler : ISampler
 {
     public Metal.SamplerState Sampler;
 

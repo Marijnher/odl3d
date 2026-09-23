@@ -4,14 +4,34 @@ using System.Runtime.InteropServices;
 
 namespace odl3d.Renderer;
 
-public static partial class Metal
+internal static partial class Metal
 {
+    /// <summary>
+    /// Represents a native Objective-C object, providing a managed wrapper around the native handle and facilitating interaction with Objective-C methods.
+    /// </summary>
     public class ObjCObject : IDisposable
     {
+        /// <summary>
+        /// Gets the native handle of the Objective-C object.
+        /// </summary>
         public IntPtr Handle { get; protected set; }
+
+        /// <summary>
+        /// Indicates whether the managed wrapper owns the native Objective-C object.
+        /// </summary>
         private readonly bool ownsNativeObject;
+
+        /// <summary>
+        /// Gets a value indicating whether the object has been disposed.
+        /// </summary>
         public bool Disposed { get; protected set; }
 
+        /// <summary>
+        /// Initializes a new instance of the ObjCObject class with the specified native handle and ownership flag.
+        /// </summary>
+        /// <param name="handle">The native handle of the Objective-C object.</param>
+        /// <param name="ownsNativeObject">Indicates whether the managed wrapper owns the native Objective-C object.</param>
+        /// <exception cref="ArgumentException"></exception>
         public ObjCObject(IntPtr handle, bool ownsNativeObject = false)
         {
             Handle = handle == IntPtr.Zero
@@ -20,6 +40,9 @@ public static partial class Metal
             this.ownsNativeObject = ownsNativeObject;
         }
 
+        /// <summary>
+        /// Disposes the managed wrapper and releases the native Objective-C object if owned.
+        /// </summary>
         public void Dispose()
         {
             if (!ownsNativeObject || Handle == IntPtr.Zero) return;
@@ -29,6 +52,9 @@ public static partial class Metal
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Finalizes the ObjCObject instance by disposing it.
+        /// </summary>
         ~ObjCObject() => Dispose();
 
         protected static IntPtr Class(string name) => obcj_getClass(name);

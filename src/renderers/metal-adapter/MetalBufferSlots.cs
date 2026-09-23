@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public static class MetalBufferSlots
+internal static class MetalBufferSlots
 {
     const uint MaxArgumentIndex = 31;   // Metal's per-stage buffer table has 31 entries
 

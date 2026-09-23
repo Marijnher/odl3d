@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalRenderCapabilities : IRenderCapabilities
+internal class MetalRenderCapabilities : IRenderCapabilities
 {
     public bool SupportsWireframe => throw new NotImplementedException();
     public bool SupportsComputeShaders => throw new NotImplementedException();

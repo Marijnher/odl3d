@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalRenderFrame : IRenderFrame
+internal class MetalRenderFrame : IRenderFrame
 {
     private Metal.Device Device;
     private MetalRenderSurface RenderSurface;

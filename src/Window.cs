@@ -21,7 +21,7 @@ public class Window : InputHost
     /// </summary>
     public static IRenderDevice Renderer => _renderer ?? throw new RenderException("Cannot access the global renderer until a Window has been created.");
 
-    private IRenderSurface RenderSurface;
+    internal IRenderSurface RenderSurface;
 
     /// <summary>
     /// The current width of the window in pixels.
@@ -154,7 +154,7 @@ public class Window : InputHost
     /// Enables or disables input handling for the window. When enabled, the window will create an input manager to handle keyboard and mouse events. When disabled, the input manager will be disposed and input handling will be turned off.
     /// </summary>
     /// <param name="enable">True to enable input handling, false to disable it.</param>
-    public override void SetInputEnabled(bool enable)
+    public override void SetEnableInput(bool enable)
     {
         if (enable && InputManager == null)
         {

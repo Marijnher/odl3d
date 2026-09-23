@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalDepthStencilState : IDepthStencilState
+internal class MetalDepthStencilState : IDepthStencilState
 {
     public bool DepthTestEnabled { get; }
     public bool DepthWriteEnabled { get; }

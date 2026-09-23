@@ -2,7 +2,7 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalRenderPass : IRenderPass
+internal class MetalRenderPass : IRenderPass
 {
     private Metal.Device Device;
     private MetalRenderSurface RenderSurface;
@@ -14,7 +14,6 @@ public class MetalRenderPass : IRenderPass
     private MetalRenderPipeline? Pipeline;
     private MetalBuffer? VertexBuffer;
     private MetalBuffer? IndexBuffer;
-    private Metal.PrimitiveType MetalPrimitiveType;
     private MetalTexture? Texture;
     private MetalSampler? Sampler;
 
@@ -37,16 +36,16 @@ public class MetalRenderPass : IRenderPass
         using var renderPass = Device.NewRenderPassDescriptor();
 
         Metal.RenderPassColorAttachment colAtch0 = renderPass.ColorAttachments[0];
-        colAtch0.SetTexture(Drawable.Texture);
-        colAtch0.SetLoadAction(description.Color.LoadAction);
-        colAtch0.SetStoreAction(description.Color.StoreAction);
+        colAtch0.Texture = Drawable.Texture;
+        colAtch0.LoadAction = description.Color.LoadAction;
+        colAtch0.StoreAction = description.Color.StoreAction;
         colAtch0.SetClearColor(description.Color.ClearColor);
 
         Metal.RenderPassDepthAttachment depthAttachment = renderPass.DepthAttachment;
-        depthAttachment.SetTexture(RenderSurface.DepthTexture);
-        depthAttachment.SetLoadAction(description.Depth?.LoadAction ?? LoadAction.Clear);
-        depthAttachment.SetStoreAction(description.Depth?.StoreAction ?? StoreAction.DontCare);
-        depthAttachment.SetClearDepth(description.Depth?.ClearDepth ?? 1.0);
+        depthAttachment.Texture = RenderSurface.DepthTexture;
+        depthAttachment.LoadAction = description.Depth?.LoadAction ?? LoadAction.Clear;
+        depthAttachment.StoreAction = description.Depth?.StoreAction ?? StoreAction.DontCare;
+        depthAttachment.ClearDepth = description.Depth?.ClearDepth ?? 1.0;
 
         Encoder = CommandBuffer.CreateRenderCommandEncoder(renderPass);
     }
@@ -60,14 +59,6 @@ public class MetalRenderPass : IRenderPass
     {
         Pipeline = (MetalRenderPipeline) shaderPipeline;
         Encoder.SetRenderPipelineState(Pipeline.Pipeline);
-        MetalPrimitiveType = Pipeline.Wireframe ? Metal.PrimitiveType.LineStrip : Pipeline.PrimitiveType switch
-        {
-            Renderer.PrimitiveType.LineList => Metal.PrimitiveType.Line,
-            Renderer.PrimitiveType.LineStrip => Metal.PrimitiveType.LineStrip,
-            Renderer.PrimitiveType.TriangleList => Metal.PrimitiveType.Triangle,
-            Renderer.PrimitiveType.TriangleStrip => Metal.PrimitiveType.TriangleStrip,
-            _ => throw new RenderException($"Unsupported primitive type: {Pipeline.PrimitiveType}")
-        };
     }
     public void SetDepthStencilState(IDepthStencilState state)
     {
@@ -140,25 +131,29 @@ public class MetalRenderPass : IRenderPass
     {
         if (Pipeline == null) throw new RenderException("Cannot draw without a valid pipeline attached.");
         PreDraw();
-        Encoder.DrawPrimitives(MetalPrimitiveType, startIndex, vertexCount);
+        Encoder.DrawPrimitives(
+            primitiveType: Pipeline.Wireframe ? PrimitiveType.LineStrip : Pipeline.PrimitiveType,
+            vertexStart: startIndex,
+            vertexCount: vertexCount
+        );
     }
 
     public void DrawIndexed(int startIndex, int indexCount)
     {
         if (VertexBuffer == null) throw new RenderException("Cannot draw without a valid vertex buffer attached.");
         if (IndexBuffer == null) throw new RenderException("Cannot draw without a valid index buffer attached.");
+        if (Pipeline == null) throw new RenderException("Cannot draw without a valid pipeline attached.");
         PreDraw();
         Encoder.DrawIndexedPrimitives(
             indexBuffer: IndexBuffer.Buffer,
             indexCount: (uint) indexCount,
-            indexType: Metal.IndexType.UInt32,
+            indexType: IndexType.UInt32,
             indexBufferOffset: (nuint) startIndex * sizeof(uint),
-            primitiveType: MetalPrimitiveType
+            primitiveType: Pipeline.Wireframe ? PrimitiveType.LineStrip : Pipeline.PrimitiveType
         );
     }
     public void DrawIndexed()
     {
-        if (VertexBuffer == null) throw new RenderException("Cannot draw without a valid vertex buffer attached.");
         if (IndexBuffer == null) throw new RenderException("Cannot draw without a valid index buffer attached.");
         DrawIndexed(0, IndexBuffer.Size);
     }

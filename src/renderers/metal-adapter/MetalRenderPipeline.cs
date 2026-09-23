@@ -4,7 +4,7 @@ using System.IO;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalRenderPipeline : IRenderPipeline
+internal class MetalRenderPipeline : IRenderPipeline
 {
     private Metal.Device Device;
 

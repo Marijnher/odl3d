@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics.Arm;
 
 namespace odl3d.Renderer.MetalAdapter;
 
-public class MetalTexture : ITexture
+internal class MetalTexture : ITexture
 {
     private Metal.Device Device;
     public Metal.Texture Texture;
