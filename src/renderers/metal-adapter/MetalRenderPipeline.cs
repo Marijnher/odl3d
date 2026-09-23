@@ -4,17 +4,43 @@ using System.IO;
 
 namespace odl3d.Renderer.MetalAdapter;
 
+/// <summary>
+/// Represents a Metal render pipeline, encapsulating the pipeline state and associated configurations.
+/// </summary>
 internal class MetalRenderPipeline : IRenderPipeline
 {
     private Metal.Device Device;
 
+    /// <summary>
+    /// Gets the primitive type used by the render pipeline.
+    /// </summary>
     public PrimitiveType PrimitiveType { get; }
+
+    /// <summary>
+    /// Gets the vertex layout description used by the render pipeline.
+    /// </summary>
     public VertexLayoutDescription VertexLayout { get; }
+
+    /// <summary>
+    /// Gets the Metal render pipeline state object associated with this render pipeline.
+    /// </summary>
     public Metal.RenderPipelineState Pipeline { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the render pipeline is configured for wireframe rendering.
+    /// </summary>
     public bool Wireframe { get; set; }
 
+    /// <summary>
+    /// Gets a value indicating whether the render pipeline has been disposed.
+    /// </summary>
     public bool Disposed { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MetalRenderPipeline"/> class with the specified device and pipeline description.
+    /// </summary>
+    /// <param name="device">The Metal device used to create the render pipeline.</param>
+    /// <param name="description">The description of the render pipeline, including shaders, vertex layout, and other configurations.</param>
     public MetalRenderPipeline(Metal.Device device, RenderPipelineDescription description)
     {
         Device = device;
@@ -50,6 +76,9 @@ internal class MetalRenderPipeline : IRenderPipeline
         VertexLayout = description.VertexLayout;
     }
 
+    /// <summary>
+    /// Disposes of the render pipeline and releases any associated resources.
+    /// </summary>
     public void Dispose()
     {
         if (Disposed) return;

@@ -2,6 +2,9 @@ using System;
 
 namespace odl3d.Renderer.MetalAdapter;
 
+/// <summary>
+/// Represents a render pass in the Metal rendering pipeline.
+/// </summary>
 internal class MetalRenderPass : IRenderPass
 {
     private Metal.Device Device;
@@ -17,8 +20,20 @@ internal class MetalRenderPass : IRenderPass
     private MetalTexture? Texture;
     private MetalSampler? Sampler;
 
+    /// <summary>
+    /// Gets a value indicating whether the render pass has been disposed.
+    /// </summary>
     public bool Disposed { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MetalRenderPass"/> class.
+    /// </summary>
+    /// <param name="device">The Metal device associated with the render pass.</param>
+    /// <param name="renderSurface">The render surface associated with the render pass.</param>
+    /// <param name="commandQueue">The command queue used for issuing rendering commands.</param>
+    /// <param name="drawable">The drawable representing the render target.</param>
+    /// <param name="commandBuffer">The command buffer used for encoding rendering commands.</param>
+    /// <param name="description">The description of the render pass to create.</param>
     public MetalRenderPass(
         Metal.Device device,
         MetalRenderSurface renderSurface,
@@ -50,16 +65,34 @@ internal class MetalRenderPass : IRenderPass
         Encoder = CommandBuffer.CreateRenderCommandEncoder(renderPass);
     }
 
+    /// <summary>
+    /// Sets the viewport for the render pass.
+    /// </summary>
+    /// <param name="viewportRect">The rectangle defining the viewport dimensions.</param>
     public void SetViewport(Rect viewportRect) => 
         Encoder.SetViewport(viewportRect.X, viewportRect.Y, viewportRect.Width, viewportRect.Height);
+
+    /// <summary>
+    /// Sets the scissor rectangle for the render pass.
+    /// </summary>
+    /// <param name="scissorRect">The rectangle defining the scissor dimensions.</param>
     public void SetScissor(Rect scissorRect) =>
         Encoder.SetScissorRect((nuint) scissorRect.X, (nuint) scissorRect.Y, (nuint) scissorRect.Width, (nuint) scissorRect.Height);
 
+    /// <summary>
+    /// Sets the render pipeline for the render pass.
+    /// </summary>
+    /// <param name="shaderPipeline">The render pipeline to set for the render pass.</param>
     public void SetRenderPipeline(IRenderPipeline shaderPipeline)
     {
         Pipeline = (MetalRenderPipeline) shaderPipeline;
         Encoder.SetRenderPipelineState(Pipeline.Pipeline);
     }
+
+    /// <summary>
+    /// Sets the depth stencil state for the render pass.
+    /// </summary>
+    /// <param name="state">The depth stencil state to set for the render pass.</param>
     public void SetDepthStencilState(IDepthStencilState state)
     {
         var metalDepthStencil = (MetalDepthStencilState) state;
@@ -108,17 +141,31 @@ internal class MetalRenderPass : IRenderPass
         Encoder.SetFragmentBuffer(buf.Buffer, (nuint) slot, offset);
     }
 
+    /// <summary>
+    /// Sets the texture for the render pass.
+    /// </summary>
+    /// <param name="texture">The texture to set for the render pass.</param>
+    /// <param name="slot">The slot to bind the texture to.</param>
     public void SetTexture(ITexture texture, uint slot = 0)
     {
         Texture = (MetalTexture) texture;
         Encoder.SetFragmentTexture(Texture.Texture, slot);
     }
+
+    /// <summary>
+    /// Sets the sampler for the render pass.
+    /// </summary>
+    /// <param name="sampler">The sampler to set for the render pass.</param>
+    /// <param name="slot">The slot to bind the sampler to.</param>
     public void SetSampler(ISampler sampler, uint slot = 0)
     {
         Sampler = (MetalSampler) sampler;
         Encoder.SetFragmentSamplerState(Sampler.Sampler, slot);
     }
 
+    /// <summary>
+    /// Prepares the render pass for drawing by validating mipmaps if necessary.
+    /// </summary>
     void PreDraw()
     {
         if (Texture != null && Sampler != null && Sampler.MipmapFilter != MipmapFilter.None)
@@ -127,6 +174,12 @@ internal class MetalRenderPass : IRenderPass
         }
     }
 
+    /// <summary>
+    /// Draws primitives using the specified start index and vertex count.
+    /// </summary>
+    /// <param name="startIndex">The starting index of the vertices to draw.</param>
+    /// <param name="vertexCount">The number of vertices to draw.</param>
+    /// <exception cref="RenderException"></exception>
     public void Draw(int startIndex, int vertexCount)
     {
         if (Pipeline == null) throw new RenderException("Cannot draw without a valid pipeline attached.");
@@ -138,6 +191,12 @@ internal class MetalRenderPass : IRenderPass
         );
     }
 
+    /// <summary>
+    /// Draws indexed primitives using the specified start index and index count.
+    /// </summary>
+    /// <param name="startIndex">The starting index of the indices to draw.</param>
+    /// <param name="indexCount">The number of indices to draw.</param>
+    /// <exception cref="RenderException"></exception>
     public void DrawIndexed(int startIndex, int indexCount)
     {
         if (VertexBuffer == null) throw new RenderException("Cannot draw without a valid vertex buffer attached.");
@@ -152,14 +211,24 @@ internal class MetalRenderPass : IRenderPass
             primitiveType: Pipeline.Wireframe ? PrimitiveType.LineStrip : Pipeline.PrimitiveType
         );
     }
+    /// <summary>
+    /// Draws all indexed primitives from the beginning of the index buffer.
+    /// </summary>
+    /// <exception cref="RenderException"></exception>
     public void DrawIndexed()
     {
         if (IndexBuffer == null) throw new RenderException("Cannot draw without a valid index buffer attached.");
         DrawIndexed(0, IndexBuffer.Size);
     }
 
+    /// <summary>
+    /// Ends the current render pass by ending the encoding of commands.
+    /// </summary>
     public void End() => Encoder.EndEncoding();
 
+    /// <summary>
+    /// Disposes of the render pass and releases any associated resources.
+    /// </summary>
     public void Dispose() 
     {
         if (Disposed) return;
