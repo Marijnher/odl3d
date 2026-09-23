@@ -2,10 +2,19 @@ using System;
 
 namespace odl3d.Renderer.OpenGLAdapter;
 
-public struct VertexSlot { public uint ID; public uint Offset; }
+/// <summary>
+/// Represents a vertex buffer slot, including its ID and offset within the buffer.
+/// </summary>
+internal struct VertexSlot { public uint ID; public uint Offset; }
 
-public sealed class GLVertexState
+/// <summary>
+/// Represents the state of the OpenGL vertex array, including the currently bound vertex layout, vertex buffer slots, and index buffer.
+/// </summary>
+internal sealed class GLVertexState
 {
+    /// <summary>
+    /// Gets the ID of the OpenGL vertex array object (VAO).
+    /// </summary>
     public uint Vao { get; }
 
     GLVertexLayout? _layout;
@@ -14,6 +23,9 @@ public sealed class GLVertexState
     uint _arrayBuffer;
     uint _elementBuffer;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GLVertexState"/> class and creates a new OpenGL vertex array object (VAO).
+    /// </summary>
     public GLVertexState()
     {
         GL.glGenVertexArrays(1, out uint vao);
@@ -21,6 +33,11 @@ public sealed class GLVertexState
         GL.glBindVertexArray(Vao);            // stays bound for the device's lifetime
     }
 
+    /// <summary>
+    /// Applies the specified vertex layout and pending vertex buffer slots to the OpenGL vertex array state.
+    /// </summary>
+    /// <param name="layout">The vertex layout to apply.</param>
+    /// <param name="pending">The array of pending vertex buffer slots to apply.</param>
     public void Apply(GLVertexLayout layout, VertexSlot[] pending)
     {
         bool layoutChanged = !ReferenceEquals(layout, _layout);
@@ -63,6 +80,10 @@ public sealed class GLVertexState
         _layout = layout;
     }
 
+    /// <summary>
+    /// Binds the specified index buffer to the OpenGL vertex array state.
+    /// </summary>
+    /// <param name="id">The ID of the index buffer to bind.</param>
     public void BindIndexBuffer(uint id)
     {
         if (_elementBuffer == id) return;
@@ -70,7 +91,10 @@ public sealed class GLVertexState
         _elementBuffer = id;
     }
 
-    // Call right before glDeleteBuffers, on the GL thread.
+    /// <summary>
+    /// Handles the deletion of a buffer by updating the OpenGL vertex array state accordingly.
+    /// </summary>
+    /// <param name="id">The ID of the buffer that was deleted.</param>
     public void OnBufferDeleted(uint id)
     {
         for (int i = 0; i < _slots.Length; i++)

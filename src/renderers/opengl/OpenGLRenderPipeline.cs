@@ -3,18 +3,51 @@ using System.Linq;
 
 namespace odl3d.Renderer.OpenGLAdapter;
 
-public class OpenGLRenderPipeline : IRenderPipeline
+/// <summary>
+/// Represents an OpenGL render pipeline, encapsulating the configuration and state required for rendering with OpenGL.
+/// </summary>
+internal class OpenGLRenderPipeline : IRenderPipeline
 {
+    /// <summary>
+    /// Gets the handle of the OpenGL program associated with this render pipeline.
+    /// </summary>
     public uint Handle { get; }
+
+    /// <summary>
+    /// Gets the OpenGL vertex layout associated with this render pipeline.
+    /// </summary>
     public GLVertexLayout GLLayout { get; }
 
+    /// <summary>
+    /// Gets the primitive type used by this render pipeline.
+    /// </summary>
     public PrimitiveType PrimitiveType { get; }
+
+    /// <summary>
+    /// Gets the vertex layout description used by this render pipeline.
+    /// </summary>
     public VertexLayoutDescription VertexLayout { get; }
+
+    /// <summary>
+    /// Gets the blend description used by this render pipeline.
+    /// </summary>
     public BlendDescription Blend { get; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether wireframe mode is enabled for this render pipeline.
+    /// </summary>
     public bool Wireframe { get; set; }
 
+    /// <summary>
+    /// Gets a value indicating whether this render pipeline has been disposed.
+    /// </summary>
     public bool Disposed { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OpenGLRenderPipeline"/> class with the specified render pipeline description.
+    /// </summary>
+    /// <param name="description">The description of the render pipeline to initialize.</param>
+    /// <exception cref="RenderException">Thrown if the OpenGL program fails to link or if uniform block slots are out of range.</exception>
     public OpenGLRenderPipeline(RenderPipelineDescription description)
     {
         PrimitiveType = description.PrimitiveType;
@@ -52,6 +85,9 @@ public class OpenGLRenderPipeline : IRenderPipeline
         GLLayout = new GLVertexLayout(VertexLayout);
     }
 
+    /// <summary>
+    /// Uses the render pipeline by setting the OpenGL program and configuring the blend state.
+    /// </summary>
     public void Use()
     {
         GL.glUseProgram(Handle);
@@ -72,7 +108,7 @@ public class OpenGLRenderPipeline : IRenderPipeline
             GetBlendOperation(Blend.AlphaOperation));
     }
 
-    static uint GetBlendFactor(BlendFactor f) => f switch
+    private static uint GetBlendFactor(BlendFactor f) => f switch
     {
         BlendFactor.Zero                     => GL.GL_ZERO,
         BlendFactor.One                      => GL.GL_ONE,
@@ -96,7 +132,7 @@ public class OpenGLRenderPipeline : IRenderPipeline
         _ => throw new RenderException($"Unsupported blend factor: {f}.")
     };
 
-    static uint GetBlendOperation(BlendOperation op) => op switch
+    private static uint GetBlendOperation(BlendOperation op) => op switch
     {
         BlendOperation.Add              => GL.GL_FUNC_ADD,
         BlendOperation.Subtract         => GL.GL_FUNC_SUBTRACT,
@@ -106,6 +142,9 @@ public class OpenGLRenderPipeline : IRenderPipeline
         _ => throw new RenderException($"Unsupported blend operation: {op}.")
     };
 
+    /// <summary>
+    /// Disposes of the render pipeline, releasing any associated OpenGL resources.
+    /// </summary>
     public void Dispose()
     {
         if (Disposed) return;

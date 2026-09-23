@@ -2,24 +2,65 @@ using System;
 
 namespace odl3d.Renderer.OpenGLAdapter;
 
-public class OpenGLSampler : ISampler
+/// <summary>
+/// Represents an OpenGL sampler object that encapsulates texture sampling state.
+/// </summary>
+internal class OpenGLSampler : ISampler
 {
+    /// <summary>
+    /// Gets the handle to the OpenGL sampler object.
+    /// </summary>
     public uint Handle { get; }
 
+    /// <summary>
+    /// Gets the texture minification filter of the sampler.
+    /// </summary>
     public TextureFilter MinFilter { get; }
+
+    /// <summary>
+    /// Gets the texture magnification filter of the sampler.
+    /// </summary>
     public TextureFilter MagFilter { get; }
+
+    /// <summary>
+    /// Gets the mipmap filter of the sampler.
+    /// </summary>
     public MipmapFilter MipmapFilter { get; }
 
+    /// <summary>
+    /// Gets the texture wrap mode for the U coordinate of the sampler.
+    /// </summary>
     public TextureWrap WrapU { get; }
+
+    /// <summary>
+    /// Gets the texture wrap mode for the V coordinate of the sampler.
+    /// </summary>
     public TextureWrap WrapV { get; }
+
+    /// <summary>
+    /// Gets the texture wrap mode for the W coordinate of the sampler.
+    /// </summary>
     public TextureWrap WrapW { get; }
 
+    /// <summary>
+    /// Gets the anisotropic filtering level of the sampler.
+    /// </summary>
     public AnisotropicFilter Anisotropy { get; }
 
+    /// <summary>
+    /// Gets the comparison function of the sampler, if any.
+    /// </summary>
     public CompareFunction? Comparison { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the sampler has been disposed.
+    /// </summary>
     public bool Disposed { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OpenGLSampler"/> class with the specified sampler description.
+    /// </summary>
+    /// <param name="description">The description of the sampler to create.</param>
     public OpenGLSampler(SamplerDescription description)
     {
         MinFilter = description.MinFilter;
@@ -82,6 +123,9 @@ public class OpenGLSampler : ISampler
         _ => throw new RenderException($"Unsupported comparison function {comparison}")
     };
 
+    /// <summary>
+    /// Disposes the sampler and releases its resources.
+    /// </summary>
     public void Dispose()
     {
         if (Disposed) return;

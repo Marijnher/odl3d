@@ -3,10 +3,16 @@ using System.Runtime.CompilerServices;
 
 namespace odl3d.Renderer.OpenGLAdapter;
 
-public class OpenGLRenderPass : IRenderPass
+/// <summary>
+/// Represents an OpenGL render pass, managing the state and resources required for rendering operations.
+/// </summary>
+internal class OpenGLRenderPass : IRenderPass
 {
     private OpenGLRenderSurface RenderSurface { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the render pass has been disposed.
+    /// </summary>
     public bool Disposed { get; private set; }
 
     private VertexSlot[] _vbSlots = new VertexSlot[GLVertexLayout.MaxSlots];
@@ -21,6 +27,12 @@ public class OpenGLRenderPass : IRenderPass
     private OpenGLTexture? Texture;
     private OpenGLSampler? Sampler;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OpenGLRenderPass"/> class.
+    /// </summary>
+    /// <param name="renderSurface">The render surface associated with this render pass.</param>
+    /// <param name="vertexState">The initial vertex state for the render pass.</param>
+    /// <param name="description">The description of the render pass.</param>
     public OpenGLRenderPass(OpenGLRenderSurface renderSurface, GLVertexState vertexState, RenderPassDescription description)
     {
         RenderSurface = renderSurface;
@@ -42,11 +54,20 @@ public class OpenGLRenderPass : IRenderPass
         if (clearFlags != 0) GL.glClear(clearFlags);
     }
 
+    /// <summary>
+    /// Sets the viewport for the render pass.
+    /// </summary>
+    /// <param name="viewportRect">The rectangle defining the viewport dimensions and position.</param>
     public void SetViewport(Rect viewportRect)
     {
         float y = RenderSurface.Height - (viewportRect.Y + viewportRect.Height);
         GL.glViewport((int) viewportRect.X, (int) y, (int) viewportRect.Width, (int) viewportRect.Height);
     }
+
+    /// <summary>
+    /// Sets the scissor rectangle for the render pass.
+    /// </summary>
+    /// <param name="scissorRect">The rectangle defining the scissor area dimensions and position.</param>
     public void SetScissor(Rect scissorRect)
     {
         GL.glEnable(GL.GL_SCISSOR_TEST);
@@ -54,12 +75,21 @@ public class OpenGLRenderPass : IRenderPass
         GL.glScissor((int) scissorRect.X, (int) y, (int) scissorRect.Width, (int) scissorRect.Height);
     }
 
+    /// <summary>
+    /// Sets the render pipeline for the render pass.
+    /// </summary>
+    /// <param name="shaderPipeline">The render pipeline to set for the render pass.</param>
     public void SetRenderPipeline(IRenderPipeline shaderPipeline)
     {
         _renderPipeline = (OpenGLRenderPipeline) shaderPipeline;
         _renderPipeline.Use();
         _vertexStateDirty = true;
     }
+
+    /// <summary>
+    /// Sets the depth-stencil state for the render pass.
+    /// </summary>
+    /// <param name="state">The depth-stencil state to set for the render pass.</param>
     public void SetDepthStencilState(IDepthStencilState state)
     {
         if (state.DepthTestEnabled || state.DepthWriteEnabled) GL.glEnable(GL.GL_DEPTH_TEST);
@@ -72,6 +102,13 @@ public class OpenGLRenderPass : IRenderPass
             : GL.GL_ALWAYS);
     }
 
+    /// <summary>
+    /// Sets the vertex buffer for the render pass.
+    /// </summary>
+    /// <typeparam name="T">The type of the vertex buffer elements.</typeparam>
+    /// <param name="buffer">The vertex buffer to set for the render pass.</param>
+    /// <param name="slot">The slot index to bind the vertex buffer to.</param>
+    /// <param name="offset">The offset within the vertex buffer.</param>
     public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
         var b = (OpenGLBuffer<T>) buffer;
@@ -79,6 +116,12 @@ public class OpenGLRenderPass : IRenderPass
         _vertexStateDirty = true;
     }
     
+    /// <summary>
+    /// Sets the index buffer for the render pass.
+    /// </summary>
+    /// <typeparam name="T">The type of the index buffer elements.</typeparam>
+    /// <param name="buffer">The index buffer to set for the render pass.</param>
+    /// <exception cref="RenderException">Thrown if the buffer is not an index buffer or if the type is unsupported.</exception>
     public unsafe void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged
     {
         var b = (OpenGLBuffer<T>) buffer;
@@ -95,6 +138,15 @@ public class OpenGLRenderPass : IRenderPass
         _indexSize = sizeof(T);
         _indexCount = b.Size;
     }
+
+    /// <summary>
+    /// Sets the uniform buffer for the render pass.
+    /// </summary>
+    /// <typeparam name="T">The type of the uniform buffer elements.</typeparam>
+    /// <param name="buffer">The uniform buffer to set for the render pass.</param>
+    /// <param name="slot">The slot index to bind the uniform buffer to.</param>
+    /// <param name="offset">The offset within the uniform buffer.</param>
+    /// <exception cref="RenderException">Thrown if the buffer is not a uniform buffer or if the offset is invalid.</exception>
     public unsafe void SetUniformBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
         if ((uint) slot >= BufferSlots.MaxUniformBuffers)
@@ -112,18 +164,32 @@ public class OpenGLRenderPass : IRenderPass
         GL.glBindBufferRange(GL.GL_UNIFORM_BUFFER, (uint) slot, b.Handle, (nint) offset, size);
     }
 
+    /// <summary>
+    /// Sets the texture for the render pass.
+    /// </summary>
+    /// <param name="texture">The texture to set for the render pass.</param>
+    /// <param name="slot">The texture slot to bind the texture to.</param>
     public void SetTexture(ITexture texture, uint slot = 0)
     {
         Texture = (OpenGLTexture) texture;
         GL.glActiveTexture(GL.GL_TEXTURE0 + slot);
         GL.glBindTexture(GL.GL_TEXTURE_2D, Texture.Handle);
     }
+
+    /// <summary>
+    /// Sets the sampler for the render pass.
+    /// </summary>
+    /// <param name="sampler">The sampler to set for the render pass.</param>
+    /// <param name="slot">The sampler slot to bind the sampler to.</param>
     public void SetSampler(ISampler sampler, uint slot = 0)
     {
         Sampler = (OpenGLSampler) sampler;
         GL.glBindSampler(slot, Sampler.Handle);
     }
 
+    /// <summary>
+    /// Prepares the render pass for drawing by validating mipmaps if necessary.
+    /// </summary>
     void PreDraw()
     {
         if (Texture != null && Sampler != null && Sampler.MipmapFilter != MipmapFilter.None)
@@ -132,6 +198,11 @@ public class OpenGLRenderPass : IRenderPass
         }
     }
 
+    /// <summary>
+    /// Draws non-indexed primitives using the specified start index and vertex count.
+    /// </summary>
+    /// <param name="startIndex">The starting index of the vertices to draw.</param>
+    /// <param name="vertexCount">The number of vertices to draw.</param>
     public void Draw(int startIndex, int vertexCount)
     {
         FlushVertexState();
@@ -139,6 +210,12 @@ public class OpenGLRenderPass : IRenderPass
         PrimitiveType primitiveType = _renderPipeline!.Wireframe ? PrimitiveType.LineStrip : _renderPipeline!.PrimitiveType;
         GL.glDrawArrays(GetPrimitiveType(primitiveType), startIndex, vertexCount);
     }
+
+    /// <summary>
+    /// Draws indexed primitives using the specified start index and index count.
+    /// </summary>
+    /// <param name="startIndex">The starting index of the indices to draw.</param>
+    /// <param name="indexCount">The number of indices to draw.</param>
     public void DrawIndexed(int startIndex, int indexCount)
     {
         FlushVertexState();
@@ -148,8 +225,15 @@ public class OpenGLRenderPass : IRenderPass
         GL.glDrawElements(GetPrimitiveType(primitiveType), indexCount, _indexType,
                         startIndex * _indexSize);
     }
+
+    /// <summary>
+    /// Draws all indexed primitives using the default start index and the total index count.
+    /// </summary>
     public void DrawIndexed() => DrawIndexed(0, _indexCount);
 
+    /// <summary>
+    /// Flushes the current vertex state to ensure it is up-to-date before drawing.
+    /// </summary>
     private void FlushVertexState()
     {
         if (!_vertexStateDirty) return;
@@ -157,6 +241,9 @@ public class OpenGLRenderPass : IRenderPass
         _vertexStateDirty = false;
     }
 
+    /// <summary>
+    /// Ends the current render pass by unbinding resources and resetting the OpenGL state.
+    /// </summary>
     public void End()
     {
         GL.glDisable(GL.GL_BLEND);
@@ -168,6 +255,9 @@ public class OpenGLRenderPass : IRenderPass
         GL.glUseProgram(0);
     }
 
+    /// <summary>
+    /// Disposes of the render pass, releasing any associated resources.
+    /// </summary>
     public void Dispose()
     {
         if (Disposed) return;

@@ -2,25 +2,58 @@ using System;
 
 namespace odl3d.Renderer.OpenGLAdapter;
 
-public class OpenGLTexture : ITexture
+/// <summary>
+/// Represents an OpenGL texture, encapsulating its handle, dimensions, format, usage, and related information.
+/// </summary>
+internal class OpenGLTexture : ITexture
 {
+    /// <summary>
+    /// Gets the handle of the OpenGL texture.
+    /// </summary>
     public uint Handle { get; }
 
+    /// <summary>
+    /// Gets the width of the texture in pixels.
+    /// </summary>
     public uint Width { get; }
+
+    /// <summary>
+    /// Gets the height of the texture in pixels.
+    /// </summary>
     public uint Height { get; }
+
+    /// <summary>
+    /// Gets the depth of the texture in pixels.
+    /// </summary>
     public int Depth { get; }
 
+    /// <summary>
+    /// Gets the format of the texture.
+    /// </summary>
     public TextureFormat Format { get; }
+
+    /// <summary>
+    /// Gets the usage flags of the texture.
+    /// </summary>
     public TextureUsage Usage { get; }
 
+    /// <summary>
+    /// Gets the number of samples per texel for multisampled textures.
+    /// </summary>
     public int SampleCount { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the texture has been disposed.
+    /// </summary>
     public bool Disposed { get; private set; }
-    
+
+    /// <summary>
+    /// Gets a value indicating whether the texture has valid mipmaps.
+    /// </summary>
     private bool HasValidMipmaps;
 
     /// <summary>
-    /// Creates a new OpenGL texture with the specified description and optional initial data.
+    /// Initializes a new instance of the <see cref="OpenGLTexture"/> class with the specified description and optional initial data.
     /// </summary>
     /// <param name="description">The description of the texture to create.</param>
     /// <param name="initialData">Optional initial data to upload to the texture.</param>
@@ -60,6 +93,9 @@ public class OpenGLTexture : ITexture
         HasValidMipmaps = false;
     }
 
+    /// <summary>
+    /// Validates the mipmaps for the texture, generating them if they are not already valid.
+    /// </summary>
     public void ValidateMipmaps()
     {
         if (HasValidMipmaps) return;
@@ -123,6 +159,9 @@ public class OpenGLTexture : ITexture
         _ => throw new NotSupportedException(f.ToString())
     };
 
+    /// <summary>
+    /// Disposes of the OpenGL texture, releasing its resources.
+    /// </summary>
     public void Dispose()
     {
         if (Disposed) return;

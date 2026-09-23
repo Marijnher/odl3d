@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Threading;
 using odl3d;
-using odl3d.Renderer;
-using odl3d.Renderer.OpenGLAdapter;
 
 namespace odl3ddemo;
 
@@ -12,7 +8,8 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        using Window window = new Window(800, 600, "odl3d", RenderTarget.Metal);
+        var renderer = RenderTarget.OpenGL;
+        using Window window = new Window(800, 600, "odl3d", renderer);
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window)
         {
