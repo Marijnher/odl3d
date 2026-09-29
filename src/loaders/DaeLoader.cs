@@ -17,7 +17,8 @@ public static class DaeLoader
     /// <summary>
     /// Gets or sets the default texture wrap mode to use when loading textures from DAE files.
     /// </summary>
-    public static TextureWrap DefaultTextureWrap { get; set; } = TextureWrap.Repeat;
+    public static TextureWrap DefaultTextureWrapS { get; set; } = TextureWrap.Repeat;
+    public static TextureWrap DefaultTextureWrapT { get; set; } = TextureWrap.Mirror;
 
     private readonly record struct VertexKey(int Position, int TexCoord);
 
@@ -43,8 +44,8 @@ public static class DaeLoader
     private sealed class MaterialData
     {
         public string? TexturePath;
-        public TextureWrap WrapS = DefaultTextureWrap;
-        public TextureWrap WrapT = DefaultTextureWrap;
+        public TextureWrap WrapS = DefaultTextureWrapS;
+        public TextureWrap WrapT = DefaultTextureWrapT;
         public bool Transparent;
     }
 
@@ -350,8 +351,8 @@ public static class DaeLoader
         }
 
         result.TexturePath = texturePath;
-        result.WrapS = ParseWrap(sampler.Elements().FirstOrDefault(x => x.Name.LocalName == "wrap_s")?.Value);
-        result.WrapT = ParseWrap(sampler.Elements().FirstOrDefault(x => x.Name.LocalName == "wrap_t")?.Value);
+        result.WrapS = ParseWrap(sampler.Elements().FirstOrDefault(x => x.Name.LocalName == "wrap_s")?.Value, DefaultTextureWrapS);
+        result.WrapT = ParseWrap(sampler.Elements().FirstOrDefault(x => x.Name.LocalName == "wrap_t")?.Value, DefaultTextureWrapT);
         return result;
     }
 
@@ -587,7 +588,7 @@ public static class DaeLoader
         return element.Name.LocalName is "triangles" or "polylist" or "polygons";
     }
 
-    private static TextureWrap ParseWrap(string? value)
+    private static TextureWrap ParseWrap(string? value, TextureWrap defaultWrap)
     {
         return value?.ToUpperInvariant() switch
         {
@@ -595,7 +596,7 @@ public static class DaeLoader
             "MIRROR" => TextureWrap.Mirror,
             "CLAMP" => TextureWrap.Clamp,
             "BORDER" => throw new FileLoadException("Border wrap mode is not supported."),
-            _ => DefaultTextureWrap
+            _ => defaultWrap
         };
     }
 
