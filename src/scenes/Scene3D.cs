@@ -26,7 +26,7 @@ public class Scene3D : Scene<Object3D>
     public unsafe override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
-        UpdateViewProjBuffer(pass);
+        UpdateSceneShaderData(pass);
         for (int i = 0; i < Objects.Count; i++)
         {
             Object3D obj = Objects[i];

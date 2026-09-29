@@ -16,8 +16,8 @@ layout(std140, binding = 0) uniform ObjectData
 
 layout(std140, binding = 1) uniform SceneData
 {
-    mat4 view;
     mat4 projection;
+    mat4 view;
 } scene;
 
 void main()

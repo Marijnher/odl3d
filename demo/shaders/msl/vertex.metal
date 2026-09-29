@@ -9,8 +9,8 @@ struct VertexIn
 
 struct SceneData
 {
-    float4x4 view;
     float4x4 projection;
+    float4x4 view;
 };
 
 struct ObjectData
