@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -33,10 +34,14 @@ public class TextBillboard : RasterizedText
     /// </summary>
     public bool FaceCamera = true;
 
-    /// <summary>The width of this text in world units.</summary>
+    /// <summary>
+    /// The width of this text in world units.
+    /// </summary>
     public float Width => PixelWidth / PixelsPerWorldUnit;
 
-    /// <summary>The height of this text in world units.</summary>
+    /// <summary>
+    /// The height of this text in world units.
+    /// </summary>
     public float Height => PixelHeight / PixelsPerWorldUnit;
 
     /// <summary>
@@ -58,6 +63,8 @@ public class TextBillboard : RasterizedText
         Mesh = MeshBuilder.CreateQuad();
         AutoDisposeMesh = false;
         Rebuild();
+        Sampler.WrapU = TextureWrap.Clamp;
+        Sampler.WrapV = TextureWrap.Clamp;
     }
 
     /// <summary>
@@ -99,15 +106,5 @@ public class TextBillboard : RasterizedText
             down.X, down.Y, down.Z, 0f,
             back.X, back.Y, back.Z, 0f,
             0f, 0f, 0f, 1f);
-    }
-
-    /// <summary>
-    /// Called when the texture for this text is rebuilt. This method is used to configure the texture's wrapping behavior.
-    /// </summary>
-    protected override void OnTextureRebuilt()
-    {
-        if (Texture == null) return;
-        Texture.WrapModeH = TextureWrap.Clamp;
-        Texture.WrapModeV = TextureWrap.Clamp;
     }
 }

@@ -10,7 +10,18 @@ namespace odl3d;
 [Flags]
 public enum FontStyle
 {
+    /// <summary>
+    /// The regular style with no additional emphasis.
+    /// </summary>
     Regular = 0,
+
+    /// <summary>
+    /// The bold style, typically used for emphasis.
+    /// </summary>
     Bold = 1,
+
+    /// <summary>
+    /// The italic style, typically used for emphasis.
+    /// </summary>
     Italic = 2
 }

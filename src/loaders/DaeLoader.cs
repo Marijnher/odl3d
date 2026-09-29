@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Xml.Linq;
+using odl3d.Renderer;
 
 namespace odl3d.Loaders;
 
@@ -13,6 +14,11 @@ namespace odl3d.Loaders;
 /// </summary>
 public static class DaeLoader
 {
+    /// <summary>
+    /// Gets or sets the default texture wrap mode to use when loading textures from DAE files.
+    /// </summary>
+    public static TextureWrap DefaultTextureWrap { get; set; } = TextureWrap.Repeat;
+
     private readonly record struct VertexKey(int Position, int TexCoord);
 
     private sealed class SourceData
@@ -37,8 +43,8 @@ public static class DaeLoader
     private sealed class MaterialData
     {
         public string? TexturePath;
-        public TextureWrap WrapS = TextureWrap.Repeat;
-        public TextureWrap WrapT = TextureWrap.Repeat;
+        public TextureWrap WrapS = DefaultTextureWrap;
+        public TextureWrap WrapT = DefaultTextureWrap;
         public bool Transparent;
     }
 
@@ -46,6 +52,7 @@ public static class DaeLoader
     {
         public Mesh Mesh = null!;
         public Texture? Texture;
+        public Sampler? Sampler;
         public bool Transparent;
         public Matrix4x4 LocalTransform = Matrix4x4.Identity;
     }
@@ -67,7 +74,7 @@ public static class DaeLoader
     /// The returned arrays are ordered such that opaque parts come before transparent parts.
     /// </remarks>
     /// <returns>A tuple containing an array of loaded meshes and an array of corresponding textures.</returns>
-    public static (Mesh[] Meshes, Texture?[] Textures, Matrix4x4[] LocalTransforms) Load(string filename, string? textureFolder = null, float scale = 1f)
+    public static (Mesh[] Meshes, Texture?[] Textures, Sampler?[] samplers, Matrix4x4[] LocalTransforms) Load(string filename, string? textureFolder = null, float scale = 1f)
     {
         XDocument document = XDocument.Load(filename);
         string baseFolder = textureFolder ?? Path.GetDirectoryName(filename) ?? ".";
@@ -111,6 +118,7 @@ public static class DaeLoader
         (
             orderedParts.Select(part => part.Mesh).ToArray(),
             orderedParts.Select(part => part.Texture).ToArray(),
+            orderedParts.Select(part => part.Sampler).ToArray(),
             orderedParts.Select(part => part.LocalTransform).ToArray()
         );
     }
@@ -141,10 +149,12 @@ public static class DaeLoader
 
             (float[] meshVertices, uint[] indices) = BuildPrimitive(primitive, sources, vertices, scale);
 
+            (Texture? texture, Sampler? sampler) = material?.TexturePath == null ? (null, null) : LoadTexture(textureFolder, material);
             yield return new LoadedPart
             {
                 Mesh = new Mesh(meshVertices, indices),
-                Texture = material?.TexturePath == null ? null : LoadTexture(textureFolder, material),
+                Texture = texture,
+                Sampler = sampler,
                 Transparent = material?.Transparent ?? false,
                 LocalTransform = localTransform
             };
@@ -557,16 +567,19 @@ public static class DaeLoader
             : ParseInts(primitive.Elements().First(x => x.Name.LocalName == "p").Value);
     }
 
-    private static Texture LoadTexture(string textureFolder, MaterialData material)
+    private static (Texture, Sampler) LoadTexture(string textureFolder, MaterialData material)
     {
         string texturePath = Uri.UnescapeDataString(material.TexturePath!.Replace('/', Path.DirectorySeparatorChar));
         string filename = Path.IsPathRooted(texturePath) ? texturePath : Path.Combine(textureFolder, texturePath);
 
-        return new Texture(filename)
+        Texture texture = new Texture(filename);
+        Sampler sampler = new Sampler
         {
-            WrapModeH = material.WrapS,
-            WrapModeV = material.WrapT
+            WrapU = material.WrapS,
+            WrapV = material.WrapT
         };
+
+        return (texture, sampler);
     }
 
     private static bool IsSupportedPrimitive(XElement element)
@@ -582,7 +595,7 @@ public static class DaeLoader
             "MIRROR" => TextureWrap.Mirror,
             "CLAMP" => TextureWrap.Clamp,
             "BORDER" => throw new FileLoadException("Border wrap mode is not supported."),
-            _ => TextureWrap.Mirror
+            _ => DefaultTextureWrap
         };
     }
 

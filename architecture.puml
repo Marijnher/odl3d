@@ -33,18 +33,28 @@ package "Drawables and resources" {
   component "Text2D / Text3D" as text
   component "Mesh" as mesh
   component "Texture" as texture
+  component "Sampler" as sampler
   component "ShaderProgram" as shader
   component "Font" as font
+  component "ObjectShaderData" as objdata
 }
 
-package "Renderer abstraction" {
-  interface "IRenderer" as renderer
+package "Renderer abstraction" as renderer{
+  interface "IRenderDevice" as device
   component "RenderFactory" as factory
-  component "OpenGL" as opengl
+  component "OpenGLRenderDevice" as opengl
+  component "MetalRenderDevice" as metal
+  component "VulkanRenderDevice" as vulkan
+  component "Direct12RenderDevice" as direct12
 }
 
-app --> factory : Create("opengl")
-app --> window : create / Render()
+package "Shaders" as shaders {
+  component "GLSL" as glsl
+  component "MSL" as msl
+}
+
+app --> factory : renderer
+app --> window : create / render
 window --> camera
 window o-- scene : manages
 
@@ -52,6 +62,7 @@ scene3d --|> scene
 scene2d --|> scene
 scene3d --> camera : view
 scene o-- object3d : contains
+scene -right-> shaders
 
 model --|> object3d
 sprites --|> object3d
@@ -59,13 +70,19 @@ text --|> object3d
 object3d --> mesh
 object3d --> texture
 object3d --> shader
+object3d --> sampler
+object3d --> device
+object3d --> objdata
 text --> font
 
-factory --> renderer : active backend
-renderer <|.. opengl
-mesh --> renderer
-texture --> renderer
-shader --> renderer
+factory --> device : active backend
+device <|.. opengl
+device <|.down. metal
+device <|.right. vulkan
+device <|.down. direct12
+
+objdata -right-> shaders
+device --> shaders
 
 note right of app
   Typical flow:

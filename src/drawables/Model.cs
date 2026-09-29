@@ -2,6 +2,8 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using odl3d.Loaders;
+using odl3d.Renderer;
+using System.Linq;
 
 namespace odl3d;
 
@@ -28,9 +30,10 @@ public class ModelPart : Object3D
     /// <param name="mesh">The mesh for this part.</param>
     /// <param name="texture">The texture for this part.</param>
     /// <param name="localTransform">The local transformation matrix for this part.</param>
-    public ModelPart(Model parent, Scene<Object3D> scene, Mesh mesh, Texture? texture, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
+    public ModelPart(Model parent, Scene<Object3D> scene, Mesh mesh, Texture? texture, Sampler? sampler, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
     {
         Parent = parent;
+        Sampler = sampler ?? new Sampler();
         LocalTransform = localTransform;
     }
 
@@ -50,6 +53,16 @@ public class Model : Object3D
     /// The list of sub-objects that make up this 3D model. Each sub-object has its own mesh and texture.
     /// </summary>
     protected List<Object3D> Objects = new List<Object3D>();
+
+    /// <summary>
+    /// The array of object shader data for all sub-objects in the model. This array is used to store the latest shader data for each sub-object before it is uploaded to the GPU buffer.
+    /// </summary>
+    protected ObjectShaderData[] ObjectShaderDataArray;
+
+    /// <summary>
+    /// The GPU buffer that stores the object shader data for all sub-objects in the model. This buffer is updated with the latest data from the ObjectShaderDataArray before rendering.
+    /// </summary>
+    protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
 
     /// <summary>
     /// The total number of vertices rendered by this model's mesh parts.
@@ -73,16 +86,22 @@ public class Model : Object3D
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Matrix4x4[]? localTransforms = null) : base(scene)
+    public Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null) : base(scene)
     {
         for (int i = 0; i < meshes.Length; i++)
         {
             Matrix4x4 localTransform = localTransforms != null && i < localTransforms.Length
                 ? localTransforms[i]
                 : Matrix4x4.Identity;
-            Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], localTransform);
+            Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], samplers?[i], localTransform);
             Objects.Add(obj);
         }
+        ObjectShaderDataArray = new ObjectShaderData[meshes.Length];
+        ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
+        {
+            Size = meshes.Length,
+            Usage = BufferUsage.Uniform
+        });
     }
 
     /// <summary>
@@ -96,8 +115,8 @@ public class Model : Object3D
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
         if (daeFolder == null) throw new ArgumentException("Invalid filename: " + filename);
-        (Mesh[] meshes, Texture?[] textures, Matrix4x4[] localTransforms) = DaeLoader.Load(filename, daeFolder);
-        return new Model(scene, meshes, textures, localTransforms);
+        (Mesh[] meshes, Texture?[] textures, Sampler?[] samplers, Matrix4x4[] localTransforms) = DaeLoader.Load(filename, daeFolder);
+        return new Model(scene, meshes, textures, samplers,localTransforms);
     }
 
     /// <summary>
@@ -140,20 +159,39 @@ public class Model : Object3D
     }
 
     /// <summary>
+    /// Binds the object shader data to the GPU buffer, updating it with the latest data from all objects in the model.
+    /// </summary>
+    public void BindObjectShaderData()
+    {
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            ObjectShaderDataArray[i] = Objects[i].GetShaderData();
+        }
+        ObjectShaderDataBuffer.SetData(ObjectShaderDataArray, 0, Objects.Count);
+    }
+
+    /// <summary>
     /// Draws the model using the specified shader and view-projection matrix. Sub-objects are filtered by the given render pass so opaque and transparent parts can be drawn in separate passes across the whole scene.
     /// </summary>
     /// <param name="shader">The shader to use for rendering the model.</param>
     /// <param name="viewProjection">The combined view-projection matrix for the current camera.</param>
     /// <param name="pass">Which render pass is currently being drawn; sub-objects not belonging to this pass are skipped.</param>
-    public override void Draw(ShaderProgram shader, Matrix4x4 viewProjection, RenderPass pass = RenderPass.Opaque)
+    public unsafe override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
-        foreach (var obj in Objects)
+        for (int i = 0; i < Objects.Count; i++)
         {
+            var obj = Objects[i];
             obj.Visible = Visible;
             if (Texture != null) obj.Texture = Texture;
             obj.Color = Color;
             obj.TextureColor = TextureColor;
-            obj.Draw(shader, viewProjection, pass);
+        }
+        BindObjectShaderData();
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            var obj = Objects[i];
+            pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
+            obj.Draw(pass, passType);
         }
     }
 

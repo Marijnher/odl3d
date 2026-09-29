@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -35,6 +38,9 @@ public class Scene2D : Scene<Object3D>
     /// <param name="window">The window whose size defines the viewport for the scene.</param>
     public Scene2D(Window window) : this(window, new Rect(0, 0, window.Width, window.Height), true) { }
 
+    /// <summary>
+    /// Updates the viewport to match the current size of the window if the scene is set to fit the window.
+    /// </summary>
     internal void UpdateWindowSize()
     {
         if (fitToWindow)
@@ -42,32 +48,41 @@ public class Scene2D : Scene<Object3D>
     }
 
     /// <summary>
-    /// Calculates and returns the orthographic projection matrix for the scene based on its viewport rectangle. The projection matrix maps pixel coordinates within the viewport to normalized device coordinates for rendering.
-    /// Depth range is deliberately wide so sprites can use Position.Z purely as a draw-order index (see Sprite2D) without being clipped.
+    /// Gets the projection matrix for the 2D scene, which is an orthographic matrix based on the viewport.
     /// </summary>
     /// <returns>The orthographic projection matrix for the scene.</returns>
-    public Matrix4x4 GetProjectionMatrix() =>
+    protected override Matrix4x4 GetProjectionMatrix() =>
         Matrix4x4.CreateOrthographicOffCenter(0, Viewport.Width, Viewport.Height, 0, -1000, 1000);
+
+    /// <summary>
+    /// Gets the view matrix for the 2D scene, which is an identity matrix since the scene is rendered in screen space.
+    /// </summary>
+    /// <returns>The view matrix for the scene, which is an identity matrix.</returns>
+    protected override Matrix4x4 GetViewMatrix() => Matrix4x4.Identity;
 
     /// <summary>
     /// Draws all sprites in the scene using the given shader. The projection matrix is calculated based on the scene's viewport, and each sprite is drawn in pixel coordinates relative to the top-left of the viewport.
     /// </summary>
     /// <param name="shader">The shader to use for drawing the sprites.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
+    public unsafe override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
         
-        float scaleX = (float) Window.FramebufferWidth / Window.Width;
-        float scaleY = (float) Window.FramebufferHeight / Window.Height;
+        float scaleX = (float) Window.RenderSurface.Width / Window.Width;
+        float scaleY = (float) Window.RenderSurface.Height / Window.Height;
         int vpX = (int) ((Viewport.X + Position.X) * scaleX);
         int vpY = (int) ((Viewport.Y + Position.Y) * scaleY);
         int vpWidth = (int) (Viewport.Width * scaleX);
         int vpHeight = (int) (Viewport.Height * scaleY);
-        Renderer.SetViewport(vpX, Window.FramebufferHeight - vpY - vpHeight, vpWidth, vpHeight);
-        Matrix4x4 projection = GetProjectionMatrix();
+        pass.SetViewport(new Rect(vpX, Window.RenderSurface.Height - vpY - vpHeight, vpWidth, vpHeight));
+        UpdateViewProjBuffer(pass);
+
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
-            Objects[i].Draw(shader, projection, renderPass);
+        {
+            pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
+            Objects[i].Draw(pass, passType);
+        }
     }
 }

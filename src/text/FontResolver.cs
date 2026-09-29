@@ -20,13 +20,19 @@ public static class FontResolver
     private static readonly Dictionary<string, string?> _resolved = new(StringComparer.OrdinalIgnoreCase);
     private static string[]? _systemSearchPaths;
 
-    /// <summary>Custom folders searched before the system font folders, in the order they were added.</summary>
+    /// <summary>
+    /// Custom folders searched before the system font folders, in the order they were added.
+    /// </summary>
     public static IReadOnlyList<string> SearchPaths => _searchPaths;
 
-    /// <summary>The platform's system font folders, searched after all custom SearchPaths.</summary>
+    /// <summary>
+    /// The platform's system font folders, searched after all custom SearchPaths.
+    /// </summary>
     public static IReadOnlyList<string> SystemSearchPaths => _systemSearchPaths ??= BuildSystemSearchPaths();
 
-    /// <summary>Registers a folder to search (recursively) before the system font folders.</summary>
+    /// <summary>
+    /// Registers a folder to search (recursively) before the system font folders.
+    /// </summary>
     public static void AddSearchPath(string folder)
     {
         string full = Path.GetFullPath(folder);
@@ -35,34 +41,47 @@ public static class FontResolver
         ClearCache();
     }
 
-    /// <summary>Unregisters a previously added custom search folder.</summary>
+    /// <summary>
+    /// Unregisters a previously added custom search folder.
+    /// </summary>
     public static void RemoveSearchPath(string folder)
     {
         string full = Path.GetFullPath(folder);
         if (_searchPaths.RemoveAll(p => string.Equals(p, full, StringComparison.OrdinalIgnoreCase)) > 0) ClearCache();
     }
 
-    /// <summary>Unregisters all custom search folders. System font folders remain searchable.</summary>
+    /// <summary>
+    /// Unregisters all custom search folders. System font folders remain searchable.
+    /// </summary>
     public static void ClearSearchPaths()
     {
         _searchPaths.Clear();
         ClearCache();
     }
 
-    /// <summary>Forgets all previously resolved (and unresolvable) font names.</summary>
+    /// <summary>
+    /// Forgets all previously resolved (and unresolvable) font names.
+    /// </summary>
     public static void ClearCache() => _resolved.Clear();
 
     /// <summary>
     /// Resolves a font name or path to an absolute file path, throwing if no matching font file exists in any
     /// custom or system search folder.
     /// </summary>
+    /// <param name="nameOrPath">The font name or path to resolve.</param>
+    /// <returns>The resolved absolute file path.</returns>
     public static string Resolve(string nameOrPath)
     {
         if (TryResolve(nameOrPath, out string? path)) return path;
         throw new FileNotFoundException($"Could not find font '{nameOrPath}' in any custom or system font folder.", nameOrPath);
     }
 
-    /// <summary>Resolves a font name or path to an absolute file path, returning false if it could not be found.</summary>
+    /// <summary>
+    /// Resolves a font name or path to an absolute file path, returning false if it could not be found.
+    /// </summary>
+    /// <param name="nameOrPath">The font name or path to resolve.</param>
+    /// <param name="path">The resolved absolute file path if found; otherwise, null.</param>
+    /// <returns>True if the font was found; otherwise, false.</returns>
     public static bool TryResolve(string nameOrPath, out string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(nameOrPath);

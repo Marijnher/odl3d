@@ -16,37 +16,37 @@ public class Camera
     /// <summary>
     /// The position of the camera in world space. This vector defines where the camera is located in the 3D scene. The default position is at the origin (0, 0, 0).
     /// </summary>
-    public Vector3 Position = Vector3.Zero;
+    public Vector3 Position { get; set; } = Vector3.Zero;
 
     /// <summary>
     /// The yaw angle of the camera in degrees, representing rotation around the Y-axis. A yaw of -90 degrees points the camera down the negative Z-axis, which is a common default orientation in 3D graphics. The yaw can be adjusted to rotate the camera left or right.
     /// </summary>
-    public float Yaw = -90f; // -90 faces down -Z, matching the previous fixed camera
+    public float Yaw { get; set; } = -90f; // -90 faces down -Z, matching the previous fixed camera
 
     /// <summary>
     /// The pitch angle of the camera in degrees, representing rotation around the X-axis. The pitch is clamped between -89 and 89 degrees to prevent gimbal lock and unnatural flipping of the camera view. A pitch of 0 degrees means the camera is level, while positive values tilt the camera upward and negative values tilt it downward.
     /// </summary>
-    public float Pitch = 0f;
+    public float Pitch { get; set; } = 0f;
 
     /// <summary>
     /// The field of view (FOV) of the camera in degrees, defining the vertical angle of the camera's view frustum. A typical FOV for a perspective camera is around 60 degrees, which provides a natural perspective without excessive distortion. The FOV can be adjusted to zoom in or out on the scene.
     /// </summary>
-    public float FieldOfViewDegrees = 60f;
+    public float FieldOfViewDegrees { get; set; } = 60f;
 
     /// <summary>
     /// The aspect ratio of the camera's view, defined as the width divided by the height of the viewport. The default aspect ratio is 4:3, but it should be set to match the actual dimensions of the rendering window or viewport to avoid distortion in the rendered scene.
     /// </summary>
-    public float AspectRatio;
+    public float AspectRatio { get; set; }
 
     /// <summary>
     /// The near clipping plane distance for the camera's view frustum. Objects closer than this distance will not be rendered. The default value is 0.1 units, which is a common choice for 3D rendering to avoid clipping artifacts with nearby objects.
     /// </summary>
-    public float NearPlane = 0.1f;
+    public float NearPlane { get; set; } = 0.1f;
 
     /// <summary>
     /// The far clipping plane distance for the camera's view frustum. Objects farther than this distance will not be rendered. The default value is 100 units, which is a typical choice for 3D rendering to limit the depth of the scene and improve performance.
     /// </summary>
-    public float FarPlane = 100f;
+    public float FarPlane { get; set; } = 100f;
 
     /// <summary>
     /// Calculates and returns the normalized forward direction vector of the camera based on its current yaw and pitch angles. This vector points in the direction the camera is facing in world space. The calculation uses trigonometric functions to convert the yaw and pitch angles from degrees to a 3D direction vector, which is then normalized to ensure it has a length of 1. This direction vector can be used for movement, raycasting, or other operations that require knowledge of where the camera is looking.

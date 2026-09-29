@@ -13,12 +13,16 @@ namespace odl3d;
 /// </summary>
 internal static class TextGeometry
 {
-    /// <summary>Number of floats per vertex: position (3), texture coordinate (2), normal (3).</summary>
+    /// <summary>
+    /// Number of floats per vertex: position (3), texture coordinate (2), normal (3).
+    /// </summary>
     public const int FloatsPerVertex = 8;
 
     private readonly record struct Shape(List<Vector2> Outer, List<List<Vector2>> Holes);
 
-    /// <summary>The geometry of one built text block, in world units, centered on the origin.</summary>
+    /// <summary>
+    /// The geometry of one built text block, in world units, centered on the origin.
+    /// </summary>
     internal sealed class Result
     {
         public required float[] Vertices { get; init; }
@@ -27,6 +31,19 @@ internal static class TextGeometry
         public float Height { get; init; }
     }
 
+    /// <summary>
+    /// Builds the geometry for a text block with the specified font, content, style, alignment, and decoration options, returning a Result containing the vertices and indices of the extruded mesh.
+    /// </summary>
+    /// <param name="font">The font to use for measuring and building glyphs.</param>
+    /// <param name="content">The text content to build geometry for.</param>
+    /// <param name="style">The font style (e.g., Bold, Italic).</param>
+    /// <param name="align">The horizontal alignment of the text block.</param>
+    /// <param name="underline">Whether to include an underline bar.</param>
+    /// <param name="strikethrough">Whether to include a strikethrough bar.</param>
+    /// <param name="depth">The extrusion depth of the text geometry.</param>
+    /// <param name="pixelsPerWorldUnit">The scale factor from font pixels to world units.</param>
+    /// <param name="smoothingAngleDegrees">The angle in degrees for smoothing normals on the extruded geometry.</param>
+    /// <returns>A Result object containing the vertices and indices of the extruded mesh.</returns>
     public static Result Build(Font font, string content, FontStyle style, TextAlign align, bool underline,
         bool strikethrough, float depth, float pixelsPerWorldUnit, float smoothingAngleDegrees)
     {
@@ -100,7 +117,9 @@ internal static class TextGeometry
         return transformed;
     }
 
-    /// <summary>Builds the rectangular contour of an underline or strikethrough bar, in world units.</summary>
+    /// <summary>
+    /// Builds the rectangular contour of an underline or strikethrough bar, in world units.
+    /// </summary>
     private static List<List<Vector2>> Bar(float x0, float x1, float top, float thickness, float blockWidth, float blockHeight, float baseline, float pixelsPerWorldUnit)
     {
         if (x1 - x0 < 1f) return new List<List<Vector2>>();
@@ -170,6 +189,8 @@ internal static class TextGeometry
         /// number of other contours is a hole; this is independent of the font's winding convention, so both
         /// TrueType (clockwise outer) and CFF (counter-clockwise outer) glyphs come out right.
         /// </summary>
+        /// <param name="contours">The list of contours representing the glyph.</param>
+        /// <returns>A list of shapes, each with an outer contour and its holes.</returns>
         private static List<Shape> Classify(List<List<Vector2>> contours)
         {
             int count = contours.Count;
@@ -243,6 +264,7 @@ internal static class TextGeometry
         /// edges whose angle falls within the smoothing angle, so flattened curves read as smooth while real
         /// corners stay sharp.
         /// </summary>
+        /// <param name="contour">The contour to sweep along the Z axis to create the wall.</param>
         private void AddWall(List<Vector2> contour)
         {
             int count = contour.Count;

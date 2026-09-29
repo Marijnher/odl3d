@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -14,7 +15,7 @@ public class Scene3D : Scene<Object3D>
     /// <param name="window">The window associated with the scene, used to determine the rendering context and other properties.</param>
     public Scene3D(Window window) : base(window)
     {
-        this.Window.AddScene(this);
+        Window.AddScene(this);
     }
 
     /// <summary>
@@ -22,12 +23,28 @@ public class Scene3D : Scene<Object3D>
     /// </summary>
     /// <param name="shader">The shader program to use for rendering the scene.</param>
     /// <param name="renderPass">The render pass to use for rendering the scene.</param>
-    public override void Draw(ShaderProgram shader, RenderPass renderPass = RenderPass.Opaque)
+    public unsafe override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
-        Matrix4x4 viewProjection = Camera.GetViewMatrix() * Camera.GetProjectionMatrix();
-        foreach (Object3D sceneObject in Objects)
-            sceneObject.Draw(shader, viewProjection, renderPass);
+        UpdateViewProjBuffer(pass);
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            Object3D obj = Objects[i];
+            pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
+            obj.Draw(pass, passType);
+        }
     }
+
+    /// <summary>
+    /// Gets the view matrix for the 3D scene, which is obtained from the camera.
+    /// </summary>
+    /// <returns>The view matrix for the 3D scene.</returns>
+    protected override Matrix4x4 GetViewMatrix() => Camera.GetViewMatrix();
+
+    /// <summary>
+    /// Gets the projection matrix for the 3D scene, which is obtained from the camera.
+    /// </summary>
+    /// <returns>The projection matrix for the 3D scene.</returns>
+    protected override Matrix4x4 GetProjectionMatrix() => Camera.GetProjectionMatrix();
 }
 

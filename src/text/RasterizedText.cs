@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using odl3d.Renderer;
 
 namespace odl3d;
 
@@ -11,6 +12,16 @@ namespace odl3d;
 /// </summary>
 public abstract class RasterizedText : Text
 {
+    /// <summary>
+    /// The width of the composed texture in pixels, or 0 before the first build.
+    /// </summary>
+    public uint PixelWidth => Texture?.Width ?? 0;
+
+    /// <summary>
+    /// The height of the composed texture in pixels, or 0 before the first build.
+    /// </summary>
+    public uint PixelHeight => Texture?.Height ?? 0;
+
     private readonly GlyphAtlas _atlas;
 
     /// <summary>
@@ -29,13 +40,9 @@ public abstract class RasterizedText : Text
         _atlas = atlas ?? GlyphAtlas.Shared;
     }
 
-    /// <summary>The width of the composed texture in pixels, or 0 before the first build.</summary>
-    public int PixelWidth => Texture?.Width ?? 0;
-
-    /// <summary>The height of the composed texture in pixels, or 0 before the first build.</summary>
-    public int PixelHeight => Texture?.Height ?? 0;
-
-    /// <inheritdoc/>
+    /// <summary>
+    /// Rebuilds the composed texture by rasterizing all glyphs and arranging them according to the current text content, style, and alignment.
+    /// </summary>
     protected override void Rebuild()
     {
         Texture? old = Texture;
@@ -49,8 +56,8 @@ public abstract class RasterizedText : Text
             widest = MathF.Max(widest, lineWidths[i]);
         }
 
-        int width = Math.Max(1, (int)MathF.Ceiling(widest));
-        int height = Math.Max(1, (int)MathF.Ceiling(Font.LineHeight * lines.Length));
+        uint width = Math.Max(1, (uint)MathF.Ceiling(widest));
+        uint height = Math.Max(1, (uint)MathF.Ceiling(Font.LineHeight * lines.Length));
         int barThickness = Math.Max(1, (int)MathF.Ceiling(Font.UnderlineThickness));
 
         Texture composed = new Texture(width, height);
@@ -91,15 +98,12 @@ public abstract class RasterizedText : Text
                 FillBar(composed, (int)MathF.Round(baselineY - Font.Ascender * 0.35f), barThickness, barX0, barX1);
         }
 
-        composed.FilterMode = TextureFilter.Linear;
+        Sampler.MinFilter = TextureFilter.Linear;
+        Sampler.MagFilter = TextureFilter.Linear;
 
         Texture = composed;
         old?.Dispose();
-        OnTextureRebuilt();
     }
-
-    /// <summary>Called after the composed Texture has been replaced, so subclasses can resize their quad.</summary>
-    protected virtual void OnTextureRebuilt() { }
 
     private void BlitGlyph(Texture dest, AtlasGlyph glyph, int destX, int destY)
     {
@@ -112,7 +116,7 @@ public abstract class RasterizedText : Text
             {
                 int dx = destX + col;
                 if (dx < 0 || dx >= dest.Width) continue;
-                int srcOffset = ((glyph.Y + row) * atlasTexture.Width + (glyph.X + col)) * 4;
+                int srcOffset = (int) ((glyph.Y + row) * atlasTexture.Width + (glyph.X + col)) * 4;
                 byte alpha = atlasTexture.Pixels[srcOffset + 3];
                 if (alpha == 0) continue;
                 dest.SetPixel(dx, dy, 255, 255, 255, alpha);
