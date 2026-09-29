@@ -76,8 +76,8 @@ public class Scene2D : Scene<Object3D>
         int vpWidth = (int) (Viewport.Width * scaleX);
         int vpHeight = (int) (Viewport.Height * scaleY);
         pass.SetViewport(new Rect(vpX, Window.RenderSurface.Height - vpY - vpHeight, vpWidth, vpHeight));
-        UpdateViewProjBuffer(pass);
-
+        UpdateSceneShaderData(pass);
+    
         // Draw in reverse order so the last-added sprite is drawn on top of other sprites with equal z values.
         for (int i = Objects.Count - 1; i >= 0; i--)
         {

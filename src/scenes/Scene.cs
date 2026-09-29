@@ -46,11 +46,11 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// The GPU buffer that stores the object shader data for all objects in the scene. This buffer is updated with the latest data from the ObjectShaderDataArray before rendering.
     /// </summary>
     protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
-    
+
     /// <summary>
-    /// The GPU buffer that stores the view-projection matrix for the scene. This buffer is updated with the latest view-projection matrix before rendering.
+    /// The GPU buffer that stores the scene shader data, including the view and projection matrices. This buffer is updated with the latest scene shader data before rendering.
     /// </summary>
-    protected readonly IBuffer<float> ViewProjBuffer;
+    protected readonly IBuffer<SceneShaderData> SceneShaderDataBuffer;
 
     /// <summary>
     /// Initializes a new instance of the Scene class with the specified window. The window is used to determine the rendering context and other properties for the scene. This constructor is protected, so it can only be called by subclasses of Scene.
@@ -66,9 +66,9 @@ public abstract class Scene<T> : Drawable where T : Object3D
             Size = maxObjects,
             Usage = BufferUsage.Uniform
         });
-        ViewProjBuffer = Renderer.CreateBuffer<float>(new BufferDescription
+        SceneShaderDataBuffer = Renderer.CreateBuffer<SceneShaderData>(new BufferDescription
         {
-            Size = 32,
+            Size = 1,
             Usage = BufferUsage.Uniform
         });
     }
@@ -140,15 +140,14 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// Recalculates the scene's view and projection matrices and uploads them to ViewProjBuffer, then binds that buffer to shader buffer slot 1. This should be called before drawing the scene's objects so they are transformed using this scene's own view/projection rather than another scene's.
     /// </summary>
     /// <param name="pass">The render pass to bind the buffer to.</param>
-    protected void UpdateViewProjBuffer(IRenderPass pass)
+    protected void UpdateSceneShaderData(IRenderPass pass)
     {
-        float[] viewProjData = new float[32];
-        var view = GetViewMatrix();
-        var proj = GetProjectionMatrix();
-        view.ToArray().CopyTo(viewProjData, 0);
-        proj.ToArray().CopyTo(viewProjData, 16);
-        ViewProjBuffer.SetData(viewProjData);
-        pass.SetUniformBuffer(ViewProjBuffer, 1);
+        SceneShaderDataBuffer.SetData([new SceneShaderData
+        {
+            Projection = GetProjectionMatrix(),
+            View = GetViewMatrix()
+        }]);
+        pass.SetUniformBuffer(SceneShaderDataBuffer, 1);
     }
 
     /// <summary>
@@ -180,7 +179,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
             Objects[0].Dispose();
         }
         ObjectShaderDataBuffer.Dispose();
-        ViewProjBuffer.Dispose();
+        SceneShaderDataBuffer.Dispose();
         base.Dispose();
         Window.RemoveScene(this);
         Disposed = true;
