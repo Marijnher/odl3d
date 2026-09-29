@@ -3,8 +3,6 @@
 layout(location = 0) in vec3 position;   // attribute(0)
 layout(location = 1) in vec2 texCoord;   // attribute(1)
 
-out vec2 vTexCoord;
-
 layout(std140, binding = 0) uniform ObjectData
 {
     mat4 model;
@@ -19,6 +17,8 @@ layout(std140, binding = 1) uniform SceneData
     mat4 projection;
     mat4 view;
 } scene;
+
+out vec2 vTexCoord;
 
 void main()
 {

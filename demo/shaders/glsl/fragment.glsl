@@ -9,6 +9,12 @@ layout(std140, binding = 0) uniform ObjectData
     uint hasNormals;
 } object;
 
+layout(std140, binding = 1) uniform SceneData
+{
+    mat4 projection;
+    mat4 view;
+} scene;
+
 uniform sampler2D tex;
 
 in vec2 vTexCoord;

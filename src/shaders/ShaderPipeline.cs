@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Text;
 using odl3d.Renderer;
@@ -91,8 +92,11 @@ public class ShaderPipeline : IDisposable
     /// <returns>A new instance of ShaderPipeline configured with the default shaders and the specified vertex layout.</returns>
     public static ShaderPipeline CreateDefault(bool hasNormals = false)
     {
-        using var defaultVertex = new Shader(GetDefaultVertexShaderFilename(), ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
-        using var defaultFragment = new Shader(GetDefaultFragmentShaderFilename(), ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
+        string vertexFilename = GetDefaultVertexShaderFilename();
+        string fragmentFilename = GetDefaultFragmentShaderFilename();
+
+        using var defaultVertex = new Shader(vertexFilename, ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
+        using var defaultFragment = new Shader(fragmentFilename, ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
 
         var attributes = new List<VertexAttributeDescription>
         {
@@ -141,14 +145,14 @@ public class ShaderPipeline : IDisposable
 
     private static string GetDefaultVertexShaderFilename() => Window.Renderer.RenderTarget switch
     {
-        RenderTarget.OpenGL => "demo/shaders/glsl/shader.vert",
+        RenderTarget.OpenGL => "demo/shaders/glsl/vertex.glsl",
         RenderTarget.Metal => "demo/shaders/msl/vertex.metal",
         _ => throw new RenderException("Unsupported render target")
     };
 
     private static string GetDefaultFragmentShaderFilename() => Window.Renderer.RenderTarget switch
     {
-        RenderTarget.OpenGL => "demo/shaders/glsl/shader.frag",
+        RenderTarget.OpenGL => "demo/shaders/glsl/fragment.glsl",
         RenderTarget.Metal => "demo/shaders/msl/fragment.metal",
         _ => throw new RenderException("Unsupported render target")
     };

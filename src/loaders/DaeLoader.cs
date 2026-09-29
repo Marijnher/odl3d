@@ -15,9 +15,13 @@ namespace odl3d.Loaders;
 public static class DaeLoader
 {
     /// <summary>
-    /// Gets or sets the default texture wrap mode to use when loading textures from DAE files.
+    /// Gets or sets the default texture wrap mode for the S coordinate when loading textures from DAE files.
     /// </summary>
     public static TextureWrap DefaultTextureWrapS { get; set; } = TextureWrap.Repeat;
+
+    /// <summary>
+    /// Gets or sets the default texture wrap mode for the T coordinate when loading textures from DAE files.
+    /// </summary>
     public static TextureWrap DefaultTextureWrapT { get; set; } = TextureWrap.Mirror;
 
     private readonly record struct VertexKey(int Position, int TexCoord);
