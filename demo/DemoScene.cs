@@ -29,7 +29,8 @@ class DemoScene : Scene3D
         };
 
         Mesh groundMesh = MeshBuilder.CreatePlane(20f, 0.2f, 20f, 50f, 50f);
-        Object3D ground = new Object3D(this, groundMesh, new Texture("assets/grass.png"))
+        Texture grassTexture = new Texture("assets/grass.png");
+        Object3D ground = new Object3D(this, groundMesh, grassTexture)
         {
             Position = new Vector3(-10, -1.5f, -10)
         };

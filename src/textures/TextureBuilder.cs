@@ -2,6 +2,9 @@ using System;
 
 namespace odl3d;
 
+/// <summary>
+/// Provides methods to create and manipulate textures with various patterns and colors.
+/// </summary>
 public class TextureBuilder
 {
     /// <summary>
@@ -92,14 +95,21 @@ public class TextureBuilder
     /// </summary>
     /// <param name="texture">The existing Texture instance to be modified by the builder.</param>
     /// <exception cref="TextureException">Thrown if the provided texture has already been disposed.</exception>
-    public TextureBuilder(Texture texture)
+    public TextureBuilder(Texture source, bool overwriteSource)
     {
-        if (texture.Disposed)
+        if (source.Disposed)
             throw new TextureException("Cannot build a TextureBuilder from a disposed texture.");
-        Texture = texture;
-        TextureWidth = texture.Width;
-        TextureHeight = texture.Height;
-        Pixels = texture.Pixels;
+        if (overwriteSource)
+        {
+            Texture = source;
+            Pixels = source.Pixels;
+        }   
+        else
+        {
+            Pixels = (byte[]) source.Pixels.Clone();
+        }
+        TextureWidth = source.Width;
+        TextureHeight = source.Height;
     }
 
     /// <summary>
@@ -127,7 +137,6 @@ public class TextureBuilder
         {
             return new Texture(TextureWidth, TextureHeight, Pixels);
         }
-        Texture.Pixels = Pixels;
         Texture.Invalidate();
         return Texture;
     }
@@ -148,6 +157,24 @@ public class TextureBuilder
             throw new TextureException("Width and height must be greater than 0.");
         if (x + width > TextureWidth || y + height > TextureHeight)
             throw new TextureException("The specified region exceeds the texture bounds.");
+    }
+
+    /// <summary>
+    /// Draws a single pixel of the specified color at the given coordinates within the texture.
+    /// </summary>
+    /// <param name="x">The X coordinate of the pixel.</param>
+    /// <param name="y">The Y coordinate of the pixel.</param>
+    /// <param name="color">The color of the pixel (RGBA).</param>
+    /// <returns>The current TextureBuilder instance for chaining.</returns>
+    public TextureBuilder DrawPixel(int x, int y, Color color)
+    {
+        GuardBounds(x, y, 1, 1);
+        int o = (int) (y * TextureWidth + x) * 4;
+        Pixels[o    ] = color.R;
+        Pixels[o + 1] = color.G;
+        Pixels[o + 2] = color.B;
+        Pixels[o + 3] = color.A;
+        return this;
     }
 
     /// <summary>
