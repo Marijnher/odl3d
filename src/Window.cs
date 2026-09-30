@@ -292,7 +292,7 @@ public class Window : InputHost
         pass.SetDepthStencilState(Stencil3DOpaque);
         foreach (Scene3D scene in Scenes3D)
         {
-            scene.BindObjectShaderData();
+            scene.UpdateObjectShaderData();
             scene.Draw(pass, RenderPass.Opaque);
         }
         // Draw transparent objects after opaque ones without writing to the depth buffer.
@@ -305,7 +305,7 @@ public class Window : InputHost
         pass.SetDepthStencilState(Stencil2D);
         foreach (Scene2D scene in Scenes2D)
         {
-            scene.BindObjectShaderData();
+            scene.UpdateObjectShaderData();
             scene.Draw(pass, RenderPass.Opaque);
             scene.Draw(pass, RenderPass.Transparent);
         }

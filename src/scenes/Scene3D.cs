@@ -29,9 +29,8 @@ public class Scene3D : Scene<Object3D>
         UpdateSceneShaderData(pass);
         for (int i = 0; i < Objects.Count; i++)
         {
-            Object3D obj = Objects[i];
             pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
-            obj.Draw(pass, passType);
+            Objects[i].Draw(pass, passType);
         }
     }
 

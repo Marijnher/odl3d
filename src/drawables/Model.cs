@@ -161,7 +161,7 @@ public class Model : Object3D
     /// <summary>
     /// Binds the object shader data to the GPU buffer, updating it with the latest data from all objects in the model.
     /// </summary>
-    public void BindObjectShaderData()
+    public void UpdateObjectShaderData()
     {
         for (int i = 0; i < Objects.Count; i++)
         {
@@ -186,13 +186,23 @@ public class Model : Object3D
             obj.Color = Color;
             obj.TextureColor = TextureColor;
         }
-        BindObjectShaderData();
+        UpdateObjectShaderData();
         for (int i = 0; i < Objects.Count; i++)
         {
             var obj = Objects[i];
             pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
             obj.Draw(pass, passType);
         }
+    }
+
+    /// <summary>
+    /// Updates the model and all its constituent objects based on the elapsed time.
+    /// </summary>
+    /// <param name="deltaTime">The elapsed time since the last update, in seconds.</param>
+    public override void Update(float deltaTime)
+    {
+        base.Update(deltaTime);
+        Objects.ForEach(obj => obj.Update(deltaTime));
     }
 
     /// <summary>

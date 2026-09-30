@@ -12,12 +12,12 @@ public class Texture : IDisposable
     /// <summary>
     /// Represents a texture that contains both CPU-side pixel data and its corresponding renderer handle.
     /// </summary>
-    protected IRenderDevice Renderer => Window.Renderer;
+    internal IRenderDevice Renderer => Window.Renderer;
 
     /// <summary>
     /// The renderer handle of the texture. This is the actual GPU resource that corresponds to the texture's pixel data.
     /// </summary>
-    public ITexture RenderTexture;
+    internal ITexture RenderTexture;
     
     /// <summary>
     /// Width of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).
@@ -32,7 +32,7 @@ public class Texture : IDisposable
     /// <summary>
     /// The pixel buffer, in RGBA order, 4 bytes per pixel, row-major order, top-to-bottom.
     /// </summary>
-    public byte[] Pixels { get; private set; }
+    public byte[] Pixels { get; internal set; }
 
     /// <summary>
     /// The renderer handle of the texture; 0 if not yet uploaded. Upload() must be called to create the renderer texture and copy the pixel data to it.
@@ -85,8 +85,11 @@ public class Texture : IDisposable
     public Texture(uint width, uint height, byte[]? initialPixels = null)
     {
         initialPixels ??= new byte[width * height * 4];
+
+        if (width < 1 || height < 1)
+            throw new TextureException("Width and height must be greater than 0.");
         if (width * height * 4 != initialPixels.Length)
-            throw new ArgumentException("Initial pixel array length does not match texture dimensions.");
+            throw new TextureException("Initial pixel array length does not match texture dimensions.");
 
         Width = width;
         Height = height;
@@ -107,7 +110,17 @@ public class Texture : IDisposable
     /// <param name="filename">Path to the PNG file to load.</param>
     public Texture(string filename)
     {
-        (byte[] bytes, int width, int height) = PNGDecoder.Decode(filename);
+        byte[] bytes;
+        int width;
+        int height;
+        try
+        {
+            (bytes, width, height) = PNGDecoder.Decode(filename);
+        }
+        catch (Exception ex)
+        {
+            throw new TextureException($"Failed to load texture from file '{filename}': {ex.Message}");
+        }
         Width = (uint) width;
         Height = (uint) height;
         Pixels = bytes;
@@ -122,11 +135,20 @@ public class Texture : IDisposable
     }
 
     /// <summary>
+    /// Marks the texture as invalid, indicating that its current pixel data may no longer match the renderer texture. This will force a re-upload on the next call to Upload().
+    /// </summary>
+    public void Invalidate()
+    {
+        Uploaded = false;
+        hasPartialAlpha = null;
+    }
+
+    /// <summary>
     /// Uploads the current contents of the Pixels buffer to the renderer texture. This must be called after modifying Pixels (directly, via SetPixel, or via any of the factory methods) for the change to become visible when the texture is drawn; until then, the renderer texture retains whatever was last uploaded.
     /// </summary>
     public void Upload()
     {
-        if (Disposed) return;
+        if (Disposed) throw new TextureException("Cannot upload a disposed texture.");
         RenderTexture.Upload(Pixels);
         Uploaded = true;
     }
@@ -134,114 +156,6 @@ public class Texture : IDisposable
     ~Texture()
     {
         if (!Disposed) Console.WriteLine("Warning: Texture was not disposed before being finalized. This may cause a renderer resource leak.");
-    }
-
-    /// <summary>
-    /// Creates a new Texture with the given width and height, filling the pixel buffer with the given color. The pixel data is initialized to the specified RGBA color.
-    /// </summary>
-    /// <param name="width">Width of the texture in pixels.</param>
-    /// <param name="height">Height of the texture in pixels.</param>
-    /// <param name="r">Red component of the color (0-255).</param>
-    /// <param name="g">Green component of the color (0-255).</param>
-    /// <param name="b">Blue component of the color (0-255).</param>
-    /// <param name="a">Alpha component of the color (0-255).</param>
-    /// <returns>A new Texture initialized with the specified color.</returns>
-    public static Texture FromColor(uint width, uint height, byte r, byte g, byte b, byte a = 255)
-    {
-        Texture texture = new Texture(width, height);
-        for (int i = 0; i < width * height; i++)
-        {
-            int o = i * 4;
-            texture.Pixels[o] = r;
-            texture.Pixels[o + 1] = g;
-            texture.Pixels[o + 2] = b;
-            texture.Pixels[o + 3] = a;
-        }
-        texture.Upload();
-        return texture;
-    }
-
-    /// <summary>
-    /// Creates a new Texture with the given width and height, filling the pixel buffer with the given color. The pixel data is initialized to the specified RGBA color.
-    /// </summary>
-    /// <param name="width">Width of the texture in pixels.</param>
-    /// <param name="height">Height of the texture in pixels.</param>
-    /// <param name="color">Color to fill the texture with (RGBA).</param>
-    /// <returns>A new Texture initialized with the specified color.</returns>
-    public static Texture FromColor(uint width, uint height, Color color)
-    {
-        return FromColor(width, height, color.R, color.G, color.B, color.A);
-    }
-
-    /// <summary>
-    /// Creates a new Texture with the given width and height, filling the pixel buffer with a checkerboard pattern of the two specified colors. The pixel data is initialized to a checkerboard pattern of the specified colors, with each square being cellSize pixels wide and tall.
-    /// </summary>
-    /// <param name="width">Width of the texture in pixels.</param>
-    /// <param name="height">Height of the texture in pixels.</param>
-    /// <param name="colorA">First color of the checkerboard pattern (RGB).</param>
-    /// <param name="colorB">Second color of the checkerboard pattern (RGB).</param>
-    /// <param name="cellSize">Size of each square in the checkerboard pattern in pixels.</param>
-    /// <returns>A new Texture initialized with the checkerboard pattern.</returns>
-    public static Texture FromCheckerboard(uint width, uint height, (byte R, byte G, byte B) colorA, (byte R, byte G, byte B) colorB, int cellSize = 8)
-    {
-        Texture texture = new Texture(width, height);
-        for (uint y = 0; y < height; y++)
-        {
-            for (uint x = 0; x < width; x++)
-            {
-                bool isA = ((x / cellSize) + (y / cellSize)) % 2 == 0;
-                (byte R, byte G, byte B) color = isA ? colorA : colorB;
-                uint o = (y * width + x) * 4;
-                texture.Pixels[o] = color.R;
-                texture.Pixels[o + 1] = color.G;
-                texture.Pixels[o + 2] = color.B;
-                texture.Pixels[o + 3] = 255;
-            }
-        }
-        texture.Upload();
-        return texture;
-    }
-
-    /// <summary>
-    /// Creates a new Texture with a gradient defined by the four corner colors. The gradient is interpolated across the specified rectangular region.
-    /// </summary>
-    /// <param name="x">X-coordinate of the top-left corner of the gradient region.</param>
-    /// <param name="y">Y-coordinate of the top-left corner of the gradient region.</param>
-    /// <param name="width">Width of the gradient region in pixels.</param>
-    /// <param name="height">Height of the gradient region in pixels.</param>
-    /// <param name="c1">Color of the top-left corner.</param>
-    /// <param name="c2">Color of the top-right corner.</param>
-    /// <param name="c3">Color of the bottom-left corner.</param>
-    /// <param name="c4">Color of the bottom-right corner.</param>
-    /// <returns>A new Texture initialized with the specified gradient.</returns>
-    public static Texture FromGradient(int x, int y, uint width, uint height, Color c1, Color c2, Color c3, Color c4)
-    {
-        Texture texture = new Texture(width, height);
-        for (int dy = y; dy < y + height; dy++)
-        {
-            for (int dx = x; dx < x + width; dx++)
-            {
-                double xl = dx - x;
-                double xr = x + width - 1 - dx;
-                double yt = dy - y;
-                double yb = y + height - 1 - dy;
-                double fxr = (xl / (xl + xr));
-                double fxl = 1 - fxr;
-                double fyb = (yt / (yt + yb));
-                double fyt = 1 - fyb;
-                double f1 = fxl * fyt;
-                double f2 = fxr * fyt;
-                double f3 = fxl * fyb;
-                double f4 = fxr * fyb;
-                uint o = (uint) (dy * width + dx) * 4;
-                texture.Pixels[o    ] = (byte) Math.Round(f1 * c1.R + f2 * c2.R + f3 * c3.R + f4 * c4.R);
-                texture.Pixels[o + 1] = (byte) Math.Round(f1 * c1.G + f2 * c2.G + f3 * c3.G + f4 * c4.G);
-                texture.Pixels[o + 2] = (byte) Math.Round(f1 * c1.B + f2 * c2.B + f3 * c3.B + f4 * c4.B);
-                texture.Pixels[o + 3] = (byte) Math.Round(f1 * c1.A + f2 * c2.A + f3 * c3.A + f4 * c4.A);
-            }
-        }
-        texture.Upload();
-        return texture;
     }
 
     /// <summary>
@@ -255,6 +169,8 @@ public class Texture : IDisposable
     /// <param name="a">Alpha component of the color (0-255).</param>
     public void SetPixel(int x, int y, byte r, byte g, byte b, byte a = 255)
     {
+        if (x < 0 || x >= Width || y < 0 || y >= Height)
+            throw new TextureException($"Pixel coordinates ({x}, {y}) are out of bounds for texture of size {Width}x{Height}.");
         uint o = (uint) (y * Width + x) * 4;
         Pixels[o] = r;
         Pixels[o + 1] = g;

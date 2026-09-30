@@ -115,7 +115,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// <summary>
     /// Binds the object shader data to the GPU buffer, updating it with the latest data from all objects in the scene.
     /// </summary>
-    internal void BindObjectShaderData()
+    internal void UpdateObjectShaderData()
     {
         for (int i = 0; i < Objects.Count; i++)
         {

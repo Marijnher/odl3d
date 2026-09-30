@@ -9,7 +9,7 @@ class DemoScene : Scene3D
 {
     public DemoScene(Window window) : base(window)
     {
-        Texture texture = Texture.FromCheckerboard(64, 64, (255, 0, 255), (0, 255, 255), 8);
+        Texture texture = TextureBuilder.CreateCheckerboard(64, 64, new Color(255, 0, 255), new Color(0, 255, 255), 8);
         Sprite3D sprite = new Sprite3D(this, texture)
         {
             Position = new Vector3(-1.25f, 0, -3),
@@ -51,7 +51,7 @@ class DemoScene : Scene3D
         };
 
         Mesh sphereMesh = MeshBuilder.CreateSphere(0.2f, 16);
-        Object3D sphere = new Object3D(this, sphereMesh, Texture.FromColor(1, 1, Color.Yellow))
+        Object3D sphere = new Object3D(this, sphereMesh, TextureBuilder.CreateSolid(1, 1, Color.Yellow))
         {
             Position = new Vector3(-0.2f, -1f, 0.2f)
         };
