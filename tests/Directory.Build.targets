@@ -3,10 +3,13 @@
         <Odl3dAssemblyOutput>$(MSBuildThisFileDirectory)../build/$(Configuration)/$(TargetFramework)/odl3d.dll</Odl3dAssemblyOutput>
     </PropertyGroup>
 
-    <Target Name="CopyOdl3dAssemblyToTestOutput" AfterTargets="Build">
+    <Target Name="CopyOdl3dAssemblyToTestOutput" BeforeTargets="VSTest" DependsOnTargets="Build">
         <Copy
             SourceFiles="$(Odl3dAssemblyOutput)"
             DestinationFolder="$(OutDir)"
             SkipUnchangedFiles="true" />
+        <Error
+            Condition="!Exists('$(OutDir)odl3d.dll')"
+            Text="odl3d.dll was not copied to the test output directory: $(OutDir)" />
     </Target>
 </Project>

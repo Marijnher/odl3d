@@ -19,7 +19,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\odl3d.csproj" />
+        <ProjectReference Include="..\..\odl3d.csproj">
+            <Private>true</Private>
+        </ProjectReference>
     </ItemGroup>
 
 </Project>
