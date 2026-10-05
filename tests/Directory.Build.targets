@@ -1,0 +1,12 @@
+<Project>
+    <PropertyGroup>
+        <Odl3dAssemblyOutput>$(MSBuildThisFileDirectory)../build/$(Configuration)/$(TargetFramework)/odl3d.dll</Odl3dAssemblyOutput>
+    </PropertyGroup>
+
+    <Target Name="CopyOdl3dAssemblyToTestOutput" AfterTargets="Build">
+        <Copy
+            SourceFiles="$(Odl3dAssemblyOutput)"
+            DestinationFolder="$(OutDir)"
+            SkipUnchangedFiles="true" />
+    </Target>
+</Project>
