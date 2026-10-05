@@ -34,9 +34,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes libfreetype6 libglfw3 xvfb fonts-dejavu-core
 
+      - name: Install Windows native dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$env:RUNNER_TEMP/vcpkg"
+          & "$env:RUNNER_TEMP/vcpkg/bootstrap-vcpkg.bat" -disableMetrics
+          & "$env:RUNNER_TEMP/vcpkg/vcpkg.exe" install glfw3:x64-windows freetype:x64-windows
+          "$env:RUNNER_TEMP/vcpkg/installed/x64-windows/bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
       - name: Install macOS native dependencies
         if: runner.os == 'macOS'
         run: brew install freetype glfw
+
+      - name: Configure macOS native library search path
+        if: runner.os == 'macOS'
+        run: echo "DYLD_LIBRARY_PATH=$(brew --prefix glfw)/lib:$(brew --prefix freetype)/lib" >> "$GITHUB_ENV"
 
       - name: Run T0 and T1 on Windows
         if: runner.os == 'Windows'
@@ -48,8 +61,6 @@ jobs:
 
       - name: Run T0 and T1 on macOS
         if: runner.os == 'macOS'
-        env:
-          DYLD_LIBRARY_PATH: /opt/homebrew/lib:/usr/local/lib
         run: dotnet test odl3d.sln --settings tests/coverage.runsettings --collect:"XPlat Code Coverage"
 
       - uses: actions/upload-artifact@v4

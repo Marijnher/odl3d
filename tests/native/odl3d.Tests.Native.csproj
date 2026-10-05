@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyName>odl3d.Tests.Native</AssemblyName>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,7 +20,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\odl3d.csproj" />
+        <ProjectReference Include="..\..\odl3d.csproj">
+            <Private>true</Private>
+        </ProjectReference>
     </ItemGroup>
 
 </Project>
