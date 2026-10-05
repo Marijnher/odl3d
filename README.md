@@ -33,14 +33,31 @@ while (!window.ShouldClose)
 - **GLFW3** - Window management
 - **Freetype** - Font rendering
 
+## Project Layout
+
+- `odl3d.csproj` builds the reusable core library from `src/`.
+- `demo/odl3d.Demo.csproj` builds the interactive sample and copies its assets.
+- `tests/odl3d.Tests/odl3d.Tests.csproj` contains CPU-only unit tests and backend tests as they are added.
+- `external/decodl` is the upstream decoder project, pinned as a Git submodule.
+
+Default GLSL and MSL sources are kept as editable raw-string constants in `src/shaders/DefaultShaders.cs`; they are compiled directly from source and do not depend on demo files or the current working directory.
+
 ## Building
 
-```powershell
-# Build odl3d
-dotnet build
+Clone with the decoder submodule, or initialize it after cloning:
 
-# Release build
-dotnet build -c Release
+```sh
+git clone --recurse-submodules https://github.com/Marin-MK/odl3d.git
+# Or, from an existing checkout:
+git submodule update --init --recursive
+```
+
+Build the library and demo, or run the initial core tests:
+
+```sh
+dotnet build odl3d.sln
+dotnet test tests/odl3d.Tests/odl3d.Tests.csproj
+dotnet run --project demo/odl3d.Demo.csproj
 ```
 
 ## License
@@ -51,8 +68,7 @@ Copyright © 2026 Marijn Herrebout
 
 ## Getting Started
 
-1. Clone the repository
-2. Ensure the native dependencies for your selected renderer/backend are available in `bin`:
+1. Ensure the native dependencies for your selected renderer/backend are available in `bin`:
    * Windows: `freetype6.dll` and `glfw3.dll`
    * macOS: `libfreetype.6.dylib` and `libglfw.3.dylib`
    * Linux: `libfreetype.6.so` and `libglfw.3.so`

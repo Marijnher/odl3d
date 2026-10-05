@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Numerics;
 using System.Text;
 using odl3d.Renderer;
@@ -89,11 +88,11 @@ public class ShaderPipeline : IDisposable
     /// <returns>A new instance of ShaderPipeline configured with the default shaders and the specified vertex layout.</returns>
     public static ShaderPipeline CreateDefault(IRenderDevice renderer, bool hasNormals = false)
     {
-        string vertexFilename = GetDefaultVertexShaderFilename(renderer);
-        string fragmentFilename = GetDefaultFragmentShaderFilename(renderer);
-
-        using var defaultVertex = new Shader(renderer, vertexFilename, ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
-        using var defaultFragment = new Shader(renderer, fragmentFilename, ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
+        string vertexSource = DefaultShaders.Vertex(renderer.RenderTarget);
+        string fragmentSource = DefaultShaders.Fragment(renderer.RenderTarget);
+        ShaderLanguage language = renderer.RenderTarget == RenderTarget.OpenGL ? ShaderLanguage.GLSL : ShaderLanguage.MSL;
+        using var defaultVertex = new Shader(renderer, vertexSource, ShaderStage.Vertex, "vertex_main", language, false);
+        using var defaultFragment = new Shader(renderer, fragmentSource, ShaderStage.Fragment, "fragment_main", language, false);
 
         var attributes = new List<VertexAttributeDescription>
         {
@@ -140,17 +139,4 @@ public class ShaderPipeline : IDisposable
         return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout, autoDisposeSource: true);
     }
 
-    private static string GetDefaultVertexShaderFilename(IRenderDevice renderer) => renderer.RenderTarget switch
-    {
-        RenderTarget.OpenGL => "demo/shaders/glsl/vertex.glsl",
-        RenderTarget.Metal => "demo/shaders/msl/vertex.metal",
-        _ => throw new RenderException("Unsupported render target")
-    };
-
-    private static string GetDefaultFragmentShaderFilename(IRenderDevice renderer) => renderer.RenderTarget switch
-    {
-        RenderTarget.OpenGL => "demo/shaders/glsl/fragment.glsl",
-        RenderTarget.Metal => "demo/shaders/msl/fragment.metal",
-        _ => throw new RenderException("Unsupported render target")
-    };
 }

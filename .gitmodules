@@ -1,0 +1,3 @@
+[submodule "external/decodl"]
+	path = external/decodl
+	url = https://github.com/Marijnher/decodl.git

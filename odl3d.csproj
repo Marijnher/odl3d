@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <Platform>x64</Platform>
         <Platforms>x64</Platforms>
@@ -25,41 +24,37 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Reference Include="bin/decodl">
-            <HintPath>bin/decodl.dll</HintPath>
-        </Reference>
+        <Compile Remove="demo/**/*.cs;tests/**/*.cs;external/**/*.cs" />
+        <ProjectReference Include="external/decodl/decodl.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <!-- GLFW -->
         <None Include="bin/glfw3.dll" Condition="Exists('bin/glfw3.dll')">
+            <Link>bin/glfw3.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="bin/libglfw.3.dylib" Condition="Exists('bin/libglfw.3.dylib')">
+            <Link>bin/libglfw.3.dylib</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="bin/libglfw.3.so" Condition="Exists('bin/libglfw.3.so')">
+            <Link>bin/libglfw.3.so</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
 
         <!-- Freetype -->
-        <None Include="bin/freetype6.dll" Condition="Exists('bin/freetype6.dll')">
+        <None Include="bin/freetype.dll" Condition="Exists('bin/freetype.dll')">
+            <Link>bin/freetype.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="bin/libfreetype.6.dylib" Condition="Exists('bin/libfreetype.6.dylib')">
+            <Link>bin/libfreetype.6.dylib</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="bin/libfreetype.6.so" Condition="Exists('bin/libfreetype.6.so')">
+            <Link>bin/libfreetype.6.so</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-
-        <!-- Assets -->
-        <None Include="assets\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-
-        <None Include="demo\shaders\**">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
