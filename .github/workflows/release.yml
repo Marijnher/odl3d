@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  release:
+  library:
     name: Publish library
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -44,9 +44,68 @@ jobs:
           path: odl3d-${{ github.ref_name }}.tar.gz
           if-no-files-found: error
 
+  demo:
+    name: Publish demo (${{ matrix.rid }})
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-14
+            rid: osx-x64
+          - os: macos-14
+            rid: osx-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Verify tag points at a commit on main
+        shell: bash
+        run: |
+          git fetch origin main --depth=1
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag ${{ github.ref_name }} does not point at a commit on main" >&2
+            exit 1
+          fi
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish self-contained single-file binary
+        run: >
+          dotnet publish demo/odl3d.Demo.csproj -c Release -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=false
+          -o publish/${{ matrix.rid }}
+
+      - name: Archive publish output (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path "publish/${{ matrix.rid }}/*" -DestinationPath "odl3d-demo-${{ matrix.rid }}.zip"
+
+      - name: Archive publish output (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: tar -czf "odl3d-demo-${{ matrix.rid }}.tar.gz" -C "publish/${{ matrix.rid }}" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: odl3d-demo-${{ matrix.rid }}
+          path: odl3d-demo-${{ matrix.rid }}.*
+          if-no-files-found: error
+
   publish-release:
     name: Create GitHub Release
-    needs: release
+    needs: [library, demo]
     runs-on: ubuntu-latest
     permissions:
       contents: write
