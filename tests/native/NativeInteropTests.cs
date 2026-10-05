@@ -90,6 +90,7 @@ public class GlfwInteropTests
         Assert.True(major > 3 || major == 3 && minor >= 3);
 
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
+        GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_NO_API);
         IntPtr window = GLFW.glfwCreateWindow(1, 1, "odl3d native test", IntPtr.Zero, IntPtr.Zero);
         try
         {

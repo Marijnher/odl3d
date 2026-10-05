@@ -25,4 +25,11 @@
         </ProjectReference>
     </ItemGroup>
 
+    <Target Name="CopyOdl3dAssemblyToNativeTestOutput" AfterTargets="Build">
+        <Copy
+            SourceFiles="$(MSBuildProjectDirectory)/../../build/$(Configuration)/$(TargetFramework)/odl3d.dll"
+            DestinationFolder="$(OutDir)"
+            SkipUnchangedFiles="true" />
+    </Target>
+
 </Project>
