@@ -33,6 +33,8 @@ internal class OpenGLRenderPipeline : IRenderPipeline
     /// </summary>
     public BlendDescription Blend { get; }
 
+    public RasterizerDescription Rasterizer { get; }
+
     /// <summary>
     /// Gets or sets a value indicating whether wireframe mode is enabled for this render pipeline.
     /// </summary>
@@ -53,6 +55,8 @@ internal class OpenGLRenderPipeline : IRenderPipeline
         PrimitiveType = description.PrimitiveType;
         VertexLayout = description.VertexLayout;
         Blend = description.Blend;
+        Rasterizer = description.Rasterizer;
+        Wireframe = description.Wireframe;
         Handle = GL.glCreateProgram();
 
         var vtxShader = (OpenGLShaderModule) description.VertexShader;
@@ -86,7 +90,7 @@ internal class OpenGLRenderPipeline : IRenderPipeline
     }
 
     /// <summary>
-    /// Uses the render pipeline by setting the OpenGL program and configuring the blend state.
+    /// Uses the render pipeline by setting the OpenGL program and configuring its fixed-function states.
     /// </summary>
     public void Use()
     {
@@ -94,18 +98,57 @@ internal class OpenGLRenderPipeline : IRenderPipeline
         if (!Blend.Enabled)
         {
             GL.glDisable(GL.GL_BLEND);
-            return;
         }
-        GL.glEnable(GL.GL_BLEND);
-        GL.glBlendFuncSeparate(
-            GetBlendFactor(Blend.SourceColor),
-            GetBlendFactor(Blend.DestinationColor),
-            GetBlendFactor(Blend.SourceAlpha),
-            GetBlendFactor(Blend.DestinationAlpha));
+        else
+        {
+            GL.glEnable(GL.GL_BLEND);
+            GL.glBlendFuncSeparate(
+                GetBlendFactor(Blend.SourceColor),
+                GetBlendFactor(Blend.DestinationColor),
+                GetBlendFactor(Blend.SourceAlpha),
+                GetBlendFactor(Blend.DestinationAlpha));
 
-        GL.glBlendEquationSeparate(
-            GetBlendOperation(Blend.ColorOperation),
-            GetBlendOperation(Blend.AlphaOperation));
+            GL.glBlendEquationSeparate(
+                GetBlendOperation(Blend.ColorOperation),
+                GetBlendOperation(Blend.AlphaOperation));
+        }
+        ApplyRasterizer();
+    }
+
+    public void ApplyRasterizer()
+    {
+        FillMode fillMode = Wireframe ? FillMode.Wireframe : Rasterizer.FillMode;
+        GL.glPolygonMode(GL.GL_FRONT_AND_BACK, fillMode switch
+        {
+            FillMode.Solid => GL.GL_FILL,
+            FillMode.Wireframe => GL.GL_LINE,
+            _ => throw new RenderException($"Unsupported fill mode: {fillMode}.")
+        });
+
+        if (Rasterizer.CullMode == CullMode.None)
+        {
+            GL.glDisable(GL.GL_CULL_FACE);
+        }
+        else
+        {
+            GL.glEnable(GL.GL_CULL_FACE);
+            GL.glCullFace(Rasterizer.CullMode switch
+            {
+                CullMode.Front => GL.GL_FRONT,
+                CullMode.Back => GL.GL_BACK,
+                _ => throw new RenderException($"Unsupported cull mode: {Rasterizer.CullMode}.")
+            });
+        }
+
+        GL.glFrontFace(Rasterizer.FrontFace switch
+        {
+            FrontFace.Clockwise => GL.GL_CW,
+            FrontFace.CounterClockwise => GL.GL_CCW,
+            _ => throw new RenderException($"Unsupported front-face winding: {Rasterizer.FrontFace}.")
+        });
+
+        if (Rasterizer.DepthClip) GL.glDisable(GL.GL_DEPTH_CLAMP);
+        else GL.glEnable(GL.GL_DEPTH_CLAMP);
     }
 
     private static uint GetBlendFactor(BlendFactor f) => f switch

@@ -208,8 +208,8 @@ internal class OpenGLRenderPass : IRenderPass
     {
         FlushVertexState();
         PreDraw();
-        PrimitiveType primitiveType = _renderPipeline!.Wireframe ? PrimitiveType.LineStrip : _renderPipeline!.PrimitiveType;
-        GL.glDrawArrays(GetPrimitiveType(primitiveType), startIndex, vertexCount);
+        _renderPipeline!.ApplyRasterizer();
+        GL.glDrawArrays(GetPrimitiveType(_renderPipeline.PrimitiveType), startIndex, vertexCount);
     }
 
     /// <summary>
@@ -221,8 +221,8 @@ internal class OpenGLRenderPass : IRenderPass
     {
         FlushVertexState();
         PreDraw();
-        PrimitiveType primitiveType = _renderPipeline!.Wireframe ? PrimitiveType.LineStrip : _renderPipeline!.PrimitiveType;
-        GL.glDrawElements(GetPrimitiveType(primitiveType), indexCount, _indexType,
+        _renderPipeline!.ApplyRasterizer();
+        GL.glDrawElements(GetPrimitiveType(_renderPipeline.PrimitiveType), indexCount, _indexType,
                         startIndex * _indexSize);
     }
 

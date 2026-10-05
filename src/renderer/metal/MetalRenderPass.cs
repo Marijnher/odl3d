@@ -87,6 +87,7 @@ internal class MetalRenderPass : IRenderPass
     {
         Pipeline = (MetalRenderPipeline) shaderPipeline;
         Encoder.SetRenderPipelineState(Pipeline.Pipeline);
+        Pipeline.ApplyRasterizer(Encoder);
     }
 
     /// <summary>
@@ -168,6 +169,7 @@ internal class MetalRenderPass : IRenderPass
     /// </summary>
     void PreDraw()
     {
+        Pipeline?.ApplyRasterizer(Encoder);
         if (Texture != null && Sampler != null && Sampler.MipmapFilter != MipmapFilter.None)
         {
             Texture.ValidateMipmaps(Device, CommandQueue);
@@ -185,7 +187,7 @@ internal class MetalRenderPass : IRenderPass
         if (Pipeline == null) throw new RenderException("Cannot draw without a valid pipeline attached.");
         PreDraw();
         Encoder.DrawPrimitives(
-            primitiveType: Pipeline.Wireframe ? PrimitiveType.LineStrip : Pipeline.PrimitiveType,
+            primitiveType: Pipeline.PrimitiveType,
             vertexStart: startIndex,
             vertexCount: vertexCount
         );
@@ -208,7 +210,7 @@ internal class MetalRenderPass : IRenderPass
             indexCount: (uint) indexCount,
             indexType: IndexType.UInt32,
             indexBufferOffset: (nuint) startIndex * sizeof(uint),
-            primitiveType: Pipeline.Wireframe ? PrimitiveType.LineStrip : Pipeline.PrimitiveType
+            primitiveType: Pipeline.PrimitiveType
         );
     }
     /// <summary>

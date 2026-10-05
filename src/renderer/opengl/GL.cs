@@ -24,6 +24,7 @@ internal static class GL
     public const uint GL_COLOR_BUFFER_BIT = 0x4000;
     public const uint GL_DEPTH_BUFFER_BIT = 0x0100;
     public const uint GL_DEPTH_TEST = 0x0B71;
+    public const uint GL_CULL_FACE = 0x0B44;
     public const uint GL_SCISSOR_TEST = 0x0C11;
     public const uint GL_BLEND = 0x0BE2;
     public const uint GL_CONSTANT_COLOR = 0x8001;
@@ -104,6 +105,11 @@ internal static class GL
     public const int GL_MIRRORED_REPEAT = 0x8370;
     public const uint GL_TEXTURE0 = 0x84C0;
     public const uint GL_FRONT_AND_BACK = 0x0408;
+    public const uint GL_FRONT = 0x0404;
+    public const uint GL_BACK = 0x0405;
+    public const uint GL_CW = 0x0900;
+    public const uint GL_CCW = 0x0901;
+    public const uint GL_DEPTH_CLAMP = 0x864F;
     public const uint GL_LINE = 0x1B01;
     public const uint GL_FILL = 0x1B02;
     public const uint GL_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
@@ -167,6 +173,8 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDrawArrays(uint mode, int first, int count);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDrawElements(uint mode, int count, uint type, IntPtr indices);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glPolygonMode(uint face, uint mode);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glCullFace(uint mode);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glFrontFace(uint mode);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenTextures(int n, out uint textures);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBindTexture(uint target, uint texture);
@@ -236,6 +244,8 @@ internal static class GL
     public static d_glDrawArrays glDrawArrays;
     public static d_glDrawElements glDrawElements;
     public static d_glPolygonMode glPolygonMode;
+    public static d_glCullFace glCullFace;
+    public static d_glFrontFace glFrontFace;
 
     public static d_glGenTextures glGenTextures;
     public static d_glBindTexture glBindTexture;
@@ -311,6 +321,8 @@ internal static class GL
         glDrawArrays = Get<d_glDrawArrays>("glDrawArrays");
         glDrawElements = Get<d_glDrawElements>("glDrawElements");
         glPolygonMode = Get<d_glPolygonMode>("glPolygonMode");
+        glCullFace = Get<d_glCullFace>("glCullFace");
+        glFrontFace = Get<d_glFrontFace>("glFrontFace");
 
         glGenTextures = Get<d_glGenTextures>("glGenTextures");
         glBindTexture = Get<d_glBindTexture>("glBindTexture");

@@ -21,6 +21,8 @@ internal class MetalRenderPipeline : IRenderPipeline
     /// </summary>
     public VertexLayoutDescription VertexLayout { get; }
 
+    public RasterizerDescription Rasterizer { get; }
+
     /// <summary>
     /// Gets the Metal render pipeline state object associated with this render pipeline.
     /// </summary>
@@ -45,6 +47,7 @@ internal class MetalRenderPipeline : IRenderPipeline
     {
         Device = device;
         Wireframe = description.Wireframe;
+        Rasterizer = description.Rasterizer;
         var vertexDescriptor = Metal.VertexDescriptor.Create();
         var attribs = vertexDescriptor.Attributes;
         for (int i = 0; i < description.VertexLayout.Attributes.Length; i++)
@@ -74,6 +77,14 @@ internal class MetalRenderPipeline : IRenderPipeline
         );
         PrimitiveType = description.PrimitiveType;
         VertexLayout = description.VertexLayout;
+    }
+
+    public void ApplyRasterizer(Metal.CommandEncoder encoder)
+    {
+        encoder.SetTriangleFillMode(Wireframe ? FillMode.Wireframe : Rasterizer.FillMode);
+        encoder.SetCullMode(Rasterizer.CullMode);
+        encoder.SetFrontFacingWinding(Rasterizer.FrontFace);
+        encoder.SetDepthClipMode(Rasterizer.DepthClip);
     }
 
     /// <summary>

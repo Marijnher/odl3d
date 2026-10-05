@@ -81,6 +81,34 @@ internal static partial class Metal
         public void SetDepthStencilState(DepthStencilState state) =>
             Send("setDepthStencilState:", state);
 
+        public void SetTriangleFillMode(FillMode fillMode) =>
+            Send("setTriangleFillMode:", fillMode switch
+            {
+                FillMode.Solid => 0,
+                FillMode.Wireframe => 1,
+                _ => throw new ArgumentOutOfRangeException(nameof(fillMode), fillMode, null)
+            });
+
+        public void SetCullMode(CullMode cullMode) =>
+            Send("setCullMode:", cullMode switch
+            {
+                CullMode.None => 0,
+                CullMode.Front => 1,
+                CullMode.Back => 2,
+                _ => throw new ArgumentOutOfRangeException(nameof(cullMode), cullMode, null)
+            });
+
+        public void SetFrontFacingWinding(FrontFace frontFace) =>
+            Send("setFrontFacingWinding:", frontFace switch
+            {
+                FrontFace.Clockwise => 0,
+                FrontFace.CounterClockwise => 1,
+                _ => throw new ArgumentOutOfRangeException(nameof(frontFace), frontFace, null)
+            });
+
+        public void SetDepthClipMode(bool depthClip) =>
+            Send("setDepthClipMode:", depthClip ? 0 : 1);
+
         /// <summary>
         /// Sets the vertex buffer for the current render pass. The vertex buffer contains vertex data used by the vertex shader.
         /// </summary>
