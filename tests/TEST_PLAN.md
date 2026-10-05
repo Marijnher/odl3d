@@ -172,7 +172,7 @@ These live in the backend test projects but need no GPU:
 
 ## 6. T1 - Native interop tests
 - FreeType: init/done; load a host font face; check metrics, kerning, outline extraction and rasterized glyph data. **Run on Windows, Linux and macOS**: protects the LLP64 vs LP64 `FT_Long` struct-layout fix (`src/native/FT.cs`). Load/unload many faces with no crash. A licensed repository fixture font remains desirable for stable metric assertions.
-- GLFW: `glfwInit` succeeds; version >= 3.3; hidden-window creation where a display exists (Xvfb on Linux). GLFW and FreeType first load local `bin/` libraries, then use OS library resolution.
+- GLFW: `glfwInit` succeeds; version >= 3.3; hidden-window creation where a display exists (Xvfb on Linux). GLFW and FreeType first load local `bin/` libraries, then use OS library resolution. Skipped on hosted macOS CI: GLFW's Cocoa backend requires the main thread and a logged-in window-server session, neither of which hosted macOS runners reliably provide, and `glfwInit`/`glfwCreateWindow` hang rather than fail fast without one.
 - Metal bindings (macOS): the native framework/runtime load and platform guard are tested; selector and device-presence assertions still require a macOS runner.
 
 Coverage policy: T0 and T1 runs collect Cobertura line and branch data using `tests/coverage.runsettings`. Tier-owned code should reach 100% line coverage; all boolean/conditional branches should be exercised where platform behavior permits. Platform-specific native branches are verified by the Windows/Linux/macOS CI matrix, and new code must add tests for each new branch before merge.

@@ -136,6 +136,12 @@ public sealed class RequiresDisplayFactAttribute : FactAttribute
         {
             Skip = "GLFW window tests require a display; use Xvfb on headless Linux.";
         }
+        // GLFW's Cocoa backend requires the main thread and a logged-in window-server session;
+        // hosted macOS CI runners hang in glfwInit()/glfwCreateWindow without one.
+        else if (OperatingSystem.IsMacOS() && Environment.GetEnvironmentVariable("CI") != null)
+        {
+            Skip = "GLFW window tests hang without an interactive window-server session on hosted macOS CI runners.";
+        }
     }
 }
 
