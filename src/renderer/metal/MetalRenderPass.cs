@@ -8,9 +8,7 @@ namespace odl3d.Renderer.MetalAdapter;
 internal class MetalRenderPass : IRenderPass
 {
     private Metal.Device Device;
-    private MetalRenderSurface RenderSurface;
     private Metal.CommandQueue CommandQueue;
-    private Metal.Drawable Drawable;
     private Metal.CommandBuffer CommandBuffer;
     private Metal.CommandEncoder Encoder;
 
@@ -29,35 +27,33 @@ internal class MetalRenderPass : IRenderPass
     /// Initializes a new instance of the <see cref="MetalRenderPass"/> class.
     /// </summary>
     /// <param name="device">The Metal device associated with the render pass.</param>
-    /// <param name="renderSurface">The render surface associated with the render pass.</param>
     /// <param name="commandQueue">The command queue used for issuing rendering commands.</param>
-    /// <param name="drawable">The drawable representing the render target.</param>
+    /// <param name="colorTarget">The texture to render color into.</param>
+    /// <param name="depthTarget">The texture to render depth into.</param>
     /// <param name="commandBuffer">The command buffer used for encoding rendering commands.</param>
     /// <param name="description">The description of the render pass to create.</param>
     public MetalRenderPass(
         Metal.Device device,
-        MetalRenderSurface renderSurface,
         Metal.CommandQueue commandQueue,
-        Metal.Drawable drawable,
+        Metal.ObjCObject colorTarget,
+        Metal.Texture depthTarget,
         Metal.CommandBuffer commandBuffer,
         RenderPassDescription description)
     {
         Device = device;
-        RenderSurface = renderSurface;
         CommandQueue = commandQueue;
-        Drawable = drawable;
         CommandBuffer = commandBuffer;
 
         using var renderPass = Device.NewRenderPassDescriptor();
 
         Metal.RenderPassColorAttachment colAtch0 = renderPass.ColorAttachments[0];
-        colAtch0.Texture = Drawable.Texture;
+        colAtch0.Texture = colorTarget;
         colAtch0.LoadAction = description.Color.LoadAction;
         colAtch0.StoreAction = description.Color.StoreAction;
         colAtch0.SetClearColor(description.Color.ClearColor);
 
         Metal.RenderPassDepthAttachment depthAttachment = renderPass.DepthAttachment;
-        depthAttachment.Texture = RenderSurface.DepthTexture;
+        depthAttachment.Texture = depthTarget;
         depthAttachment.LoadAction = description.Depth?.LoadAction ?? LoadAction.Clear;
         depthAttachment.StoreAction = description.Depth?.StoreAction ?? StoreAction.DontCare;
         depthAttachment.ClearDepth = description.Depth?.ClearDepth ?? 1.0;

@@ -30,6 +30,17 @@ public interface IRenderDevice : IDisposable
     IRenderSurface CreateSurface(nint nativeWindow);
 
     /// <summary>
+    /// Creates a rendering surface that is not attached to a window. Frames acquired from it render into an
+    /// RGBA8 color target with a <see cref="TextureFormat.Depth32Float"/> depth target, and can be read back
+    /// with <see cref="IRenderFrame.ReadPixels"/>.
+    /// </summary>
+    /// <param name="width">The width of the surface in pixels. Must be greater than zero.</param>
+    /// <param name="height">The height of the surface in pixels. Must be greater than zero.</param>
+    /// <returns>The created offscreen rendering surface.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="width"/> or <paramref name="height"/> is zero.</exception>
+    IRenderSurface CreateOffscreenSurface(uint width, uint height);
+
+    /// <summary>
     /// Creates a buffer resource on the GPU with the specified description and optional initial data.
     /// </summary>
     /// <typeparam name="T">The type of the elements in the buffer.</typeparam>

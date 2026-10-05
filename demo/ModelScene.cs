@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using odl3d;
 
-namespace odl3ddemo;
+namespace odl3d.Demo;
 
 public class ModelScene : Scene3D
 {

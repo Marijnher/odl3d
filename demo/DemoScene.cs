@@ -3,7 +3,7 @@ using System.Numerics;
 using odl3d;
 using odl3d.Renderer;
 
-namespace odl3ddemo;
+namespace odl3d.Demo;
 
 class DemoScene : Scene3D
 {

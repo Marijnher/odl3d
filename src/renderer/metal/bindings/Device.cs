@@ -147,6 +147,27 @@ internal static partial class Metal
         }
 
         /// <summary>
+        /// Creates a texture usable as a render pass attachment. Color targets use managed storage so they can be
+        /// read back on the CPU; depth targets use private storage, as required for depth formats on macOS.
+        /// </summary>
+        /// <param name="width">The width of the texture.</param>
+        /// <param name="height">The height of the texture.</param>
+        /// <param name="textureFormat">The format of the texture.</param>
+        /// <returns>A new <see cref="Texture"/> instance.</returns>
+        public Texture CreateRenderTargetTexture(uint width, uint height, TextureFormat textureFormat)
+        {
+            bool isDepth = textureFormat is TextureFormat.Depth16Unorm or TextureFormat.Depth32Float
+                or TextureFormat.Depth24UnormStencil8 or TextureFormat.Depth32FloatStencil8;
+            using var descriptor = TextureDescriptor.Create(width, height, textureFormat, mipmapped: false);
+            descriptor.Usage = TextureDescriptor.UsageRenderTarget | (isDepth ? (nuint) 0 : TextureDescriptor.UsageShaderRead);
+            descriptor.StorageMode = isDepth ? TextureDescriptor.StorageModePrivate : TextureDescriptor.StorageModeManaged;
+            IntPtr handle = Send("newTextureWithDescriptor:", descriptor);
+            if (handle == IntPtr.Zero)
+                throw new RenderException("Metal could not create the render target texture.");
+            return new Texture(handle);
+        }
+
+        /// <summary>
         /// Generates mipmaps for the specified texture using the given command queue.
         /// </summary>
         /// <param name="queue">The command queue to use for generating mipmaps.</param>

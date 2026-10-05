@@ -23,6 +23,13 @@ internal static partial class Metal
             Send("generateMipmapsForTexture:", texture);
 
         /// <summary>
+        /// Copies GPU-side changes of a managed resource back to its CPU-accessible copy.
+        /// </summary>
+        /// <param name="resource">The managed buffer or texture to synchronize.</param>
+        public void SynchronizeResource(ObjCObject resource) =>
+            Send("synchronizeResource:", resource);
+
+        /// <summary>
         /// Ends the encoding of commands for the blit command encoder. After calling this method, no further commands can be encoded with this encoder.
         /// </summary>
         public void EndEncoding() => Send("endEncoding");

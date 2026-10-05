@@ -50,5 +50,20 @@ internal static partial class Metal
         {
             fixed (byte* bytePtr = bytes) Upload((nint) bytePtr, mipLevel, bytesPerRow, width, height);
         }
+
+        /// <summary>
+        /// Copies the contents of mip level 0 into the specified buffer. The texture must be CPU-accessible and
+        /// any GPU writes to it must have completed and been synchronized.
+        /// </summary>
+        /// <param name="destination">The buffer to copy into; must hold at least bytesPerRow * height bytes.</param>
+        /// <param name="bytesPerRow">The number of bytes per row in the destination buffer.</param>
+        /// <param name="width">The width of the region to copy.</param>
+        /// <param name="height">The height of the region to copy.</param>
+        public unsafe void GetBytes(byte[] destination, nuint bytesPerRow, nuint width, nuint height)
+        {
+            MTLRegion region = new MTLRegion { Width = width, Height = height, Depth = 1 };
+            fixed (byte* ptr = destination)
+                Send("getBytes:bytesPerRow:fromRegion:mipmapLevel:", (nint) ptr, bytesPerRow, region, 0);
+        }
     }
 }

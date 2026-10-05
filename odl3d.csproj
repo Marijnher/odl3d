@@ -9,7 +9,7 @@
         <Nullable>disable</Nullable>
         <Authors>Marijn Herrebout</Authors>
         <Copyright>Marijn Herrebout</Copyright>
-        <RepositoryUrl>https://github.com/Marin-MK/odl3d</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Marijnher/odl3d</RepositoryUrl>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 

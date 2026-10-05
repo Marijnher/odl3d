@@ -51,6 +51,15 @@ internal class MetalRenderDevice : IRenderDevice
         new MetalRenderSurface(Device, nativeWindow);
 
     /// <summary>
+    /// Creates a render surface that renders into textures instead of a window.
+    /// </summary>
+    /// <param name="width">The width of the surface in pixels.</param>
+    /// <param name="height">The height of the surface in pixels.</param>
+    /// <returns>The created offscreen render surface.</returns>
+    public IRenderSurface CreateOffscreenSurface(uint width, uint height) =>
+        new MetalOffscreenSurface(Device, width, height);
+
+    /// <summary>
     /// Creates a buffer with the specified description and optional initial data.
     /// </summary>
     /// <typeparam name="T">The type of the buffer elements.</typeparam>

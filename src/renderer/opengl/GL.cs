@@ -124,6 +124,13 @@ internal static class GL
     public const uint GL_TEXTURE_COMPARE_FUNC = 0x884D;
     public const uint GL_UNIFORM_BUFFER = 0x8A11;
     public const uint GL_INVALID_INDEX = 0xFFFFFFFF;
+    public const uint GL_FRAMEBUFFER = 0x8D40;
+    public const uint GL_READ_FRAMEBUFFER = 0x8CA8;
+    public const uint GL_RENDERBUFFER = 0x8D41;
+    public const uint GL_COLOR_ATTACHMENT0 = 0x8CE0;
+    public const uint GL_DEPTH_ATTACHMENT = 0x8D00;
+    public const uint GL_FRAMEBUFFER_COMPLETE = 0x8CD5;
+    public const uint GL_PACK_ALIGNMENT = 0x0D05;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClearColor(float r, float g, float b, float a);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glClearDepth(double depth);
@@ -195,6 +202,19 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendFuncSeparate(uint sfactorRGB, uint dfactorRGB, uint sfactorAlpha, uint dfactorAlpha);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBlendEquationSeparate(uint modeRGB, uint modeAlpha);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenFramebuffers(int n, out uint framebuffers);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDeleteFramebuffers(int n, ref uint framebuffers);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBindFramebuffer(uint target, uint framebuffer);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate uint d_glCheckFramebufferStatus(uint target);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGenRenderbuffers(int n, out uint renderbuffers);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDeleteRenderbuffers(int n, ref uint renderbuffers);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glBindRenderbuffer(uint target, uint renderbuffer);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glRenderbufferStorage(uint target, uint internalFormat, int width, int height);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glFramebufferRenderbuffer(uint target, uint attachment, uint renderbufferTarget, uint renderbuffer);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glReadPixels(int x, int y, int width, int height, uint format, uint type, IntPtr pixels);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glPixelStorei(uint pname, int param);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glFlush();
+
 #pragma warning disable CS8618
     public static d_glClearColor glClearColor;
     public static d_glClearDepth glClearDepth;
@@ -265,6 +285,19 @@ internal static class GL
     public static d_glDepthFunc glDepthFunc;
     public static d_glBlendFuncSeparate glBlendFuncSeparate;
     public static d_glBlendEquationSeparate glBlendEquationSeparate;
+
+    public static d_glGenFramebuffers glGenFramebuffers;
+    public static d_glDeleteFramebuffers glDeleteFramebuffers;
+    public static d_glBindFramebuffer glBindFramebuffer;
+    public static d_glCheckFramebufferStatus glCheckFramebufferStatus;
+    public static d_glGenRenderbuffers glGenRenderbuffers;
+    public static d_glDeleteRenderbuffers glDeleteRenderbuffers;
+    public static d_glBindRenderbuffer glBindRenderbuffer;
+    public static d_glRenderbufferStorage glRenderbufferStorage;
+    public static d_glFramebufferRenderbuffer glFramebufferRenderbuffer;
+    public static d_glReadPixels glReadPixels;
+    public static d_glPixelStorei glPixelStorei;
+    public static d_glFlush glFlush;
 #pragma warning restore CS8618
 
     public static bool Loaded { get; private set; }
@@ -342,6 +375,19 @@ internal static class GL
         glDepthFunc = Get<d_glDepthFunc>("glDepthFunc");
         glBlendFuncSeparate = Get<d_glBlendFuncSeparate>("glBlendFuncSeparate");
         glBlendEquationSeparate = Get<d_glBlendEquationSeparate>("glBlendEquationSeparate");
+
+        glGenFramebuffers = Get<d_glGenFramebuffers>("glGenFramebuffers");
+        glDeleteFramebuffers = Get<d_glDeleteFramebuffers>("glDeleteFramebuffers");
+        glBindFramebuffer = Get<d_glBindFramebuffer>("glBindFramebuffer");
+        glCheckFramebufferStatus = Get<d_glCheckFramebufferStatus>("glCheckFramebufferStatus");
+        glGenRenderbuffers = Get<d_glGenRenderbuffers>("glGenRenderbuffers");
+        glDeleteRenderbuffers = Get<d_glDeleteRenderbuffers>("glDeleteRenderbuffers");
+        glBindRenderbuffer = Get<d_glBindRenderbuffer>("glBindRenderbuffer");
+        glRenderbufferStorage = Get<d_glRenderbufferStorage>("glRenderbufferStorage");
+        glFramebufferRenderbuffer = Get<d_glFramebufferRenderbuffer>("glFramebufferRenderbuffer");
+        glReadPixels = Get<d_glReadPixels>("glReadPixels");
+        glPixelStorei = Get<d_glPixelStorei>("glPixelStorei");
+        glFlush = Get<d_glFlush>("glFlush");
 
         Loaded = true;
     }

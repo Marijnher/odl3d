@@ -53,6 +53,15 @@ internal class OpenGLRenderDevice : IRenderDevice
         new OpenGLRenderSurface(this, nativeWindow);
 
     /// <summary>
+    /// Creates a new render surface backed by a framebuffer object instead of a window.
+    /// </summary>
+    /// <param name="width">The width of the surface in pixels.</param>
+    /// <param name="height">The height of the surface in pixels.</param>
+    /// <returns>The created offscreen render surface.</returns>
+    public IRenderSurface CreateOffscreenSurface(uint width, uint height) =>
+        new OpenGLOffscreenSurface(this, width, height);
+
+    /// <summary>
     /// Creates a new buffer with the specified description and optional initial data.
     /// </summary>
     /// <typeparam name="T">The type of the buffer elements.</typeparam>

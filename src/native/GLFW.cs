@@ -50,6 +50,7 @@ internal static class GLFW
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate IntPtr d_glfwCreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, IntPtr monitor, IntPtr share);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwDestroyWindow(IntPtr window);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwMakeContextCurrent(IntPtr window);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate IntPtr d_glfwGetCurrentContext();
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwSwapBuffers(IntPtr window);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwSwapInterval(int interval);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwPollEvents();
@@ -84,6 +85,7 @@ internal static class GLFW
     public static d_glfwCreateWindow glfwCreateWindow;
     public static d_glfwDestroyWindow glfwDestroyWindow;
     public static d_glfwMakeContextCurrent glfwMakeContextCurrent;
+    public static d_glfwGetCurrentContext glfwGetCurrentContext;
     public static d_glfwSwapBuffers glfwSwapBuffers;
     public static d_glfwSwapInterval glfwSwapInterval;
     public static d_glfwPollEvents glfwPollEvents;
@@ -141,6 +143,7 @@ internal static class GLFW
         glfwCreateWindow = GetFunction<d_glfwCreateWindow>("glfwCreateWindow");
         glfwDestroyWindow = GetFunction<d_glfwDestroyWindow>("glfwDestroyWindow");
         glfwMakeContextCurrent = GetFunction<d_glfwMakeContextCurrent>("glfwMakeContextCurrent");
+        glfwGetCurrentContext = GetFunction<d_glfwGetCurrentContext>("glfwGetCurrentContext");
         glfwSwapBuffers = GetFunction<d_glfwSwapBuffers>("glfwSwapBuffers");
         glfwSwapInterval = GetFunction<d_glfwSwapInterval>("glfwSwapInterval");
         glfwGetKey = GetFunction<d_glfwGetKey>("glfwGetKey");

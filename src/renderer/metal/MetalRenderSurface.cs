@@ -96,7 +96,7 @@ internal class MetalRenderSurface : IRenderSurface
     public IRenderFrame? AcquireFrame()
     {
         var drawable = MetalLayer.NextDrawable();
-        return new MetalRenderFrame(Device, this, CommandQueue, drawable);
+        return new MetalRenderFrame(Device, CommandQueue, DepthTexture, drawable);
     }
 
     /// <summary>

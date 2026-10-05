@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "odl3d.Demo", "demo\odl3d.De
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "odl3d.Tests", "tests\odl3d.Tests\odl3d.Tests.csproj", "{931B981F-0CAA-4919-90C3-457F7EDEE9DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "odl3d.Tests", "tests\odl3d.Tests.csproj", "{931B981F-0CAA-4919-90C3-457F7EDEE9DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

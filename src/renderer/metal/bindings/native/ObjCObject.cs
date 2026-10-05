@@ -171,6 +171,9 @@ internal static partial class Metal
         protected T Send<T>(string selectorName, MTLRegion region, nuint level, IntPtr bytes, nuint bytesPerRow) where T : ObjCObject =>
             Convert<T>(Send(selectorName, region, level, bytes, bytesPerRow));
 
+        protected IntPtr Send(string selectorName, IntPtr bytes, nuint bytesPerRow, MTLRegion region, nuint level) =>
+            objc_msgSendPtrUInt64RegionUInt64(Handle, GetSelector(selectorName), bytes, bytesPerRow, region, level);
+
         protected IntPtr Send(string selectorName, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset) =>
             objc_msgSendThreeUInt64PtrUInt64(Handle, GetSelector(selectorName), primitiveType, indexCount, indexType, indexBuffer, indexBufferOffset);
         protected T Send<T>(string selectorName, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset) where T : ObjCObject =>

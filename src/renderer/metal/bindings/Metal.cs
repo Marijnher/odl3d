@@ -25,6 +25,7 @@ internal static partial class Metal
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendThreeUInt64PtrUInt64(IntPtr receiver, IntPtr selector, nuint primitiveType, nuint indexCount, nuint indexType, IntPtr indexBuffer, nuint indexBufferOffset);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendThreeUInt64Byte(IntPtr receiver, IntPtr selector, nuint pixelFormat, nuint width, nuint height, byte mipmapped);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendRegion(IntPtr receiver, IntPtr selector, MTLRegion region, nuint level, IntPtr bytes, nuint bytesPerRow);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendPtrUInt64RegionUInt64(IntPtr receiver, IntPtr selector, IntPtr bytes, nuint bytesPerRow, MTLRegion region, nuint level);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendViewport(IntPtr receiver, IntPtr selector, MTLViewport viewport);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate IntPtr d_objc_msgSendScissorRect(IntPtr receiver, IntPtr selector, MTLScissorRect scissorRect);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate CGSize d_objc_msgSendRetSize(IntPtr receiver, IntPtr selector);
@@ -53,6 +54,7 @@ internal static partial class Metal
     private static d_objc_msgSendThreeUInt64PtrUInt64 objc_msgSendThreeUInt64PtrUInt64;
     private static d_objc_msgSendThreeUInt64Byte objc_msgSendThreeUInt64Byte;
     private static d_objc_msgSendRegion objc_msgSendRegion;
+    private static d_objc_msgSendPtrUInt64RegionUInt64 objc_msgSendPtrUInt64RegionUInt64;
     private static d_objc_msgSendViewport objc_msgSendViewport;
     private static d_objc_msgSendScissorRect objc_msgSendScissorRect;
     private static d_objc_msgSendRetSize objc_msgSendRetSize;
@@ -106,6 +108,7 @@ internal static partial class Metal
         objc_msgSendThreeUInt64PtrUInt64 = GetFunction<d_objc_msgSendThreeUInt64PtrUInt64>(_objc, "objc_msgSend");
         objc_msgSendThreeUInt64Byte = GetFunction<d_objc_msgSendThreeUInt64Byte>(_objc, "objc_msgSend");
         objc_msgSendRegion = GetFunction<d_objc_msgSendRegion>(_objc, "objc_msgSend");
+        objc_msgSendPtrUInt64RegionUInt64 = GetFunction<d_objc_msgSendPtrUInt64RegionUInt64>(_objc, "objc_msgSend");
         objc_msgSendViewport = GetFunction<d_objc_msgSendViewport>(_objc, "objc_msgSend");
         objc_msgSendScissorRect = GetFunction<d_objc_msgSendScissorRect>(_objc, "objc_msgSend");
         objc_msgSendRetSize = GetFunction<d_objc_msgSendRetSize>(_objc, "objc_msgSend");

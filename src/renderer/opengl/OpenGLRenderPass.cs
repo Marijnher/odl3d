@@ -8,7 +8,7 @@ namespace odl3d.Renderer.OpenGLAdapter;
 /// </summary>
 internal class OpenGLRenderPass : IRenderPass
 {
-    private OpenGLRenderSurface RenderSurface { get; }
+    private readonly uint _targetHeight;
 
     /// <summary>
     /// Gets a value indicating whether the render pass has been disposed.
@@ -30,14 +30,19 @@ internal class OpenGLRenderPass : IRenderPass
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenGLRenderPass"/> class.
     /// </summary>
-    /// <param name="renderSurface">The render surface associated with this render pass.</param>
-    /// <param name="vertexState">The initial vertex state for the render pass.</param>
+    /// <param name="framebuffer">The framebuffer to render into; 0 is the window's default framebuffer.</param>
+    /// <param name="targetWidth">The width of the render target in pixels.</param>
+    /// <param name="targetHeight">The height of the render target in pixels.</param>
+    /// <param name="vertexArrayCache">The vertex array cache of the device.</param>
     /// <param name="description">The description of the render pass.</param>
-    public OpenGLRenderPass(OpenGLRenderSurface renderSurface, GLVertexArrayCache vertexArrayCache, RenderPassDescription description)
+    public OpenGLRenderPass(uint framebuffer, uint targetWidth, uint targetHeight, GLVertexArrayCache vertexArrayCache, RenderPassDescription description)
     {
-        RenderSurface = renderSurface;
+        _targetHeight = targetHeight;
         _vertexArrayCache = vertexArrayCache;
         uint clearFlags = 0;
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, framebuffer);
+        // Match Metal, whose default viewport covers the whole attachment.
+        GL.glViewport(0, 0, (int) targetWidth, (int) targetHeight);
         GL.glDisable(GL.GL_SCISSOR_TEST);
         if (description.Color.LoadAction == LoadAction.Clear)
         {
@@ -60,7 +65,7 @@ internal class OpenGLRenderPass : IRenderPass
     /// <param name="viewportRect">The rectangle defining the viewport dimensions and position.</param>
     public void SetViewport(Rect viewportRect)
     {
-        float y = RenderSurface.Height - (viewportRect.Y + viewportRect.Height);
+        float y = _targetHeight - (viewportRect.Y + viewportRect.Height);
         GL.glViewport((int) viewportRect.X, (int) y, (int) viewportRect.Width, (int) viewportRect.Height);
     }
 
@@ -71,7 +76,7 @@ internal class OpenGLRenderPass : IRenderPass
     public void SetScissor(Rect scissorRect)
     {
         GL.glEnable(GL.GL_SCISSOR_TEST);
-        float y = RenderSurface.Height - (scissorRect.Y + scissorRect.Height);
+        float y = _targetHeight - (scissorRect.Y + scissorRect.Height);
         GL.glScissor((int) scissorRect.X, (int) y, (int) scissorRect.Width, (int) scissorRect.Height);
     }
 

@@ -9,6 +9,27 @@ internal static partial class Metal
     /// </summary>
     public sealed class TextureDescriptor : ObjCObject
     {
+        public const nuint UsageShaderRead = 0x0001;
+        public const nuint UsageRenderTarget = 0x0004;
+        public const nuint StorageModeManaged = 1;
+        public const nuint StorageModePrivate = 2;
+
+        /// <summary>
+        /// Sets the MTLTextureUsage flags of the texture.
+        /// </summary>
+        public nuint Usage
+        {
+            set => Send("setUsage:", value);
+        }
+
+        /// <summary>
+        /// Sets the MTLStorageMode of the texture.
+        /// </summary>
+        public nuint StorageMode
+        {
+            set => Send("setStorageMode:", value);
+        }
+
         /// <summary>
         /// Gets the class pointer for the Metal texture descriptor.
         /// </summary>
@@ -26,14 +47,15 @@ internal static partial class Metal
         /// <param name="width">The width of the texture.</param>
         /// <param name="height">The height of the texture.</param>
         /// <param name="textureFormat">The format of the texture.</param>
+        /// <param name="mipmapped">Whether the texture has a full mipmap chain.</param>
         /// <returns>A new <see cref="TextureDescriptor"/> instance.</returns>
-        public static TextureDescriptor Create(uint width, uint height, TextureFormat textureFormat = TextureFormat.RGBA8Unorm)
+        public static TextureDescriptor Create(uint width, uint height, TextureFormat textureFormat = TextureFormat.RGBA8Unorm, bool mipmapped = true)
         {
             nuint pixelFormat = GetPixelFormat(textureFormat);
             IntPtr handle = SendRaw(
                 ClassPointer,
                 "texture2DDescriptorWithPixelFormat:width:height:mipmapped:",
-                pixelFormat, width, height, 1
+                pixelFormat, width, height, (byte) (mipmapped ? 1 : 0)
             );
             if (handle == IntPtr.Zero)
                 throw new RenderException("Metal could not create the texture.");
