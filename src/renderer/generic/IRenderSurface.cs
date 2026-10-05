@@ -23,11 +23,6 @@ public interface IRenderSurface : IGPUResource
     bool VSync { get; set; }
 
     /// <summary>
-    /// Gets the color format of the render surface.
-    /// </summary>
-    TextureFormat ColorFormat { get; }
-
-    /// <summary>
     /// Gets the depth format of the render surface, if available.
     /// </summary>
     TextureFormat? DepthFormat { get; }

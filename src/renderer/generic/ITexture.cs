@@ -18,11 +18,6 @@ public interface ITexture : IGPUResource
     uint Height { get; }
 
     /// <summary>
-    /// Gets the depth of the texture in pixels.
-    /// </summary>
-    int Depth { get; }
-
-    /// <summary>
     /// Gets the format of the texture.
     /// </summary>
     TextureFormat Format { get; }
@@ -31,11 +26,6 @@ public interface ITexture : IGPUResource
     /// Gets the usage flags of the texture.
     /// </summary>
     TextureUsage Usage { get; }
-
-    /// <summary>
-    /// Gets the number of samples per texel for the texture.
-    /// </summary>
-    int SampleCount { get; }
 
     /// <summary>
     /// Uploads texture data to the specified mip level.

@@ -26,11 +26,6 @@ internal class MetalTexture : ITexture
     public uint Height { get; }
 
     /// <summary>
-    /// Gets the depth of the texture.
-    /// </summary>
-    public int Depth { get; }
-
-    /// <summary>
     /// Gets the format of the texture.
     /// </summary>
     public TextureFormat Format { get; }
@@ -39,11 +34,6 @@ internal class MetalTexture : ITexture
     /// Gets the usage flags of the texture.
     /// </summary>
     public TextureUsage Usage { get; }
-
-    /// <summary>
-    /// Gets the sample count of the texture.
-    /// </summary>
-    public int SampleCount { get; }
 
     /// <summary>
     /// Gets a value indicating whether the texture has been disposed.
@@ -66,6 +56,8 @@ internal class MetalTexture : ITexture
         Device = device;
         Width = description.Width;
         Height = description.Height;
+        Format = description.Format;
+        Usage = description.Usage;
         Texture = Device.CreateTexture(
             initialData ?? new byte[Width * Height * 4],
             Width, Height, description.Format

@@ -5,7 +5,7 @@ namespace odl3d.Renderer.OpenGLAdapter;
 /// <summary>
 /// Represents an OpenGL frame used for rendering.
 /// </summary>
-internal class OpenGLFrame : IRenderFrame
+internal class OpenGLRenderFrame : IRenderFrame
 {
     private nint WindowHandle;
 
@@ -20,22 +20,17 @@ internal class OpenGLFrame : IRenderFrame
     public OpenGLRenderSurface RenderSurface { get; private set; }
 
     /// <summary>
-    /// Gets the color texture associated with this frame.
-    /// </summary>
-    public ITexture ColorTexture => throw new NotImplementedException();
-
-    /// <summary>
     /// Gets a value indicating whether the frame has been disposed.
     /// </summary>
     public bool Disposed { get; private set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="OpenGLFrame"/> class.
+    /// Initializes a new instance of the <see cref="OpenGLRenderFrame"/> class.
     /// </summary>
     /// <param name="device">The OpenGL render device associated with this frame.</param>
     /// <param name="renderSurface">The render surface associated with this frame.</param>
     /// <param name="windowHandle">The handle to the window for this frame.</param>
-    public OpenGLFrame(OpenGLRenderDevice device, OpenGLRenderSurface renderSurface, nint windowHandle)
+    public OpenGLRenderFrame(OpenGLRenderDevice device, OpenGLRenderSurface renderSurface, nint windowHandle)
     {
         Device = device;
         RenderSurface = renderSurface;
@@ -49,7 +44,7 @@ internal class OpenGLFrame : IRenderFrame
     /// <returns>The newly created render pass.</returns>
     public IRenderPass CreateRenderPass(RenderPassDescription renderPassDescription) =>
         Disposed
-            ? throw new ObjectDisposedException(nameof(OpenGLFrame))
+            ? throw new ObjectDisposedException(nameof(OpenGLRenderFrame))
             : new OpenGLRenderPass(RenderSurface, Device.VertexArrayCache, renderPassDescription);
     
     /// <summary>

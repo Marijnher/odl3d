@@ -92,7 +92,7 @@ internal class OpenGLRenderSurface : IRenderSurface
     /// </summary>
     /// <returns>The acquired render frame, or null if no frame could be acquired.</returns>
     public IRenderFrame? AcquireFrame() =>
-        new OpenGLFrame(Device, this, WindowHandle);
+        new OpenGLRenderFrame(Device, this, WindowHandle);
 
     /// <summary>
     /// Disposes the render surface and releases any associated resources.

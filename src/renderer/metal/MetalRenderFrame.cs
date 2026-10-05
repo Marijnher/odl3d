@@ -15,11 +15,6 @@ internal class MetalRenderFrame : IRenderFrame
     private Metal.CommandBuffer CommandBuffer;
 
     /// <summary>
-    /// Gets the color texture associated with the render frame.
-    /// </summary>
-    public ITexture ColorTexture => throw new NotImplementedException();
-
-    /// <summary>
     /// Gets a value indicating whether the render frame has been disposed.
     /// </summary>
     public bool Disposed { get; private set; }

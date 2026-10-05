@@ -10,11 +10,6 @@ namespace odl3d.Renderer;
 public interface IRenderFrame : IDisposable
 {
     /// <summary>
-    /// Gets the color texture associated with the frame.
-    /// </summary>
-    ITexture ColorTexture { get; }
-
-    /// <summary>
     /// Creates a render pass for the frame with the specified description.
     /// </summary>
     /// <param name="renderPassDescription">The description of the render pass to create.</param>

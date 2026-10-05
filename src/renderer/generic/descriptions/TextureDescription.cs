@@ -23,16 +23,6 @@ public sealed record TextureDescription
     public required TextureFormat Format { get; init; }
 
     /// <summary>
-    /// The depth of the texture in texels. For 2D textures, this is typically 1.
-    /// </summary>
-    public int Depth { get; init; } = 1;
-
-    /// <summary>
-    /// The number of samples per texel for multisampled textures.
-    /// </summary>
-    public int SampleCount { get; init; } = 1;
-
-    /// <summary>
     /// The intended usage of the texture, such as sampled, render target, or storage.
     /// </summary>
     public TextureUsage Usage { get; init; } = TextureUsage.Sampled;

@@ -23,11 +23,6 @@ internal class OpenGLTexture : ITexture
     public uint Height { get; }
 
     /// <summary>
-    /// Gets the depth of the texture in pixels.
-    /// </summary>
-    public int Depth { get; }
-
-    /// <summary>
     /// Gets the format of the texture.
     /// </summary>
     public TextureFormat Format { get; }
@@ -36,11 +31,6 @@ internal class OpenGLTexture : ITexture
     /// Gets the usage flags of the texture.
     /// </summary>
     public TextureUsage Usage { get; }
-
-    /// <summary>
-    /// Gets the number of samples per texel for multisampled textures.
-    /// </summary>
-    public int SampleCount { get; }
 
     /// <summary>
     /// Gets a value indicating whether the texture has been disposed.
@@ -61,10 +51,8 @@ internal class OpenGLTexture : ITexture
     {
         Width = description.Width;
         Height = description.Height;
-        Depth = description.Depth;
         Format = description.Format;
         Usage = description.Usage;
-        SampleCount = description.SampleCount;
         GL.glGenTextures(1, out uint handle);
         Handle = handle;
         if (initialData != null) Upload(initialData);
