@@ -113,6 +113,12 @@ public class TextureBuilder
     }
 
     /// <summary>
+    /// Initializes a new instance of the TextureBuilder class by loading a texture from the specified file. The builder will allow modifications to the loaded texture's pixel data.
+    /// </summary>
+    /// <param name="filename">The path to the texture file to be loaded.</param>
+    public TextureBuilder(string filename) : this(new Texture(filename), true) { }
+
+    /// <summary>
     /// Initializes a new instance of the TextureBuilder class with the specified width and height. A new pixel buffer is allocated for the texture.
     /// </summary>
     /// <param name="width">The width of the texture in pixels.</param>

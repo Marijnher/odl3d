@@ -1,16 +1,18 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace odl3d.Renderer.OpenGLAdapter;
 
 /// <summary>
 /// Represents a vertex buffer slot, including its ID and offset within the buffer.
 /// </summary>
-internal struct VertexSlot { public uint ID; public uint Offset; }
+internal readonly record struct VertexSlot(uint ID, uint Offset);
 
 /// <summary>
 /// Represents the state of the OpenGL vertex array, including the currently bound vertex layout, vertex buffer slots, and index buffer.
 /// </summary>
-internal sealed class GLVertexState
+internal sealed class GLVertexState : IDisposable
 {
     /// <summary>
     /// Gets the ID of the OpenGL vertex array object (VAO).
@@ -30,7 +32,7 @@ internal sealed class GLVertexState
     {
         GL.glGenVertexArrays(1, out uint vao);
         Vao = vao;
-        GL.glBindVertexArray(Vao);            // stays bound for the device's lifetime
+        GL.glBindVertexArray(Vao);
     }
 
     /// <summary>
@@ -91,15 +93,111 @@ internal sealed class GLVertexState
         _elementBuffer = id;
     }
 
-    /// <summary>
-    /// Handles the deletion of a buffer by updating the OpenGL vertex array state accordingly.
-    /// </summary>
-    /// <param name="id">The ID of the buffer that was deleted.</param>
+    public void Dispose()
+    {
+        uint vao = Vao;
+        GL.glDeleteVertexArrays(1, ref vao);
+    }
+}
+
+/// <summary>
+/// Reuses vertex array objects for matching layouts and buffer bindings.
+/// </summary>
+internal sealed class GLVertexArrayCache
+{
+    private const int MaxEntries = 256;
+
+    private sealed class Entry
+    {
+        public required int Hash { get; init; }
+        public required GLVertexLayout Layout { get; init; }
+        public required VertexSlot[] Slots { get; init; }
+        public required uint IndexBuffer { get; init; }
+        public required GLVertexState State { get; init; }
+    }
+
+    private readonly Dictionary<int, List<Entry>> _entries = new();
+    private readonly Queue<Entry> _insertionOrder = new();
+    private int _count;
+
+    public void Bind(GLVertexLayout layout, VertexSlot[] slots, uint indexBuffer)
+    {
+        int hash = GetHash(layout, slots, indexBuffer);
+        if (_entries.TryGetValue(hash, out List<Entry>? bucket))
+        {
+            foreach (Entry entry in bucket)
+            {
+                if (!ReferenceEquals(entry.Layout, layout) || entry.IndexBuffer != indexBuffer || !entry.Slots.AsSpan().SequenceEqual(slots))
+                    continue;
+
+                GL.glBindVertexArray(entry.State.Vao);
+                return;
+            }
+        }
+
+        GLVertexState state = new();
+        state.Apply(layout, slots);
+        state.BindIndexBuffer(indexBuffer);
+        Entry added = new()
+        {
+            Hash = hash,
+            Layout = layout,
+            Slots = (VertexSlot[]) slots.Clone(),
+            IndexBuffer = indexBuffer,
+            State = state
+        };
+        if (!_entries.TryGetValue(hash, out bucket))
+            _entries.Add(hash, bucket = new List<Entry>());
+        bucket.Add(added);
+        _insertionOrder.Enqueue(added);
+        _count++;
+
+        while (_count > MaxEntries)
+            Remove(_insertionOrder.Dequeue());
+    }
+
     public void OnBufferDeleted(uint id)
     {
-        for (int i = 0; i < _slots.Length; i++)
-            if (_slots[i].ID == id) _slots[i] = default;
-        if (_arrayBuffer == id) _arrayBuffer = 0;
-        if (_elementBuffer == id) _elementBuffer = 0;
+        List<Entry> staleEntries = new();
+        foreach (List<Entry> bucket in _entries.Values)
+        {
+            foreach (Entry entry in bucket)
+            {
+                bool containsBuffer = entry.IndexBuffer == id;
+                for (int i = 0; !containsBuffer && i < entry.Slots.Length; i++)
+                    containsBuffer = entry.Slots[i].ID == id;
+                if (containsBuffer) staleEntries.Add(entry);
+            }
+        }
+        foreach (Entry entry in staleEntries)
+            Remove(entry);
+    }
+
+    public void Clear()
+    {
+        foreach (List<Entry> bucket in _entries.Values)
+            foreach (Entry entry in bucket)
+                entry.State.Dispose();
+        _entries.Clear();
+        _insertionOrder.Clear();
+        _count = 0;
+    }
+
+    private static int GetHash(GLVertexLayout layout, VertexSlot[] slots, uint indexBuffer)
+    {
+        HashCode hash = new();
+        hash.Add(RuntimeHelpers.GetHashCode(layout));
+        hash.Add(indexBuffer);
+        foreach (VertexSlot slot in slots)
+            hash.Add(slot);
+        return hash.ToHashCode();
+    }
+
+    private void Remove(Entry entry)
+    {
+        if (!_entries.TryGetValue(entry.Hash, out List<Entry>? bucket) || !bucket.Remove(entry)) return;
+        if (bucket.Count == 0) _entries.Remove(entry.Hash);
+        entry.State.Dispose();
+        _count--;
     }
 }

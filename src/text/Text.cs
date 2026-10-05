@@ -83,8 +83,8 @@ public abstract class Text : Object3D
     /// <param name="content">The initial text to display. May contain line breaks.</param>
     /// <param name="style">The initial Bold/Italic style.</param>
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
-    protected Text(Scene<Object3D> scene, Font font, string content, FontStyle style, TextAlign align)
-        : base(scene, null, null)
+    protected Text(Font font, string content, FontStyle style, TextAlign align)
+        : base()
     {
         _font = font;
         _content = content;

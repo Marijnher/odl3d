@@ -27,10 +27,7 @@ internal class OpenGLRenderDevice : IRenderDevice
     /// </summary>
     public bool Disposed { get; private set; }
 
-    /// <summary>
-    /// Gets or sets the current vertex state of the OpenGL render device.
-    /// </summary>
-    public GLVertexState? VertexState { get; set; }
+    public GLVertexArrayCache VertexArrayCache { get; } = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenGLRenderDevice"/> class.
@@ -109,6 +106,7 @@ internal class OpenGLRenderDevice : IRenderDevice
     public void Dispose()
     {
         if (Disposed) return;
+        VertexArrayCache.Clear();
         Disposed = true;
     }
 }

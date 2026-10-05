@@ -13,12 +13,12 @@ public class Object3D : Drawable
     /// <summary>
     /// The Scene3D instance to which this Fobject belongs. The scene provides context for the object's position and scale in world space, as well as access to the camera and other scene properties.
     /// </summary>
-    public Scene<Object3D> Scene;
+    public Scene<Object3D>? Scene { get; private set; }
 
     /// <summary>
     /// The renderer instance used to draw this object. This is obtained from the window associated with the scene.
     /// </summary>
-    protected IRenderDevice Renderer => Window.Renderer;
+    protected IRenderDevice Renderer => (Scene ?? throw new InvalidOperationException("Attach the object to a scene before drawing it.")).Window.Renderer;
 
     /// <summary>
     /// The texture to use when drawing this object, or null to draw without a texture.
@@ -71,29 +71,23 @@ public class Object3D : Drawable
     /// <param name="scene">The scene to which this object belongs.</param>
     /// <param name="mesh">The mesh to use when drawing this object, or null to draw nothing.</param>
     /// <param name="texture">The texture to use when drawing this object, or null to draw without a texture.</param>
-    public Object3D(Scene<Object3D> scene, Mesh? mesh = null, Texture? texture = null) 
+    public Object3D(Mesh? mesh = null, Texture? texture = null)
     {
-        Scene = scene;
         Mesh = mesh;
         Texture = texture;
         Sampler = new Sampler();
-        scene.Add(this);
     }
 
-    /// <summary>
-    /// Creates a new Object3D with the given mesh and optional texture, and optionally adds it to the scene.
-    /// </summary>
-    /// <param name="scene">The scene to which this object belongs.</param>
-    /// <param name="mesh">The mesh to use when drawing this object, or null to draw nothing.</param>
-    /// <param name="texture">The texture to use when drawing this object, or null to draw without a texture.</param>
-    /// <param name="addToScene">True to add the object to the scene immediately; false to add it later manually.</param>
-    protected Object3D(Scene<Object3D> scene, Mesh? mesh, Texture? texture, bool addToScene) 
+    internal virtual void Attach(Scene<Object3D> scene)
     {
+        if (Disposed) throw new ObjectDisposedException(nameof(Object3D));
+        if (Scene != null) throw new InvalidOperationException("The object already belongs to a scene.");
         Scene = scene;
-        Mesh = mesh;
-        Texture = texture;
-        Sampler = new Sampler();
-        if (addToScene) scene.Add(this);
+    }
+
+    internal virtual void Detach(Scene<Object3D>? scene)
+    {
+        if (ReferenceEquals(Scene, scene)) Scene = null;
     }
 
     ~Object3D()
@@ -109,7 +103,7 @@ public class Object3D : Drawable
     {
         if (enable && InputManager == null)
         {
-            InputManager = new ProxyInputManager(Scene.Window);
+            InputManager = new ProxyInputManager((Scene ?? throw new InvalidOperationException("Attach the object to a scene before enabling input.")).Window);
         }
         else if (!enable && InputManager != null)
         {
@@ -127,7 +121,7 @@ public class Object3D : Drawable
         Matrix4x4.CreateRotationX(MathF.PI / 180 * Rotation.X) *
         Matrix4x4.CreateRotationY(MathF.PI / 180 * Rotation.Y) *
         Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
-        Matrix4x4.CreateTranslation(Position + Scene.Position);
+        Matrix4x4.CreateTranslation(Position + (Scene?.Position ?? Vector3.Zero));
 
     /// <summary>
     /// Returns the shader data for this object, which includes the model matrix, texture usage, colors, and normal information.
@@ -162,16 +156,19 @@ public class Object3D : Drawable
         if (!Visible || Disposed || Mesh == null || Mesh.Disposed) return;
         if (passType == RenderPass.Transparent != IsTransparent) return;
 
-        ShaderPipeline pipeline = Mesh.HasNormals ? Scene.Window.ShaderPipelineWithNormals : Scene.Window.ShaderPipeline;
+        Scene<Object3D> scene = Scene ?? throw new InvalidOperationException("Attach the object to a scene before drawing it.");
+        ShaderPipeline pipeline = Mesh.HasNormals ? scene.Window.ShaderPipelineWithNormals : scene.Window.ShaderPipeline;
         pass.SetRenderPipeline(pipeline.Pipeline);
 
+        Mesh.EnsureUploaded(Renderer);
         pass.SetVertexBuffer(Mesh.Vertices);
         pass.SetIndexBuffer(Mesh.Indices);
         if (Texture != null && !Texture.Disposed)
         {
-            if (!Texture.Uploaded) Texture.Upload();
+            Texture.EnsureUploaded(Renderer);
             pass.SetTexture(Texture.RenderTexture);
         }
+        Sampler.EnsureCreated(Renderer);
         pass.SetSampler(Sampler.RenderSampler);
         pass.DrawIndexed();
     }

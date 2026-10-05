@@ -17,7 +17,7 @@ internal class OpenGLRenderPass : IRenderPass
 
     private VertexSlot[] _vbSlots = new VertexSlot[GLVertexLayout.MaxSlots];
     private OpenGLRenderPipeline? _renderPipeline;
-    private GLVertexState _vertexState;
+    private GLVertexArrayCache _vertexArrayCache;
     private bool _vertexStateDirty;
     private uint _indexBufferHandle;
     uint _indexType;
@@ -33,10 +33,10 @@ internal class OpenGLRenderPass : IRenderPass
     /// <param name="renderSurface">The render surface associated with this render pass.</param>
     /// <param name="vertexState">The initial vertex state for the render pass.</param>
     /// <param name="description">The description of the render pass.</param>
-    public OpenGLRenderPass(OpenGLRenderSurface renderSurface, GLVertexState vertexState, RenderPassDescription description)
+    public OpenGLRenderPass(OpenGLRenderSurface renderSurface, GLVertexArrayCache vertexArrayCache, RenderPassDescription description)
     {
         RenderSurface = renderSurface;
-        _vertexState = vertexState;
+        _vertexArrayCache = vertexArrayCache;
         uint clearFlags = 0;
         GL.glDisable(GL.GL_SCISSOR_TEST);
         if (description.Color.LoadAction == LoadAction.Clear)
@@ -112,7 +112,7 @@ internal class OpenGLRenderPass : IRenderPass
     public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
         var b = (OpenGLBuffer<T>) buffer;
-        _vbSlots[slot] = new VertexSlot { ID = b.Handle, Offset = offset };
+        _vbSlots[slot] = new VertexSlot(b.Handle, offset);
         _vertexStateDirty = true;
     }
     
@@ -137,6 +137,7 @@ internal class OpenGLRenderPass : IRenderPass
         };
         _indexSize = sizeof(T);
         _indexCount = b.Size;
+        _vertexStateDirty = true;
     }
 
     /// <summary>
@@ -219,7 +220,6 @@ internal class OpenGLRenderPass : IRenderPass
     public void DrawIndexed(int startIndex, int indexCount)
     {
         FlushVertexState();
-        _vertexState.BindIndexBuffer(_indexBufferHandle);
         PreDraw();
         PrimitiveType primitiveType = _renderPipeline!.Wireframe ? PrimitiveType.LineStrip : _renderPipeline!.PrimitiveType;
         GL.glDrawElements(GetPrimitiveType(primitiveType), indexCount, _indexType,
@@ -237,7 +237,7 @@ internal class OpenGLRenderPass : IRenderPass
     private void FlushVertexState()
     {
         if (!_vertexStateDirty) return;
-        _vertexState.Apply(_renderPipeline!.GLLayout, _vbSlots);
+        _vertexArrayCache.Bind(_renderPipeline!.GLLayout, _vbSlots, _indexBufferHandle);
         _vertexStateDirty = false;
     }
 
@@ -251,7 +251,7 @@ internal class OpenGLRenderPass : IRenderPass
         GL.glBindSampler(0, 0);
         GL.glBindBuffer(GL.GL_UNIFORM_BUFFER, 0);
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0);
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GL.glBindVertexArray(0);
         GL.glUseProgram(0);
     }
 

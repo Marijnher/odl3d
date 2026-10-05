@@ -15,11 +15,12 @@ public class Window : InputHost
     /// </summary>
     public IntPtr Handle { get; protected set; }
 
-    private static IRenderDevice? _renderer;
     /// <summary>
     /// The renderer instance used to render the window's contents. The Renderer property provides access to the active renderer, allowing the Window to call renderer methods for rendering scenes, managing resources, and interacting with the rendering backend. This property is read-only and is initialized in the constructor.
     /// </summary>
-    public static IRenderDevice Renderer => _renderer ?? throw new RenderException("Cannot access the global renderer until a Window has been created.");
+    public IRenderDevice Renderer => Application.Renderer;
+
+    public GraphicsApplication Application { get; }
 
     /// <summary>
     /// The render surface associated with the window. This surface is used by the renderer to draw the window's contents. It is initialized when the window is created and should not be modified directly.
@@ -113,10 +114,9 @@ public class Window : InputHost
     /// <param name="height">Window height in pixels.</param>
     /// <param name="title">Window title.</param>
     /// </summary>
-    public Window(int width, int height, string title, RenderTarget? renderTarget = null)
+    internal Window(GraphicsApplication application, int width, int height, string title)
     {
-        GLFW.Load();
-        _renderer = RenderFactory.Create(renderTarget);
+        Application = application;
         
         Width = width;
         Height = height;
@@ -125,7 +125,6 @@ public class Window : InputHost
         Handle = GLFW.glfwCreateWindow(width, height, title, IntPtr.Zero, IntPtr.Zero);
         if (Handle == IntPtr.Zero)
         {
-            GLFW.glfwTerminate();
             throw new Exception("Failed to create a GLFW window.");
         }
         Center();
@@ -148,11 +147,12 @@ public class Window : InputHost
             DepthWriteEnabled = false
         });
 
-        ShaderPipeline = ShaderPipeline.CreateDefault(hasNormals: false);
-        ShaderPipelineWithNormals = ShaderPipeline.CreateDefault(hasNormals: true);
+        ShaderPipeline = ShaderPipeline.CreateDefault(Renderer, hasNormals: false);
+        ShaderPipelineWithNormals = ShaderPipeline.CreateDefault(Renderer, hasNormals: true);
 
         // Default non-moveable camera
         Camera = new Camera(this);
+        Application.RegisterWindow(this);
     }
 
     ~Window()
@@ -351,6 +351,12 @@ public class Window : InputHost
         else throw new ArgumentException("The scene type is not supported.");
     }
 
+    /// <summary>Creates and registers a 3D scene for this window.</summary>
+    public Scene3D CreateScene3D() => new(this);
+
+    /// <summary>Creates and registers a full-window 2D scene for this window.</summary>
+    public Scene2D CreateScene2D() => new(this);
+
     /// <summary>
     /// Disposes of the window and its renderer context, releasing any associated resources. After calling this method, the window should not be used again.
     /// </summary>
@@ -371,11 +377,11 @@ public class Window : InputHost
         Stencil3DOpaque.Dispose();
         Stencil3DTransparent.Dispose();
         Stencil2D.Dispose();
-        Renderer.Dispose();
         ShaderPipeline.Dispose();
         ShaderPipelineWithNormals.Dispose();
+        RenderSurface.Dispose();
         GLFW.glfwDestroyWindow(Handle);
-        GLFW.glfwTerminate();
+        Application.RemoveWindow(this);
         Disposed = true;
     }
 }

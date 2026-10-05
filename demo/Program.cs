@@ -8,8 +8,8 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var renderer = RenderTarget.OpenGL;
-        using Window window = new Window(800, 600, "odl3d", renderer);
+        using GraphicsApplication app = new GraphicsApplication(RenderTarget.OpenGL);
+        using Window window = app.CreateWindow(800, 600, "odl3d");
         window.BackgroundColor = new Color(0, 0, 0);
         window.Camera = new MoveableCamera(window)
         {

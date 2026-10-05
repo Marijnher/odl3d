@@ -9,14 +9,11 @@ namespace odl3d;
 public class Sampler
 {
     /// <summary>
-    /// Gets the renderer associated with the current window.
-    /// </summary>
-    protected IRenderDevice Renderer => Window.Renderer;
-
-    /// <summary>
     /// Gets the underlying render sampler used by the renderer.
     /// </summary>
-    internal ISampler RenderSampler;
+    private ISampler? _renderSampler;
+    private IRenderDevice? _renderer;
+    internal ISampler RenderSampler => _renderSampler ?? throw new InvalidOperationException("The sampler has not been uploaded to a renderer.");
 
     private TextureFilter _minFilter;
     /// <summary>
@@ -137,25 +134,28 @@ public class Sampler
     /// <summary>
     /// Initializes a new instance of the <see cref="Sampler"/> class.
     /// </summary>
-    public Sampler()
-    {
-        RenderSampler = CreateSampler();
-    }
+    public Sampler() { }
 
     /// <summary>
     /// Invalidates the current sampler and creates a new one.
     /// </summary>
     private void InvalidateSampler()
     {
-        RenderSampler?.Dispose();
-        RenderSampler = CreateSampler();
+        _renderSampler?.Dispose();
+        _renderSampler = null;
     }
 
     /// <summary>
     /// Creates a new texture sampler based on the current sampler settings.
     /// </summary>
     /// <returns>A new instance of <see cref="ISampler"/> based on the current sampler settings.</returns>
-    private ISampler CreateSampler() => Renderer.CreateSampler(new SamplerDescription
+    internal void EnsureCreated(IRenderDevice renderer)
+    {
+        if (_renderer != null && !ReferenceEquals(_renderer, renderer))
+            throw new InvalidOperationException("A sampler can only be used with the renderer that first created it.");
+        if (_renderSampler != null) return;
+        _renderer = renderer;
+        _renderSampler = renderer.CreateSampler(new SamplerDescription
     {
         MinFilter = MinFilter,
         MagFilter = MagFilter,
@@ -165,5 +165,6 @@ public class Sampler
         WrapW = WrapW,
         Anisotropy = Anisotropy,
         Comparison = Comparison
-    });
+        });
+    }
 }

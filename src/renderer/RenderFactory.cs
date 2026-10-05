@@ -4,23 +4,17 @@ using odl3d.Renderer;
 namespace odl3d;
 
 /// <summary>
-/// Provides a factory for creating and managing instances of the <see cref="IRenderDevice"/> interface, allowing for the selection and initialization of different rendering backends (e.g., OpenGL) based on a specified identifier. The factory ensures that only one instance of the renderer is created and provides access to it through the <see cref="Renderer"/> property.
+/// Creates renderer devices for application-owned graphics contexts.
 /// </summary>
 public static class RenderFactory
 {
     /// <summary>
-    /// Gets the singleton instance of the <see cref="IRenderDevice"/> interface, which represents the active renderer used for drawing 3D objects in the scene. If the renderer has not been initialized, an exception is thrown, indicating that the <see cref="Create(RenderTarget)"/> method must be called first to create and configure the renderer. This property provides access to the renderer for rendering operations, such as drawing meshes, setting uniforms, and managing GPU resources.
+    /// Creates a renderer device for the specified backend, or selects the platform default.
     /// </summary>
-    public static IRenderDevice Renderer => _instance ?? throw new RenderException("Renderer has not been initialized. Call RenderFactory.Create() first.");
-    private static IRenderDevice? _instance;
-
-    /// <summary>
-    /// Creates and initializes a new instance of the <see cref="IRenderDevice"/> interface based on the specified identifier, allowing for the selection of different rendering backends (e.g., OpenGL). The method sets the singleton instance of the renderer, which can be accessed through the <see cref="Renderer"/> property. If an unknown identifier is provided, a <see cref="RenderException"/> is thrown, indicating that the specified renderer is not supported. This method must be called before accessing the <see cref="Renderer"/> property to ensure that a valid renderer instance is available for rendering operations.
-    /// </summary>
-    /// <param name="id">The identifier of the renderer to create.</param>
+    /// <param name="target">The renderer backend to create.</param>
     /// <returns>The created renderer instance.</returns>
-    /// <exception cref="RenderException">Thrown when the specified renderer identifier is not supported.</exception>
-    public static IRenderDevice Create(RenderTarget? target = null) => _instance = target switch
+    /// <exception cref="RenderException">Thrown when the specified renderer backend is not supported.</exception>
+    public static IRenderDevice Create(RenderTarget? target = null) => target switch
     {
         RenderTarget.OpenGL => CreateOpenGLRenderer(),
         RenderTarget.Metal => CreateMetalRenderer(),

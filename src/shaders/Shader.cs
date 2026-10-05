@@ -8,6 +8,8 @@ namespace odl3d;
 /// </summary>
 public class Shader : IDisposable
 {
+    internal IRenderDevice Renderer { get; }
+
     /// <summary>
     /// The renderer-backed shader program handle for this shader; contains the state of the vertex and fragment shaders. The shader program is used to encapsulate the shader configuration and is managed by the renderer for efficient rendering.
     /// </summary>
@@ -16,8 +18,6 @@ public class Shader : IDisposable
     /// <summary>
     /// Indicates whether the shader has been disposed; used to prevent double disposal and ensure proper resource management. Once disposed, the shader handle is no longer valid and should not be used for rendering.
     /// </summary>
-    protected IRenderDevice Renderer => Window.Renderer;
-
     /// <summary>
     /// Indicates whether the shader has been disposed; used to prevent double disposal and ensure proper resource management. Once disposed, the shader handle is no longer valid and should not be used for rendering.
     /// </summary>
@@ -29,9 +29,10 @@ public class Shader : IDisposable
     /// <param name="source">The source code for the shader.</param>
     /// <param name="type">The type of the shader.</param>
     /// <exception cref="ShaderException">Thrown when shader compilation fails.</exception>
-    public Shader(string source, ShaderStage stage, string entryPoint, ShaderLanguage shaderLanguage, bool sourceIsFilename = true)
+    public Shader(IRenderDevice renderer, string source, ShaderStage stage, string entryPoint, ShaderLanguage shaderLanguage, bool sourceIsFilename = true)
     {
-        ShaderModule = Renderer.CreateShaderModule(new ShaderModuleDescription
+        Renderer = renderer;
+        ShaderModule = renderer.CreateShaderModule(new ShaderModuleDescription
         {
             ShaderLanguage = shaderLanguage,
             EntryPoint = entryPoint,

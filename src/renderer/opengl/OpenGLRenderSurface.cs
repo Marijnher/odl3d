@@ -73,7 +73,6 @@ internal class OpenGLRenderSurface : IRenderSurface
         Width = (uint) fbWidth;
         Height = (uint) fbHeight;
         VSync = true;
-        Device.VertexState = new GLVertexState();
     }
 
     /// <summary>
@@ -100,6 +99,7 @@ internal class OpenGLRenderSurface : IRenderSurface
     public void Dispose()
     {
         if (Disposed) return;
+        Device.VertexArrayCache.Clear();
         GLFW.glfwMakeContextCurrent(IntPtr.Zero);
         Disposed = true;
     }

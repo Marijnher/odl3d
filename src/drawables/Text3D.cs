@@ -90,10 +90,9 @@ public class Text3D : Text
     /// <param name="depth">Extrusion thickness along Z, in world units.</param>
     /// <param name="pixelsPerWorldUnit">How many font pixels map to one world unit.</param>
     /// <param name="smoothingAngle">Angle threshold in degrees for smoothing the side-wall normals.</param>
-    public Text3D(Scene<Object3D> scene, Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float depth = 0.05f, float pixelsPerWorldUnit = 256f, float smoothingAngle = 40f)
-        : base(scene, font, content, style, align)
+    public Text3D(Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float depth = 0.05f, float pixelsPerWorldUnit = 256f, float smoothingAngle = 40f)
+        : base(font, content, style, align)
     {
-        if (scene is not Scene3D) Console.WriteLine("Warning: Text3D is being added to a Scene that is not a Scene3D. This may cause rendering issues.");
         ArgumentOutOfRangeException.ThrowIfNegative(depth);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(pixelsPerWorldUnit, 0f);
         _depth = depth;
@@ -113,9 +112,9 @@ public class Text3D : Text
         Matrix4x4.CreateRotationY(MathF.PI / 180 * Rotation.Y) *
         Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
         Matrix4x4.CreateTranslation(
-            Position.X + Scene.Position.X + Width * Scale.X / 2f,
-            Position.Y + Scene.Position.Y,
-            Position.Z + Scene.Position.Z);
+            Position.X + (Scene?.Position.X ?? 0f) + Width * Scale.X / 2f,
+            Position.Y + (Scene?.Position.Y ?? 0f),
+            Position.Z + (Scene?.Position.Z ?? 0f));
 
     /// <summary>
     /// Rebuilds the geometry of the 3D text based on the current font, content, style, alignment, depth, pixels per world unit, and smoothing angle. The method generates the vertex and index data for the text's mesh, calculates its width and height, and updates the mesh used for rendering. If the generated geometry has no indices (i.e., no visible geometry), the mesh is set to null.

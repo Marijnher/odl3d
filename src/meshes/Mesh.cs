@@ -8,20 +8,21 @@ namespace odl3d;
 /// </summary>
 public partial class Mesh : IDisposable
 {
-    /// <summary>
-    /// Gets the renderer associated with this mesh, which is used to create and manage GPU resources.
-    /// </summary>
-    protected IRenderDevice Renderer => Window.Renderer;
+    private readonly float[] _vertexData;
+    private readonly uint[] _indexData;
+    private IRenderDevice? _device;
+    private IBuffer<float>? _vertices;
+    private IBuffer<uint>? _indices;
 
     /// <summary>
     /// Gets the vertex buffer containing the mesh's vertex data, including positions, texture coordinates, and optionally normals.
     /// </summary>
-    public IBuffer<float> Vertices { get; protected set; }
+    public IBuffer<float> Vertices => _vertices ?? throw new InvalidOperationException("The mesh has not been uploaded to a renderer.");
 
     /// <summary>
     /// Gets the index buffer containing the mesh's index data, which defines the triangles to draw using the vertices.
     /// </summary>
-    public IBuffer<uint> Indices { get; protected set; }
+    public IBuffer<uint> Indices => _indices ?? throw new InvalidOperationException("The mesh has not been uploaded to a renderer.");
 
     /// <summary>
     /// True if this mesh supplies a per-vertex normal in attribute 2, allowing a shader to light it. Meshes
@@ -59,20 +60,31 @@ public partial class Mesh : IDisposable
     /// <param name="hasNormals">True if the vertex data includes a normal after the texture coordinates.</param>
     public Mesh(float[] vertices, uint[] indices, bool hasNormals)
     {
-        Vertices = Renderer.CreateBuffer(new BufferDescription
-        {
-            Size = vertices.Length,
-            Usage = BufferUsage.Vertex
-        }, vertices);
-        Indices = Renderer.CreateBuffer(new BufferDescription
-        {
-            Size = indices.Length,
-            Usage = BufferUsage.Index
-        }, indices);
-
+        _vertexData = vertices;
+        _indexData = indices;
         HasNormals = hasNormals;
         int floatsPerVertex = hasNormals ? 8 : 5;
         VertexCount = vertices.Length / floatsPerVertex;
+    }
+
+    internal void EnsureUploaded(IRenderDevice device)
+    {
+        ObjectDisposedException.ThrowIf(Disposed, this);
+        if (_device != null && !ReferenceEquals(_device, device))
+            throw new InvalidOperationException("A mesh can only be used with the renderer that first uploaded it.");
+        if (_vertices != null) return;
+
+        _device = device;
+        _vertices = device.CreateBuffer(new BufferDescription
+        {
+            Size = _vertexData.Length,
+            Usage = BufferUsage.Vertex
+        }, _vertexData);
+        _indices = device.CreateBuffer(new BufferDescription
+        {
+            Size = _indexData.Length,
+            Usage = BufferUsage.Index
+        }, _indexData);
     }
 
     ~Mesh()
@@ -86,8 +98,8 @@ public partial class Mesh : IDisposable
     public void Dispose()
     {
         if (Disposed) return;
-        Vertices.Dispose();
-        Indices.Dispose();
+        _vertices?.Dispose();
+        _indices?.Dispose();
         Disposed = true;
         OnDisposed?.Invoke();
     }

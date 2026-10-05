@@ -16,9 +16,8 @@ public class Sprite2D : Object3D
     /// </summary>
     /// <param name="scene">The Scene2D to which this sprite belongs.</param>
     /// <param name="texture">The optional texture to use for the sprite.</param>
-    public Sprite2D(Scene<Object3D> scene, Texture? texture = null) : base(scene, MeshBuilder.CreateQuad(), texture)
+    public Sprite2D(Texture? texture = null) : base(MeshBuilder.CreateQuad(), texture)
     {
-        if (scene is not Scene2D) Console.WriteLine("Warning: Sprite2D is being added to a Scene that is not a Scene2D. This may cause rendering issues.");
         AutoDisposeMesh = false;
     }
 

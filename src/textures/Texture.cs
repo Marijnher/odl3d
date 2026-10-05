@@ -12,12 +12,12 @@ public class Texture : IDisposable
     /// <summary>
     /// Represents a texture that contains both CPU-side pixel data and its corresponding renderer handle.
     /// </summary>
-    internal IRenderDevice Renderer => Window.Renderer;
-
     /// <summary>
     /// The renderer handle of the texture. This is the actual GPU resource that corresponds to the texture's pixel data.
     /// </summary>
-    internal ITexture RenderTexture;
+    private ITexture? _renderTexture;
+    private IRenderDevice? _renderer;
+    internal ITexture RenderTexture => _renderTexture ?? throw new InvalidOperationException("The texture has not been uploaded to a renderer.");
     
     /// <summary>
     /// Width of the texture in pixels; the pixel buffer is Width * Height * 4 bytes (RGBA).
@@ -94,14 +94,6 @@ public class Texture : IDisposable
         Width = width;
         Height = height;
         Pixels = initialPixels;
-        RenderTexture = Renderer.CreateTexture(new TextureDescription
-        {
-            Format = TextureFormat.RGBA8Unorm,
-            Width = Width,
-            Height = Height
-        }, Pixels);
-        // The renderer texture above was just created from the current (initial) Pixels contents.
-        Uploaded = true;
     }
 
     /// <summary>
@@ -124,14 +116,6 @@ public class Texture : IDisposable
         Width = (uint) width;
         Height = (uint) height;
         Pixels = bytes;
-        RenderTexture = Renderer.CreateTexture(new TextureDescription
-        {
-            Format = TextureFormat.RGBA8Unorm,
-            Width = Width,
-            Height = Height
-        }, Pixels);
-        // The renderer texture above was just created from the current (initial) Pixels contents.
-        Uploaded = true;
     }
 
     /// <summary>
@@ -149,8 +133,39 @@ public class Texture : IDisposable
     public void Upload()
     {
         if (Disposed) throw new TextureException("Cannot upload a disposed texture.");
-        RenderTexture.Upload(Pixels);
-        Uploaded = true;
+        if (_renderer == null) throw new InvalidOperationException("The texture must be drawn or uploaded with a renderer before Upload() can be used.");
+        EnsureUploaded(_renderer);
+    }
+
+    public void Upload(IRenderDevice renderer)
+    {
+        EnsureUploaded(renderer);
+    }
+
+    internal void EnsureUploaded(IRenderDevice renderer)
+    {
+        if (Disposed) throw new TextureException("Cannot upload a disposed texture.");
+        if (_renderer != null && !ReferenceEquals(_renderer, renderer))
+            throw new InvalidOperationException("A texture can only be used with the renderer that first uploaded it.");
+
+        if (_renderTexture == null)
+        {
+            _renderer = renderer;
+            _renderTexture = renderer.CreateTexture(new TextureDescription
+            {
+                Format = TextureFormat.RGBA8Unorm,
+                Width = Width,
+                Height = Height
+            }, Pixels);
+            Uploaded = true;
+            return;
+        }
+
+        if (!Uploaded)
+        {
+            _renderTexture.Upload(Pixels);
+            Uploaded = true;
+        }
     }
 
     ~Texture()
@@ -187,7 +202,7 @@ public class Texture : IDisposable
     public void Dispose()
     {
         if (Disposed) return;
-        RenderTexture.Dispose();
+        _renderTexture?.Dispose();
         Disposed = true;
         OnDisposed?.Invoke();
     }

@@ -102,12 +102,17 @@ internal static class GLFW
 #pragma warning restore CS8618
 
     private static IntPtr _library;
+    private static int _loadCount;
 
     public static bool Loaded { get; private set; }
 
     public static void Load()
     {
-        if (Loaded) return;
+        if (Loaded)
+        {
+            _loadCount++;
+            return;
+        }
 
         // Candidate native library names per OS; GLFW is not bundled and must be resolvable at runtime.
         string[] candidates =
@@ -157,6 +162,16 @@ internal static class GLFW
             throw new RenderException("Failed to initialize GLFW.");
         
         Loaded = true;
+        _loadCount = 1;
+    }
+
+    public static void Terminate()
+    {
+        if (!Loaded) return;
+        if (--_loadCount > 0) return;
+        glfwTerminate();
+        Loaded = false;
+        _loadCount = 0;
     }
 
     private static TDelegate GetFunction<TDelegate>(string name) where TDelegate : Delegate

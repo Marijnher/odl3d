@@ -8,7 +8,23 @@ odl3d is a C# graphics library designed to simplify 3D game development and grap
 
 ## Architecture
 
-Applications create a window and renderer, add drawable objects to 2D or 3D scenes, and render those scenes through the active backend.
+Applications create a graphics application and window, construct drawables independently, explicitly add them to 2D or 3D scenes, and render those scenes through the application's renderer.
+
+```csharp
+using var app = new GraphicsApplication(RenderTarget.OpenGL);
+using var window = app.CreateWindow(800, 600, "My application");
+var scene = window.CreateScene3D();
+
+var texture = TextureBuilder.CreateCheckerboard(64, 64, Color.Magenta, new Color(0, 255, 255));
+var sprite = new Sprite3D(texture);
+scene.Add(sprite);
+
+while (!window.ShouldClose)
+{
+   window.Update(0);
+   window.Render();
+}
+```
 
 ![architecture.png](architecture.png)
 

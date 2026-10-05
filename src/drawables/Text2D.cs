@@ -18,10 +18,9 @@ public class Text2D : RasterizedText
     /// <param name="style">The initial Bold/Italic style.</param>
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
     /// <param name="atlas">An optional custom GlyphAtlas; defaults to the shared process-wide atlas.</param>
-    public Text2D(Scene<Object3D> scene, Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, GlyphAtlas? atlas = null)
-        : base(scene, font, content, style, align, atlas)
+    public Text2D(Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, GlyphAtlas? atlas = null)
+        : base(font, content, style, align, atlas)
     {
-        if (scene is not Scene2D) Console.WriteLine("Warning: Text2D is being added to a Scene that is not a Scene2D. This may cause rendering issues.");
         Mesh = MeshBuilder.CreateQuad();
         AutoDisposeMesh = false;
         Rebuild();
@@ -41,8 +40,8 @@ public class Text2D : RasterizedText
             Matrix4x4.CreateRotationY(MathF.PI / 180 * Rotation.Y) *
             Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
             Matrix4x4.CreateTranslation(
-                Position.X + Scene.Position.X,
-                Position.Y + Scene.Position.Y,
-                Position.Z + Scene.Position.Z);
+                Position.X + (Scene?.Position.X ?? 0f),
+                Position.Y + (Scene?.Position.Y ?? 0f),
+                Position.Z + (Scene?.Position.Z ?? 0f));
     }
 }

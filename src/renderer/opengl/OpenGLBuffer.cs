@@ -87,8 +87,7 @@ internal class OpenGLBuffer<T> : IBuffer<T> where T : unmanaged
     {
         if (Disposed) return;
         uint handle = Handle;
-        // Release buffer from the device's vertex state (VAO) cache before deleting it.
-        Device.VertexState!.OnBufferDeleted(handle);
+        Device.VertexArrayCache.OnBufferDeleted(handle);
         GL.glDeleteBuffers(1, ref handle);
         Disposed = true;
     }

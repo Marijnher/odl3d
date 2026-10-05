@@ -18,11 +18,6 @@ public class ShaderPipeline : IDisposable
     public IRenderPipeline Pipeline { get; private set; }
 
     /// <summary>
-    /// Gets the renderer associated with the window of this shader pipeline.
-    /// </summary>
-    protected IRenderDevice Renderer => Window.Renderer;
-
-    /// <summary>
     /// Gets or sets whether the shader pipeline should render in wireframe mode.
     /// </summary>
     public bool Wireframe
@@ -45,7 +40,9 @@ public class ShaderPipeline : IDisposable
     /// <exception cref="ShaderException">Thrown if the shader program fails to link.</exception>
     public ShaderPipeline(Shader vertexShader, Shader fragmentShader, VertexLayoutDescription vertexLayout, bool autoDisposeSource = true) 
     {
-        Pipeline = Renderer.CreateRenderPipeline(new RenderPipelineDescription
+        if (!ReferenceEquals(vertexShader.Renderer, fragmentShader.Renderer))
+            throw new ArgumentException("Both shaders must belong to the same renderer.");
+        Pipeline = vertexShader.Renderer.CreateRenderPipeline(new RenderPipelineDescription
         {
             VertexShader = vertexShader.ShaderModule,
             FragmentShader = fragmentShader.ShaderModule,
@@ -90,13 +87,13 @@ public class ShaderPipeline : IDisposable
     /// </summary>
     /// <param name="hasNormals">Indicates whether the vertex layout should include normal attributes.</param>
     /// <returns>A new instance of ShaderPipeline configured with the default shaders and the specified vertex layout.</returns>
-    public static ShaderPipeline CreateDefault(bool hasNormals = false)
+    public static ShaderPipeline CreateDefault(IRenderDevice renderer, bool hasNormals = false)
     {
-        string vertexFilename = GetDefaultVertexShaderFilename();
-        string fragmentFilename = GetDefaultFragmentShaderFilename();
+        string vertexFilename = GetDefaultVertexShaderFilename(renderer);
+        string fragmentFilename = GetDefaultFragmentShaderFilename(renderer);
 
-        using var defaultVertex = new Shader(vertexFilename, ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
-        using var defaultFragment = new Shader(fragmentFilename, ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
+        using var defaultVertex = new Shader(renderer, vertexFilename, ShaderStage.Vertex, "vertex_main", ShaderLanguage.MSL, true);
+        using var defaultFragment = new Shader(renderer, fragmentFilename, ShaderStage.Fragment, "fragment_main", ShaderLanguage.MSL, true);
 
         var attributes = new List<VertexAttributeDescription>
         {
@@ -143,14 +140,14 @@ public class ShaderPipeline : IDisposable
         return new ShaderPipeline(defaultVertex, defaultFragment, vertexLayout, autoDisposeSource: true);
     }
 
-    private static string GetDefaultVertexShaderFilename() => Window.Renderer.RenderTarget switch
+    private static string GetDefaultVertexShaderFilename(IRenderDevice renderer) => renderer.RenderTarget switch
     {
         RenderTarget.OpenGL => "demo/shaders/glsl/vertex.glsl",
         RenderTarget.Metal => "demo/shaders/msl/vertex.metal",
         _ => throw new RenderException("Unsupported render target")
     };
 
-    private static string GetDefaultFragmentShaderFilename() => Window.Renderer.RenderTarget switch
+    private static string GetDefaultFragmentShaderFilename(IRenderDevice renderer) => renderer.RenderTarget switch
     {
         RenderTarget.OpenGL => "demo/shaders/glsl/fragment.glsl",
         RenderTarget.Metal => "demo/shaders/msl/fragment.metal",

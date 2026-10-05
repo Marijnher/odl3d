@@ -15,7 +15,7 @@ public class Sprite3D : Object3D
     /// </summary>
     /// <param name="scene">The scene to which this sprite belongs.</param>
     /// <param name="texture">The texture to use for the sprite.</param>
-    public Sprite3D(Scene<Object3D> scene, Texture? texture = null) : base(scene, MeshBuilder.CreateQuad(), texture) { }
+    public Sprite3D(Texture? texture = null) : base(MeshBuilder.CreateQuad(), texture) { }
 
     /// <summary>
     /// Gets the model matrix for the sprite, which defines its position, rotation, and scale in the 3D world.
@@ -26,5 +26,5 @@ public class Sprite3D : Object3D
         Matrix4x4.CreateRotationX(MathF.PI / 180 * Rotation.X) *
         Matrix4x4.CreateRotationY(MathF.PI / 180 * Rotation.Y) *
         Matrix4x4.CreateRotationZ(MathF.PI / 180 * Rotation.Z) *
-        Matrix4x4.CreateTranslation(Position.X + Scene.Position.X + Scale.X / 2f, Position.Y + Scene.Position.Y, Position.Z + Scene.Position.Z);
+        Matrix4x4.CreateTranslation(Position.X + (Scene?.Position.X ?? 0f) + Scale.X / 2f, Position.Y + (Scene?.Position.Y ?? 0f), Position.Z + (Scene?.Position.Z ?? 0f));
 }

@@ -16,6 +16,6 @@ class Plane3D : Object3D
     /// <param name="height">The height of the plane.</param>
     /// <param name="length">The length of the plane.</param>
     /// <param name="texture">The texture for the plane, or null to draw without a texture.</param>
-    public Plane3D(Scene<Object3D> scene, float width, float height, float length, Texture? texture = null) :
-        base(scene, MeshBuilder.CreatePlane(width, height, length), texture) { }
+    public Plane3D(float width, float height, float length, Texture? texture = null) :
+        base(MeshBuilder.CreatePlane(width, height, length), texture) { }
 }

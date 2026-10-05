@@ -30,7 +30,7 @@ public class ModelPart : Object3D
     /// <param name="mesh">The mesh for this part.</param>
     /// <param name="texture">The texture for this part.</param>
     /// <param name="localTransform">The local transformation matrix for this part.</param>
-    public ModelPart(Model parent, Scene<Object3D> scene, Mesh mesh, Texture? texture, Sampler? sampler, Matrix4x4 localTransform) : base(scene, mesh, texture, addToScene: false)
+    public ModelPart(Model parent, Mesh mesh, Texture? texture, Sampler? sampler, Matrix4x4 localTransform) : base(mesh, texture)
     {
         Parent = parent;
         Sampler = sampler ?? new Sampler();
@@ -62,7 +62,7 @@ public class Model : Object3D
     /// <summary>
     /// The GPU buffer that stores the object shader data for all sub-objects in the model. This buffer is updated with the latest data from the ObjectShaderDataArray before rendering.
     /// </summary>
-    protected IBuffer<ObjectShaderData> ObjectShaderDataBuffer;
+    protected IBuffer<ObjectShaderData>? ObjectShaderDataBuffer;
 
     /// <summary>
     /// The total number of vertices rendered by this model's mesh parts.
@@ -86,22 +86,31 @@ public class Model : Object3D
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public Model(Scene<Object3D> scene, Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null) : base(scene)
+    public Model(Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null) : base()
     {
         for (int i = 0; i < meshes.Length; i++)
         {
             Matrix4x4 localTransform = localTransforms != null && i < localTransforms.Length
                 ? localTransforms[i]
                 : Matrix4x4.Identity;
-            Object3D obj = new ModelPart(this, scene, meshes[i], textures[i], samplers?[i], localTransform);
+            Object3D obj = new ModelPart(this, meshes[i], textures[i], samplers?[i], localTransform);
             Objects.Add(obj);
         }
         ObjectShaderDataArray = new ObjectShaderData[meshes.Length];
-        ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
-        {
-            Size = meshes.Length,
-            Usage = BufferUsage.Uniform
-        });
+    }
+
+    internal override void Attach(Scene<Object3D> scene)
+    {
+        base.Attach(scene);
+        foreach (Object3D part in Objects)
+            part.Attach(scene);
+    }
+
+    internal override void Detach(Scene<Object3D>? scene)
+    {
+        foreach (Object3D part in Objects)
+            part.Detach(scene);
+        base.Detach(scene);
     }
 
     /// <summary>
@@ -111,12 +120,12 @@ public class Model : Object3D
     /// <param name="filename">The path to the DAE file to load.</param>
     /// <returns>A new Model instance representing the loaded 3D model.</returns>
     /// <exception cref="ArgumentException">Thrown if the filename is invalid or the DAE file cannot be loaded.</exception>
-    public static Model LoadDAE(Scene<Object3D> scene, string filename)
+    public static Model LoadDAE(string filename)
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
         if (daeFolder == null) throw new ArgumentException("Invalid filename: " + filename);
         (Mesh[] meshes, Texture?[] textures, Sampler?[] samplers, Matrix4x4[] localTransforms) = DaeLoader.Load(filename, daeFolder);
-        return new Model(scene, meshes, textures, samplers,localTransforms);
+        return new Model(meshes, textures, samplers, localTransforms);
     }
 
     /// <summary>
@@ -126,7 +135,7 @@ public class Model : Object3D
     /// <param name="objFilename">The path to the OBJ file to load.</param>
     /// <returns>A new Model instance representing the loaded 3D model.</returns>
     /// <exception cref="ArgumentException">Thrown if the filename is invalid or the OBJ file cannot be loaded.</exception>
-    public static Model LoadOBJ(Scene<Object3D> scene, string objFilename)
+    public static Model LoadOBJ(string objFilename)
     {
         string? objFolder = System.IO.Path.GetDirectoryName(objFilename);
         if (objFolder == null) throw new ArgumentException("Invalid filename: " + objFilename);
@@ -155,7 +164,7 @@ public class Model : Object3D
             textures[idx] = tex;
             idx++;
         }
-        return new Model(scene, meshes, textures);
+        return new Model(meshes, textures);
     }
 
     /// <summary>
@@ -163,6 +172,14 @@ public class Model : Object3D
     /// </summary>
     public void UpdateObjectShaderData()
     {
+        if (ObjectShaderDataBuffer == null)
+        {
+            ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
+            {
+                Size = Objects.Count,
+                Usage = BufferUsage.Uniform
+            });
+        }
         for (int i = 0; i < Objects.Count; i++)
         {
             ObjectShaderDataArray[i] = Objects[i].GetShaderData();
@@ -190,7 +207,7 @@ public class Model : Object3D
         for (int i = 0; i < Objects.Count; i++)
         {
             var obj = Objects[i];
-            pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
+            pass.SetUniformBuffer(ObjectShaderDataBuffer!, 0, (uint) (i * sizeof(ObjectShaderData)));
             obj.Draw(pass, passType);
         }
     }
@@ -212,6 +229,7 @@ public class Model : Object3D
     {
         if (Disposed) return;
         base.Dispose();
+        ObjectShaderDataBuffer?.Dispose();
         foreach (var obj in Objects)
         {
             obj.Dispose();

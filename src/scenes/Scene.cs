@@ -3,6 +3,7 @@ using System;
 using System.Numerics;
 using odl3d.Renderer;
 using System.Linq;
+using System.Collections.ObjectModel;
 
 namespace odl3d;
 
@@ -28,9 +29,11 @@ public abstract class Scene<T> : Drawable where T : Object3D
     protected Camera Camera => Window.Camera;
 
     /// <summary>
-    /// The list of objects contained in the scene. This list can be modified by adding or removing objects, and the Draw method will render all objects in this list.
+    /// The read-only view of objects explicitly added to the scene with Add().
     /// </summary>
-    public List<T> Objects { get; } = new List<T>();
+    private readonly List<T> _objects = new();
+    private readonly ReadOnlyCollection<T> _readOnlyObjects;
+    public IReadOnlyList<T> Objects => _readOnlyObjects;
 
     /// <summary>
     /// The maximum number of objects that the scene can contain. This value is used to allocate the object shader data array and GPU buffer, and it can be configured in the constructor.
@@ -59,6 +62,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
     protected Scene(Window window, int maxObjects = 100)
     {
         Window = window;
+        _readOnlyObjects = _objects.AsReadOnly();
         MaxObjects = maxObjects;
         ObjectShaderDataArray = new ObjectShaderData[maxObjects];
         ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
@@ -101,27 +105,37 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// <param name="sceneObject">The object to add to the scene.</param>
     public void Add(T sceneObject) 
     {
-        if (Objects.Count >= MaxObjects)
+        ArgumentNullException.ThrowIfNull(sceneObject);
+        if (sceneObject.Scene != null)
+            throw new InvalidOperationException("The object already belongs to a scene. Remove it before adding it elsewhere.");
+        if (_objects.Count >= MaxObjects)
             throw new RenderException($"Cannot add more than {MaxObjects} objects to the scene.");
-        Objects.Add(sceneObject);
+        if (this is not Scene<Object3D> objectScene)
+            throw new InvalidOperationException("Only scenes containing Object3D instances can accept drawable objects.");
+        sceneObject.Attach(objectScene);
+        _objects.Add(sceneObject);
     }
 
     /// <summary>
     /// Removes an object of type T from the scene's collection of objects. If the object is not found in the collection, no action is taken. The object will no longer be included in the scene's rendering after removal.
     /// </summary>
     /// <param name="sceneObject">The object to remove from the scene.</param>
-    public void Remove(T sceneObject) => Objects.Remove(sceneObject);
+    public void Remove(T sceneObject)
+    {
+        if (_objects.Remove(sceneObject))
+            sceneObject.Detach(this as Scene<Object3D>);
+    }
 
     /// <summary>
     /// Binds the object shader data to the GPU buffer, updating it with the latest data from all objects in the scene.
     /// </summary>
     internal void UpdateObjectShaderData()
     {
-        for (int i = 0; i < Objects.Count; i++)
+        for (int i = 0; i < _objects.Count; i++)
         {
-            ObjectShaderDataArray[i] = Objects[i].GetShaderData();
+            ObjectShaderDataArray[i] = _objects[i].GetShaderData();
         }
-        ObjectShaderDataBuffer.SetData(ObjectShaderDataArray, 0, Objects.Count);
+        ObjectShaderDataBuffer.SetData(ObjectShaderDataArray, 0, _objects.Count);
     }
 
     /// <summary>
@@ -164,7 +178,8 @@ public abstract class Scene<T> : Drawable where T : Object3D
     public override void Update(float deltaTime)
     {
         base.Update(deltaTime);
-        Objects.ForEach(o => o.Update(deltaTime));
+        foreach (T sceneObject in _objects)
+            sceneObject.Update(deltaTime);
     }
 
     /// <summary>
@@ -173,10 +188,10 @@ public abstract class Scene<T> : Drawable where T : Object3D
     public override void Dispose()
     {
         if (Disposed) return;
-        while (Objects.Count > 0)
+        while (_objects.Count > 0)
         {
             // Child automatically removes itself from object list upon disposal
-            Objects[0].Dispose();
+            _objects[0].Dispose();
         }
         ObjectShaderDataBuffer.Dispose();
         SceneShaderDataBuffer.Dispose();

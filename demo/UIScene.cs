@@ -12,13 +12,16 @@ class UIScene : Scene2D
 
     public UIScene(Window window) : base(window)
     {
-        var topLeft = new Sprite2D(this, TextureBuilder.CreateSolid(32, 32, Color.Red));
+        var topLeft = new Sprite2D(TextureBuilder.CreateSolid(32, 32, Color.Red));
         topLeft.Position = new Vector3(4, 4, 0);
+        Add(topLeft);
 
-        var topRight = new Sprite2D(this, TextureBuilder.CreateSolid(32, 32, Color.Green));
+        var topRight = new Sprite2D(TextureBuilder.CreateSolid(32, 32, Color.Green));
         topRight.Position = new Vector3(window.Width - 36, 4, 0);
+        Add(topRight);
 
-        infoText = new Text2D(this, Font.Get("arial", 16));
+        infoText = new Text2D(Font.Get("arial", 16));
+        Add(infoText);
         infoText.Position = new Vector3(6, window.Height - infoText.MeasureString().Y - 18, 1);
         UpdateInfoText(0, 0);
     }
