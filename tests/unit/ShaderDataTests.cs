@@ -4,7 +4,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class ShaderDataTests : TestBase
+public class ShaderDataTests
 {
     [Fact]
     public void Shader_data_sizes_and_field_offsets_match_gpu_layout()

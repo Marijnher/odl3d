@@ -4,7 +4,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class MeshBuilderTests : TestBase
+public class MeshBuilderTests
 {
     [Fact]
     public void CreateSphere_reports_expected_vertex_and_index_counts()

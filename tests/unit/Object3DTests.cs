@@ -4,7 +4,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class Object3DTests : TestBase
+public class Object3DTests
 {
     [Fact]
     public void Model_matrix_applies_scale_before_translation()

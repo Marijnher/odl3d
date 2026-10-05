@@ -14,7 +14,7 @@ public sealed class NativeInteropCollectionDefinition { }
 
 [Collection(NativeInteropCollection.Name)]
 [Trait("Tier", "T1")]
-public class FreeTypeInteropTests : TestBase
+public class FreeTypeInteropTests
 {
     [Fact]
     public void FreeType_loads_faces_measures_and_rasterizes_glyphs()
@@ -77,7 +77,7 @@ public class FreeTypeInteropTests : TestBase
 
 [Collection(NativeInteropCollection.Name)]
 [Trait("Tier", "T1")]
-public class GlfwInteropTests : TestBase
+public class GlfwInteropTests
 {
     [RequiresDisplayFact]
     public void Initializes_reports_supported_version_and_creates_hidden_window()
@@ -110,7 +110,7 @@ public class GlfwInteropTests : TestBase
 
 [Collection(NativeInteropCollection.Name)]
 [Trait("Tier", "T1")]
-public class MetalInteropTests : TestBase
+public class MetalInteropTests
 {
     [Fact]
     public void Metal_binding_is_guarded_by_platform()
@@ -141,7 +141,7 @@ public sealed class RequiresDisplayFactAttribute : FactAttribute
 
 [Collection(NativeInteropCollection.Name)]
 [Trait("Tier", "T1")]
-public class NativeLibraryResolverTests : TestBase
+public class NativeLibraryResolverTests
 {
     [Fact]
     public void Loads_from_system_search_and_reports_missing_libraries_and_exports()
