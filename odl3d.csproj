@@ -9,6 +9,8 @@
         <Copyright>Marijn Herrebout</Copyright>
         <RepositoryUrl>https://github.com/Marijnher/odl3d</RepositoryUrl>
         <Nullable>enable</Nullable>
+        <!-- Library has no entry point of its own, so a deps.json is never consulted at runtime -->
+        <GenerateDependencyFile>false</GenerateDependencyFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -19,6 +21,8 @@
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <Optimize>True</Optimize>
         <OutputPath>build/Release</OutputPath>
+        <!-- Library projects don't copy transitive package deps locally by default; needed so Crc32.NET.dll is present to merge -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
@@ -57,5 +61,30 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.48" PrivateAssets="All" />
+    </ItemGroup>
+
+    <!-- Fold decodl and its Crc32.NET dependency into odl3d.dll so Release output is a single assembly -->
+    <Target Name="MergeReferencedAssemblies" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+        <ItemGroup>
+            <MergeAssemblies Include="$(TargetDir)$(AssemblyName).dll" />
+            <MergeAssemblies Include="$(TargetDir)decodl.dll" />
+            <MergeAssemblies Include="$(TargetDir)Crc32.NET.dll" />
+        </ItemGroup>
+        <ILRepack
+            Parallel="true"
+            Internalize="true"
+            InputAssemblies="@(MergeAssemblies)"
+            TargetKind="Dll"
+            OutputFile="$(TargetDir)$(AssemblyName).dll" />
+        <Delete Files="$(TargetDir)decodl.dll;$(TargetDir)decodl.pdb;$(TargetDir)Crc32.NET.dll" />
+    </Target>
+
+    <!-- dotnet publish resolves decodl/Crc32.NET straight from their source paths, bypassing the Build-time merge/delete above -->
+    <Target Name="ExcludeMergedAssembliesFromPublish" AfterTargets="Publish" Condition="'$(Configuration)'=='Release'">
+        <Delete Files="$(PublishDir)decodl.dll;$(PublishDir)decodl.pdb;$(PublishDir)Crc32.NET.dll" />
+    </Target>
 
 </Project>

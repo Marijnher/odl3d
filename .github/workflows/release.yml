@@ -76,6 +76,25 @@ jobs:
             exit 1
           fi
 
+      - name: Install Linux native dependencies
+        if: matrix.rid == 'linux-x64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libfreetype6 libglfw3
+
+      - name: Install Windows native dependencies
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$env:RUNNER_TEMP/vcpkg"
+          & "$env:RUNNER_TEMP/vcpkg/bootstrap-vcpkg.bat" -disableMetrics
+          & "$env:RUNNER_TEMP/vcpkg/vcpkg.exe" install glfw3:x64-windows freetype:x64-windows
+
+      - name: Install macOS native dependencies
+        # GitHub's macOS runners are arm64; Homebrew here only yields arm64 libs, so osx-x64 ships without bundled natives.
+        if: matrix.rid == 'osx-arm64'
+        run: brew install freetype glfw
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
@@ -86,7 +105,30 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=false
+          -p:DebugType=none
           -o publish/${{ matrix.rid }}
+
+      - name: Bundle native libraries (Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "publish/${{ matrix.rid }}/bin" | Out-Null
+          Copy-Item "$env:RUNNER_TEMP/vcpkg/installed/x64-windows/bin/glfw3.dll" "publish/${{ matrix.rid }}/bin/"
+          Copy-Item "$env:RUNNER_TEMP/vcpkg/installed/x64-windows/bin/freetype.dll" "publish/${{ matrix.rid }}/bin/"
+
+      - name: Bundle native libraries (Linux)
+        if: matrix.rid == 'linux-x64'
+        run: |
+          mkdir -p "publish/${{ matrix.rid }}/bin"
+          cp "$(dpkg -L libglfw3 | grep 'libglfw\.so\.3$')" "publish/${{ matrix.rid }}/bin/libglfw.so.3"
+          cp "$(dpkg -L libfreetype6 | grep 'libfreetype\.so\.6$')" "publish/${{ matrix.rid }}/bin/libfreetype.so.6"
+
+      - name: Bundle native libraries (macOS arm64)
+        if: matrix.rid == 'osx-arm64'
+        run: |
+          mkdir -p "publish/${{ matrix.rid }}/bin"
+          cp "$(brew --prefix glfw)/lib/libglfw.3.dylib" "publish/${{ matrix.rid }}/bin/"
+          cp "$(brew --prefix freetype)/lib/libfreetype.6.dylib" "publish/${{ matrix.rid }}/bin/"
 
       - name: Archive publish output (Windows)
         if: runner.os == 'Windows'
