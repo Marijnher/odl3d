@@ -7,6 +7,8 @@ namespace odl3d;
 /// </summary>
 public class Timer
 {
+    private readonly Func<double> _getTime;
+
     /// <summary>
     /// The duration of the timer in seconds.
     /// </summary>
@@ -20,12 +22,12 @@ public class Timer
     /// <summary>
     /// The remaining time of the timer in seconds. Returns 0 if the timer has finished.
     /// </summary>
-    public double RemainingTime => Math.Max(0d, FinishTime - GLFW.glfwGetTime());
+    public double RemainingTime => Math.Max(0d, FinishTime - _getTime());
 
     /// <summary>
     /// Indicates whether the timer has finished.
     /// </summary>
-    public bool IsFinished => GLFW.glfwGetTime() >= FinishTime;
+    public bool IsFinished => _getTime() >= FinishTime;
 
     /// <summary>
     /// Called when the timer finishes as long as the object is updated.
@@ -42,7 +44,14 @@ public class Timer
     /// </summary>
     /// <param name="duration">The duration of the timer in seconds.</param>
     public Timer(double duration)
+        : this(duration, () => GLFW.glfwGetTime())
     {
+    }
+
+    internal Timer(double duration, Func<double> getTime)
+    {
+        ArgumentNullException.ThrowIfNull(getTime);
+        _getTime = getTime;
         Duration = duration;
         Reset(duration);
     }
@@ -62,7 +71,7 @@ public class Timer
     /// </summary>
     public void Reset()
     {
-        FinishTime = GLFW.glfwGetTime() + Duration;
+        FinishTime = _getTime() + Duration;
         CalledOnFinished = false;
     }
 

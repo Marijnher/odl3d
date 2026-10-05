@@ -253,32 +253,22 @@ internal static unsafe class FT
             OperatingSystem.IsMacOS() ? ["libfreetype.6.dylib", "libfreetype.dylib"] :
                                          ["libfreetype.so.6", "libfreetype.so"];
 
-        foreach (string candidate in candidates)
-        {
-            if (NativeLibrary.TryLoad("bin/" + candidate, out _library)) break;
-        }
-        if (_library == IntPtr.Zero)
-            throw new DllNotFoundException("Could not locate the FreeType native library (freetype.dll / libfreetype.so.6 / libfreetype.6.dylib). Install it or place it next to the executable.");
+        _library = NativeLibraryResolver.LoadFromBinOrSystem(candidates,
+            "Could not locate the FreeType native library (freetype.dll / libfreetype.so.6 / libfreetype.6.dylib). Install it or place it next to the executable.");
 
-        FT_Init_FreeType = GetFunction<d_FT_Init_FreeType>("FT_Init_FreeType");
-        FT_Done_FreeType = GetFunction<d_FT_Done_FreeType>("FT_Done_FreeType");
-        FT_New_Face = GetFunction<d_FT_New_Face>("FT_New_Face");
-        FT_Done_Face = GetFunction<d_FT_Done_Face>("FT_Done_Face");
-        FT_Set_Pixel_Sizes = GetFunction<d_FT_Set_Pixel_Sizes>("FT_Set_Pixel_Sizes");
-        FT_Get_Char_Index = GetFunction<d_FT_Get_Char_Index>("FT_Get_Char_Index");
-        FT_Load_Glyph = GetFunction<d_FT_Load_Glyph>("FT_Load_Glyph");
-        FT_Render_Glyph = GetFunction<d_FT_Render_Glyph>("FT_Render_Glyph");
-        FT_Get_Kerning = GetFunction<d_FT_Get_Kerning>("FT_Get_Kerning");
-        FT_Set_Transform = GetFunction<d_FT_Set_Transform>("FT_Set_Transform");
-        FT_Outline_Embolden = GetFunction<d_FT_Outline_Embolden>("FT_Outline_Embolden");
+        FT_Init_FreeType = NativeLibraryResolver.GetFunction<d_FT_Init_FreeType>(_library, "FT_Init_FreeType");
+        FT_Done_FreeType = NativeLibraryResolver.GetFunction<d_FT_Done_FreeType>(_library, "FT_Done_FreeType");
+        FT_New_Face = NativeLibraryResolver.GetFunction<d_FT_New_Face>(_library, "FT_New_Face");
+        FT_Done_Face = NativeLibraryResolver.GetFunction<d_FT_Done_Face>(_library, "FT_Done_Face");
+        FT_Set_Pixel_Sizes = NativeLibraryResolver.GetFunction<d_FT_Set_Pixel_Sizes>(_library, "FT_Set_Pixel_Sizes");
+        FT_Get_Char_Index = NativeLibraryResolver.GetFunction<d_FT_Get_Char_Index>(_library, "FT_Get_Char_Index");
+        FT_Load_Glyph = NativeLibraryResolver.GetFunction<d_FT_Load_Glyph>(_library, "FT_Load_Glyph");
+        FT_Render_Glyph = NativeLibraryResolver.GetFunction<d_FT_Render_Glyph>(_library, "FT_Render_Glyph");
+        FT_Get_Kerning = NativeLibraryResolver.GetFunction<d_FT_Get_Kerning>(_library, "FT_Get_Kerning");
+        FT_Set_Transform = NativeLibraryResolver.GetFunction<d_FT_Set_Transform>(_library, "FT_Set_Transform");
+        FT_Outline_Embolden = NativeLibraryResolver.GetFunction<d_FT_Outline_Embolden>(_library, "FT_Outline_Embolden");
 
         Loaded = true;
     }
 
-    private static TDelegate GetFunction<TDelegate>(string name) where TDelegate : Delegate
-    {
-        if (!NativeLibrary.TryGetExport(_library, name, out IntPtr ptr))
-            throw new EntryPointNotFoundException($"Could not find FreeType function '{name}'.");
-        return Marshal.GetDelegateForFunctionPointer<TDelegate>(ptr);
-    }
 }

@@ -38,6 +38,7 @@ internal static class GLFW
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate int d_glfwInit();
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwTerminate();
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwGetVersion(out int major, out int minor, out int revision);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwWindowHint(int hint, int value);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwGetWindowSize(IntPtr window, out int width, out int height);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glfwGetFramebufferSize(IntPtr window, out int width, out int height);
@@ -73,6 +74,7 @@ internal static class GLFW
 #pragma warning disable CS8618
     public static d_glfwInit glfwInit;
     public static d_glfwTerminate glfwTerminate;
+    public static d_glfwGetVersion glfwGetVersion;
     public static d_glfwWindowHint glfwWindowHint;
     public static d_glfwGetWindowSize glfwGetWindowSize;
     public static d_glfwGetFramebufferSize glfwGetFramebufferSize;
@@ -122,47 +124,43 @@ internal static class GLFW
             OperatingSystem.IsMacOS() ? ["libglfw.3.dylib", "libglfw.dylib"] :
                                          ["libglfw.so.3", "libglfw.so"];
 
-        foreach (string candidate in candidates)
-        {
-            if (NativeLibrary.TryLoad("bin/" + candidate, out _library)) break;
-        }
-        if (_library == IntPtr.Zero)
-            throw new DllNotFoundException("Could not locate the GLFW native library (glfw3.dll / libglfw.so.3 / libglfw.3.dylib). Install it or place it next to the executable.");
+        _library = NativeLibraryResolver.LoadFromBinOrSystem(candidates,
+            "Could not locate the GLFW native library (glfw3.dll / libglfw.so.3 / libglfw.3.dylib). Install it or place it next to the executable.");
 
-        glfwInit = GetFunction<d_glfwInit>("glfwInit");
-        glfwTerminate = GetFunction<d_glfwTerminate>("glfwTerminate");
-        glfwWindowHint = GetFunction<d_glfwWindowHint>("glfwWindowHint");
-        glfwGetWindowSize = GetFunction<d_glfwGetWindowSize>("glfwGetWindowSize");
-        glfwGetFramebufferSize = GetFunction<d_glfwGetFramebufferSize>("glfwGetFramebufferSize");
-        glfwSetWindowSize = GetFunction<d_glfwSetWindowSize>("glfwSetWindowSize");
-        glfwSetWindowPos = GetFunction<d_glfwSetWindowPos>("glfwSetWindowPos");
-        glfwMaximizeWindow = GetFunction<d_glfwMaximizeWindow>("glfwMaximizeWindow");
-        glfwRestoreWindow = GetFunction<d_glfwRestoreWindow>("glfwRestoreWindow");
-        glfwGetPrimaryMonitor = GetFunction<d_glfwGetPrimaryMonitor>("glfwGetPrimaryMonitor");
-        glfwGetMonitorWorkarea = GetFunction<d_glfwGetMonitorWorkarea>("glfwGetMonitorWorkarea");
-        glfwCreateWindow = GetFunction<d_glfwCreateWindow>("glfwCreateWindow");
-        glfwDestroyWindow = GetFunction<d_glfwDestroyWindow>("glfwDestroyWindow");
-        glfwMakeContextCurrent = GetFunction<d_glfwMakeContextCurrent>("glfwMakeContextCurrent");
-        glfwGetCurrentContext = GetFunction<d_glfwGetCurrentContext>("glfwGetCurrentContext");
-        glfwSwapBuffers = GetFunction<d_glfwSwapBuffers>("glfwSwapBuffers");
-        glfwSwapInterval = GetFunction<d_glfwSwapInterval>("glfwSwapInterval");
-        glfwGetKey = GetFunction<d_glfwGetKey>("glfwGetKey");
-        glfwGetCursorPos = GetFunction<d_glfwGetCursorPos>("glfwGetCursorPos");
-        glfwSetInputMode = GetFunction<d_glfwSetInputMode>("glfwSetInputMode");
-        glfwGetTime = GetFunction<d_glfwGetTime>("glfwGetTime");
-        glfwPollEvents = GetFunction<d_glfwPollEvents>("glfwPollEvents");
-        glfwWindowShouldClose = GetFunction<d_glfwWindowShouldClose>("glfwWindowShouldClose");
-        glfwSetWindowShouldClose = GetFunction<d_glfwSetWindowShouldClose>("glfwSetWindowShouldClose");
-        glfwGetProcAddress = GetFunction<d_glfwGetProcAddress>("glfwGetProcAddress");
+        glfwInit = NativeLibraryResolver.GetFunction<d_glfwInit>(_library, "glfwInit");
+        glfwTerminate = NativeLibraryResolver.GetFunction<d_glfwTerminate>(_library, "glfwTerminate");
+        glfwGetVersion = NativeLibraryResolver.GetFunction<d_glfwGetVersion>(_library, "glfwGetVersion");
+        glfwWindowHint = NativeLibraryResolver.GetFunction<d_glfwWindowHint>(_library, "glfwWindowHint");
+        glfwGetWindowSize = NativeLibraryResolver.GetFunction<d_glfwGetWindowSize>(_library, "glfwGetWindowSize");
+        glfwGetFramebufferSize = NativeLibraryResolver.GetFunction<d_glfwGetFramebufferSize>(_library, "glfwGetFramebufferSize");
+        glfwSetWindowSize = NativeLibraryResolver.GetFunction<d_glfwSetWindowSize>(_library, "glfwSetWindowSize");
+        glfwSetWindowPos = NativeLibraryResolver.GetFunction<d_glfwSetWindowPos>(_library, "glfwSetWindowPos");
+        glfwMaximizeWindow = NativeLibraryResolver.GetFunction<d_glfwMaximizeWindow>(_library, "glfwMaximizeWindow");
+        glfwRestoreWindow = NativeLibraryResolver.GetFunction<d_glfwRestoreWindow>(_library, "glfwRestoreWindow");
+        glfwGetPrimaryMonitor = NativeLibraryResolver.GetFunction<d_glfwGetPrimaryMonitor>(_library, "glfwGetPrimaryMonitor");
+        glfwGetMonitorWorkarea = NativeLibraryResolver.GetFunction<d_glfwGetMonitorWorkarea>(_library, "glfwGetMonitorWorkarea");
+        glfwCreateWindow = NativeLibraryResolver.GetFunction<d_glfwCreateWindow>(_library, "glfwCreateWindow");
+        glfwDestroyWindow = NativeLibraryResolver.GetFunction<d_glfwDestroyWindow>(_library, "glfwDestroyWindow");
+        glfwMakeContextCurrent = NativeLibraryResolver.GetFunction<d_glfwMakeContextCurrent>(_library, "glfwMakeContextCurrent");
+        glfwGetCurrentContext = NativeLibraryResolver.GetFunction<d_glfwGetCurrentContext>(_library, "glfwGetCurrentContext");
+        glfwSwapBuffers = NativeLibraryResolver.GetFunction<d_glfwSwapBuffers>(_library, "glfwSwapBuffers");
+        glfwSwapInterval = NativeLibraryResolver.GetFunction<d_glfwSwapInterval>(_library, "glfwSwapInterval");
+        glfwGetKey = NativeLibraryResolver.GetFunction<d_glfwGetKey>(_library, "glfwGetKey");
+        glfwGetCursorPos = NativeLibraryResolver.GetFunction<d_glfwGetCursorPos>(_library, "glfwGetCursorPos");
+        glfwSetInputMode = NativeLibraryResolver.GetFunction<d_glfwSetInputMode>(_library, "glfwSetInputMode");
+        glfwGetTime = NativeLibraryResolver.GetFunction<d_glfwGetTime>(_library, "glfwGetTime");
+        glfwPollEvents = NativeLibraryResolver.GetFunction<d_glfwPollEvents>(_library, "glfwPollEvents");
+        glfwWindowShouldClose = NativeLibraryResolver.GetFunction<d_glfwWindowShouldClose>(_library, "glfwWindowShouldClose");
+        glfwSetWindowShouldClose = NativeLibraryResolver.GetFunction<d_glfwSetWindowShouldClose>(_library, "glfwSetWindowShouldClose");
+        glfwGetProcAddress = NativeLibraryResolver.GetFunction<d_glfwGetProcAddress>(_library, "glfwGetProcAddress");
         if (OperatingSystem.IsMacOS())
-            glfwGetCocoaWindow = GetFunction<d_glfwGetCocoaWindow>("glfwGetCocoaWindow");
-        glfwSetKeyCallback = GetFunction<d_glfwSetKeyCallback>("glfwSetKeyCallback");
-        glfwSetMouseButtonCallback = GetFunction<d_glfwSetMouseButtonCallback>("glfwSetMouseButtonCallback");
-        glfwSetCursorPosCallback = GetFunction<d_glfwSetCursorPosCallback>("glfwSetCursorPosCallback");
-        glfwGetWindowContentScale = GetFunction<d_glfwGetWindowContentScale>("glfwGetWindowContentScale");
+            glfwGetCocoaWindow = NativeLibraryResolver.GetFunction<d_glfwGetCocoaWindow>(_library, "glfwGetCocoaWindow");
+        glfwSetKeyCallback = NativeLibraryResolver.GetFunction<d_glfwSetKeyCallback>(_library, "glfwSetKeyCallback");
+        glfwSetMouseButtonCallback = NativeLibraryResolver.GetFunction<d_glfwSetMouseButtonCallback>(_library, "glfwSetMouseButtonCallback");
+        glfwSetCursorPosCallback = NativeLibraryResolver.GetFunction<d_glfwSetCursorPosCallback>(_library, "glfwSetCursorPosCallback");
+        glfwGetWindowContentScale = NativeLibraryResolver.GetFunction<d_glfwGetWindowContentScale>(_library, "glfwGetWindowContentScale");
         
-        if (glfwInit() == GLFW_FALSE)
-            throw new RenderException("Failed to initialize GLFW.");
+        EnsureInitSucceeded(glfwInit());
         
         Loaded = true;
         _loadCount = 1;
@@ -177,10 +175,10 @@ internal static class GLFW
         _loadCount = 0;
     }
 
-    private static TDelegate GetFunction<TDelegate>(string name) where TDelegate : Delegate
+    internal static void EnsureInitSucceeded(int result)
     {
-        if (!NativeLibrary.TryGetExport(_library, name, out IntPtr ptr))
-            throw new EntryPointNotFoundException($"Could not find GLFW function '{name}'.");
-        return Marshal.GetDelegateForFunctionPointer<TDelegate>(ptr);
+        if (result == GLFW_FALSE)
+            throw new RenderException("Failed to initialize GLFW.");
     }
+
 }

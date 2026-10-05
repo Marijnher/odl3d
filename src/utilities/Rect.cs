@@ -58,6 +58,9 @@ public class Rect
     /// <returns>true if the rectangles intersect; otherwise, false.</returns>
     public bool Intersects(Rect other)
     {
+        if (Width < 0 || Height < 0 || other.Width < 0 || other.Height < 0)
+            return false;
+
         return !(other.X > X + Width || other.X + other.Width < X || other.Y > Y + Height || other.Y + other.Height < Y);
     }
 

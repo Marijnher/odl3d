@@ -15,7 +15,7 @@ public class Sampler
     private IRenderDevice? _renderer;
     internal ISampler RenderSampler => _renderSampler ?? throw new InvalidOperationException("The sampler has not been uploaded to a renderer.");
 
-    private TextureFilter _minFilter;
+    private TextureFilter _minFilter = TextureFilter.Nearest;
     /// <summary>
     /// Gets or sets the minification filter for the texture sampler.
     /// </summary>
@@ -29,7 +29,7 @@ public class Sampler
             InvalidateSampler();
         }
     }
-    private TextureFilter _magFilter;
+    private TextureFilter _magFilter = TextureFilter.Nearest;
     /// <summary>
     /// Gets or sets the magnification filter for the texture sampler.
     /// </summary>
@@ -43,7 +43,7 @@ public class Sampler
             InvalidateSampler();
         }
     }
-    private MipmapFilter _mipmapFilter;
+    private MipmapFilter _mipmapFilter = MipmapFilter.None;
     /// <summary>
     /// Gets or sets the mipmap filter for the texture sampler.
     /// </summary>
@@ -58,7 +58,7 @@ public class Sampler
         }
     }
 
-    private TextureWrap _wrapU;
+    private TextureWrap _wrapU = TextureWrap.Repeat;
     /// <summary>
     /// Gets or sets the wrap mode for the U (horizontal) texture coordinate.
     /// </summary>
@@ -72,7 +72,7 @@ public class Sampler
             InvalidateSampler();
         }
     }
-    private TextureWrap _wrapV;
+    private TextureWrap _wrapV = TextureWrap.Repeat;
     /// <summary>
     /// Gets or sets the wrap mode for the V (vertical) texture coordinate.
     /// </summary>
@@ -86,7 +86,7 @@ public class Sampler
             InvalidateSampler();
         }
     }
-    private TextureWrap _wrapW;
+    private TextureWrap _wrapW = TextureWrap.Repeat;
     /// <summary>
     /// Gets or sets the wrap mode for the W (depth) texture coordinate.
     /// </summary>
@@ -101,7 +101,7 @@ public class Sampler
         }
     }
 
-    private AnisotropicFilter _anistropy;
+    private AnisotropicFilter _anistropy = AnisotropicFilter.None;
     /// <summary>
     /// Gets or sets the anisotropic filter for the texture sampler.
     /// </summary>

@@ -26,6 +26,8 @@
     <ItemGroup>
         <Compile Remove="demo/**/*.cs;tests/**/*.cs;external/**/*.cs" />
         <ProjectReference Include="external/decodl/decodl.csproj" />
+        <InternalsVisibleTo Include="odl3d.Tests.Unit" />
+        <InternalsVisibleTo Include="odl3d.Tests.Native" />
     </ItemGroup>
 
     <ItemGroup>

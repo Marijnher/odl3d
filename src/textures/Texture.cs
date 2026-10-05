@@ -192,8 +192,7 @@ public class Texture : IDisposable
         Pixels[o + 2] = b;
         Pixels[o + 3] = a;
         Uploaded = false;
-        // Only ever flips false->true here; a full rescan would be needed to detect the reverse, which isn't worth the cost.
-        if (a != 0 && a != 255) hasPartialAlpha = true;
+        hasPartialAlpha = null;
     }
 
     /// <summary>

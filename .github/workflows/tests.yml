@@ -1,0 +1,85 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-and-native:
+    name: T0 and T1 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - ubuntu-latest
+          - macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Linux native dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libfreetype6 libglfw3 xvfb fonts-dejavu-core
+
+      - name: Install macOS native dependencies
+        if: runner.os == 'macOS'
+        run: brew install freetype glfw
+
+      - name: Run T0 and T1 on Windows
+        if: runner.os == 'Windows'
+        run: dotnet test odl3d.sln --settings tests/coverage.runsettings --collect:"XPlat Code Coverage"
+
+      - name: Run T0 and T1 on Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run -a dotnet test odl3d.sln --settings tests/coverage.runsettings --collect:"XPlat Code Coverage"
+
+      - name: Run T0 and T1 on macOS
+        if: runner.os == 'macOS'
+        env:
+          DYLD_LIBRARY_PATH: /opt/homebrew/lib:/usr/local/lib
+        run: dotnet test odl3d.sln --settings tests/coverage.runsettings --collect:"XPlat Code Coverage"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.os }}
+          path: tests/**/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: error
+
+  merge-coverage:
+    name: Merge cross-platform coverage
+    if: always()
+    needs: cpu-and-native
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage
+          merge-multiple: true
+
+      - name: Merge Cobertura reports
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+          reportgenerator "-reports:coverage/**/coverage.cobertura.xml" "-targetdir:coverage/merged" "-reporttypes:Cobertura;Html;TextSummary"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merged-coverage
+          path: coverage/merged
+          if-no-files-found: error

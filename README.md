@@ -37,7 +37,9 @@ while (!window.ShouldClose)
 
 - `odl3d.csproj` builds the reusable core library from `src/`.
 - `demo/odl3d.Demo.csproj` builds the interactive sample and copies its assets.
-- `tests/odl3d.Tests/odl3d.Tests.csproj` contains CPU-only unit tests and backend tests as they are added.
+- `tests/unit/odl3d.Tests.Unit.csproj` contains T0 CPU-only unit tests.
+- `tests/native/odl3d.Tests.Native.csproj` contains T1 native interop tests.
+- `tests/TEST_PLAN.md` describes planned rendering, integration, and performance coverage.
 - `external/decodl` is the upstream decoder project, pinned as a Git submodule.
 
 Default GLSL and MSL sources are kept as editable raw-string constants in `src/shaders/DefaultShaders.cs`; they are compiled directly from source and do not depend on demo files or the current working directory.
@@ -52,13 +54,16 @@ git clone --recurse-submodules https://github.com/Marin-MK/odl3d.git
 git submodule update --init --recursive
 ```
 
-Build the library and demo, or run the initial core tests:
+Build the library and demo:
 
 ```sh
 dotnet build odl3d.sln
-dotnet test tests/odl3d.Tests/odl3d.Tests.csproj
 dotnet run --project demo/odl3d.Demo.csproj
 ```
+
+## Testing
+
+For T0/T1 test commands, native prerequisites, and readable line/branch coverage reports, see [TESTING.md](TESTING.md).
 
 ## License
 

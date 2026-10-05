@@ -38,32 +38,41 @@ Found while reviewing the code; GPU tiers are blocked or weakened without them.
 |---|---|---|---|
 | P1 | **No pixel readback** in the generic API (`IRenderFrame` only has `CreateRenderPass`/`Present`; `ITexture` only `Upload`; `TextureUsage.CopySource` exists but nothing uses it). | No GPU-side assertion is possible. | Add `IRenderFrame.ReadPixels(Rect) : byte[]` (RGBA8, row 0 = top) or `ITexture.Download()`. Can be `internal` + `InternalsVisibleTo` if not meant to be public. |
 | P2 | **No offscreen render target**: `ColorAttachmentDescription` has no texture; passes can only target a window surface. | Every GPU test needs a window; GL requires one anyway, Metal does not. | Add `IRenderDevice.CreateOffscreenSurface(width, height, format)` returning an `IRenderSurface`. On GL back it with an FBO in a hidden GLFW window; on Metal with a `MTLTexture`. |
-| P3 | No `InternalsVisibleTo` for tests. | Enum-mapping tables, `ShaderPreprocessor`, `GLVertexLayout`, `MetalBufferSlots` are not reachable. | Add `InternalsVisibleTo("odl3d.Tests.*")`. |
+| P3 | No `InternalsVisibleTo` for tests. | Enum-mapping tables, `ShaderPreprocessor`, `GLVertexLayout`, `MetalBufferSlots` are not reachable. | Grant access to specific test assemblies, never a wildcard. Unit-test access is now enabled; add backend assembly grants when those projects are introduced. |
 | P4 | `FontResolver` falls back to **system fonts**. | Text tests differ per machine. | Commit an OFL-licensed fixture font (e.g. DejaVu Sans / Noto Sans, regular + bold + italic) to `tests/fixtures/fonts` and register it via `AddSearchPath`. Never depend on system fonts in assertions. |
 | P5 | Input is only fed by GLFW callbacks. | Input logic is untestable without a real window. | Expose an internal way to inject key/mouse events into `AbstractInputManager` (or test through `ProxyInputManager`). |
 | P6 | Native libs (glfw, freetype) are copied by `odl3d.csproj`; test projects must copy them too. | `DllNotFoundException` in CI. | Shared `Directory.Build.targets` or reference the same items from test projects. |
-| P7 | Test csproj sits at `tests/odl3d.Tests.csproj` while sources are in `tests/odl3d.Tests/`. | Confusing once multiple test projects exist. | Restructure as in section 4. |
+| P7 | The former `tests/odl3d.Tests/` layout was redundant. | Confusing once multiple test projects exist. | Keep category directories directly under `tests/`; resolved by the section 4 layout. |
 | P8 | xUnit 2 cannot skip dynamically. | Metal tests on Windows/Linux, or GL on a GPU-less runner, would fail instead of skip. | Move to xUnit v3 (`Assert.Skip`) or add `Xunit.SkippableFact`. |
 
 ## 4. Project structure
 
 ```
 tests/
-  Directory.Build.props              # common: net10.0, x64, xunit, native lib copy, InternalsVisibleTo
-  odl3d.Tests.Unit/                  # T0 - library CPU logic (no native, no GPU)
-  odl3d.Tests.Native/                # T1 - FreeType / GLFW / Metal binding interop
-  odl3d.Tests.Rendering.Conformance/ # T2 + T4 - abstract suites against IRenderDevice (no concrete backend)
-  odl3d.Tests.Rendering.OpenGL/      # concrete conformance subclasses + T3 GL-specific + GL CPU-side internals
-  odl3d.Tests.Rendering.Metal/       # concrete conformance subclasses + T3 Metal-specific + Metal CPU-side internals
-  odl3d.Tests.Integration/           # T5 - scenes, drawables, models, text on a real device (backend-parameterized)
-  odl3d.Benchmarks/                  # T6 - BenchmarkDotNet (CPU) + frame timing (GPU)
+  unit/                              # T0 - library CPU logic (no native, no GPU)
+    odl3d.Tests.Unit.csproj
+  native/                            # T1 - FreeType / GLFW / Metal binding interop
+    odl3d.Tests.Native.csproj
+  rendering/
+    conformance/                     # T2 + T4 - shared suites against IRenderDevice
+      odl3d.Tests.Rendering.Conformance.csproj
+    opengl/                          # backend conformance + GL-specific tests
+      odl3d.Tests.Rendering.OpenGL.csproj
+    metal/                           # backend conformance + Metal-specific tests
+      odl3d.Tests.Rendering.Metal.csproj
+  integration/                       # T5 - real-device library workflows
+    odl3d.Tests.Integration.csproj
+  benchmarks/                        # T6 - CPU benchmarks + GPU frame timing
+    odl3d.Benchmarks.csproj
   fixtures/
-    models/   (tiny hand-written .obj/.mtl/.dae + references to assets/)
-    images/   (png/jpg variants)
+    models/                          # tiny hand-written .obj/.mtl/.dae + references to assets/
+    images/                          # png/jpg variants
     fonts/
-    shaders/  (valid/invalid GLSL + MSL)
-  golden/     (reference PNGs, one per scene; per-backend override only with justification)
+    shaders/                         # valid/invalid GLSL + MSL
+  golden/                            # optional initially; add reference PNGs when T4 scenes stabilize
 ```
+
+Directory names describe test categories and are intentionally plain; project names live in the `.csproj` filenames. `golden/` is useful for repeatable cross-backend image regressions, but is not needed until T4 rendering tests and their canonical scenes are in place.
 
 Conventions:
 - Traits: `[Trait("Tier","T0".."T6")]`, `[Trait("Backend","OpenGL"|"Metal")]`, `[Trait("Requires","Gpu"|"Window"|"Font")]` so CI can filter (`dotnet test --filter "Tier=T0"`).
@@ -80,7 +89,9 @@ Conventions:
 - **GPU tests run serially** (`[CollectionDefinition(DisableParallelization = true)]`): GLFW must be used from the main thread and GL contexts are thread-affine. GPU tests are **synchronous** (no `await`, which may resume on another thread).
 - Debug validation is **on** in all GPU tests: GL `KHR_debug` callback (fail test on `HIGH` severity), Metal `MTL_DEBUG_LAYER=1` (fail on validation messages).
 
-## 5. T0 - CPU unit tests (odl3d library)
+## 5. T0 - CPU unit tests (`tests/unit`)
+
+Initial implementation in `tests/unit` covers color/rectangle/matrix/timer behavior, camera math, mesh builder indexing and counts, shader-data offsets and default depth conventions, sampler defaults, texture pixels/builders/lifecycle, Object3D transforms and resource ownership, and culture-independent OBJ loading. The remaining checklist below is still planned work; in particular, deterministic text tests need the fixture font from P4, and input/backend-internal coverage needs the corresponding test seams and projects.
 
 ### 5.1 Utilities
 - `Color`: constants have correct bytes; equality; conversion to `Vector4` (0..1) round-trips.
@@ -109,13 +120,13 @@ Conventions:
 
 ### 5.4 Vertex and shader-data layout (high value)
 GPU layout mismatches fail silently (garbage rendering), so lock them down on the CPU:
-- `Vertex`: `Unsafe.SizeOf<Vertex>()` and `Marshal.OffsetOf` match the `VertexAttributeDescription.Offset`s used by `ShaderPipeline.CreateDefault`.
+- `Vertex` is a managed class, not an interop struct. Verify `MeshBuilder.Build` serializes position/UV/(optional normal) floats in the 5-/8-float stride expected by the `VertexAttributeDescription.Offset`s used by `ShaderPipeline.CreateDefault`.
 - `ObjectShaderData` == 256 bytes, `SceneShaderData` == 128 bytes; every field offset matches the **std140** block in the GLSL default shader and the struct in the MSL default shader.
 - 256 bytes is also the uniform-offset alignment needed by GL (`GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT`) and Metal (constant-buffer offsets on macOS); assert size % 256 == 0.
 - `VertexLayoutDescription` checks: attributes do not overlap, fit within the stride, have unique indices, and `VertexFormat` byte sizes are correct.
 
 ### 5.5 Textures
-- `TextureBuilder` (existing tests + ): gradient endpoints exact, circle inside/outside/edge, `SetPixel` out-of-bounds behaviour, **row 0 = top** convention.
+- `TextureBuilder`: gradient endpoints exact, circle inside/outside/edge, `SetPixel` out-of-bounds behaviour, **row 0 = top** convention.
 - `Texture`: `Pixels.Length == w*h*4`; invalid dimensions throw `TextureException`; `HasPartialAlpha` correct for opaque / binary-alpha / soft-alpha images, and **invalidated when pixels change**; `FilterMode`/`WrapMode` defaults; `Dispose` idempotent; `OnDisposed` raised exactly once; `Upload` after dispose throws.
 - `Texture.FromImage` (decodl): fixtures for PNG RGBA/RGB/gray/gray+alpha/palette/16-bit/interlaced, and JPEG; check pixel values at known coordinates and orientation; missing/corrupt file -> `TextureException` (not a raw decoder exception).
 - `Sampler`: defaults; every filter/wrap combination maps to a `SamplerDescription`.
@@ -160,9 +171,11 @@ These live in the backend test projects but need no GPU:
 - `MetalBufferSlots`: **vertex-buffer slots and uniform-buffer slots never collide.** Metal uses one buffer argument table for both, which is a classic bug source.
 
 ## 6. T1 - Native interop tests
-- FreeType: init/done; load fixture face; check `units_per_EM`, `num_glyphs`, ascender against known values. **Run on Windows, Linux and macOS**: protects the LLP64 vs LP64 `FT_Long` struct-layout fix (`src/native/FT.cs`). Load/unload many faces with no crash.
-- GLFW: `glfwInit` succeeds; version >= 3.3; hidden-window creation where a display exists (Xvfb on Linux).
-- Metal bindings (macOS): every bound ObjC selector exists (`respondsToSelector:`/`class_getInstanceMethod`); `MTLCreateSystemDefaultDevice` is non-null or the test is skipped with a clear reason.
+- FreeType: init/done; load a host font face; check metrics, kerning, outline extraction and rasterized glyph data. **Run on Windows, Linux and macOS**: protects the LLP64 vs LP64 `FT_Long` struct-layout fix (`src/native/FT.cs`). Load/unload many faces with no crash. A licensed repository fixture font remains desirable for stable metric assertions.
+- GLFW: `glfwInit` succeeds; version >= 3.3; hidden-window creation where a display exists (Xvfb on Linux). GLFW and FreeType first load local `bin/` libraries, then use OS library resolution.
+- Metal bindings (macOS): the native framework/runtime load and platform guard are tested; selector and device-presence assertions still require a macOS runner.
+
+Coverage policy: T0 and T1 runs collect Cobertura line and branch data using `tests/coverage.runsettings`. Tier-owned code should reach 100% line coverage; all boolean/conditional branches should be exercised where platform behavior permits. Platform-specific native branches are verified by the Windows/Linux/macOS CI matrix, and new code must add tests for each new branch before merge.
 
 ## 7. T2 - Backend conformance suite (generic API contract)
 
@@ -273,7 +286,8 @@ Backend-parameterized like T2.
 
 - PR gate: T0 + T1 everywhere; T2-T5 on software GL and on Metal if available.
 - Nightly: everything, including hardware GPUs, fuzzing, soak, benchmarks.
-- Code coverage reported for T0 + T1 (target >= 80% of non-native, non-backend code); GPU tiers are judged by the API-surface checklist in sections 7-8 instead of line coverage.
+- T0 + T1 require 100% line coverage for tier-owned source files across the supported OS matrix; branch coverage is reported and each reachable branch must have an assertion. Platform-specific lines (for example Windows `FT_Long` layout and macOS Cocoa GLFW bindings) are combined by `.github/workflows/tests.yml`. Coverage collection is configured in `tests/coverage.runsettings`; run a project with `dotnet test <project.csproj> --settings tests/coverage.runsettings --collect:"XPlat Code Coverage"`.
+- GPU tiers are judged by the API-surface checklist in sections 7-8 instead of line coverage.
 
 ## 13. Regression register
 Each bug fix adds a test at the lowest tier that reproduces it. Known items to lock in now:
@@ -286,7 +300,7 @@ Each bug fix adds a test at the lowest tier that reproduces it. Known items to l
 | GL vs Metal depth range (`z*2-w` remap) | 5.2 + 7.5 near/far clipping |
 
 ## 14. Rollout order
-1. **Phase 1 (CPU, no code changes):** restructure projects (P6, P7), struct-layout tests, mesh/texture/loader/text/camera tests, enum exhaustiveness, offline shader compilation. Highest value per effort.
+1. **Phase 1 (CPU):** establish `tests/unit`, then add struct-layout tests, mesh/texture/loader/text/camera tests, enum exhaustiveness, and offline shader compilation. Resolve P6/P7 where applicable. Highest value per effort.
 2. **Phase 2 (testability):** readback + offscreen surface (P1, P2), `InternalsVisibleTo` (P3), fixture font (P4), input injection (P5), dynamic skip (P8).
 3. **Phase 3 (GPU):** conformance suite on OpenGL/llvmpipe in CI, then Metal on macOS; GL-specific and Metal-specific tests.
 4. **Phase 4:** golden-image consistency (including direct Metal vs GL diff on macOS), integration tests, demo smoke.
