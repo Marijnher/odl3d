@@ -4,7 +4,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class CameraTests
+public class CameraTests : TestBase
 {
     [Theory]
     [InlineData(-180f, -89f)]

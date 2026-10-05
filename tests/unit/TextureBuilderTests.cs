@@ -4,7 +4,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class TextureBuilderTests
+public class TextureBuilderTests : TestBase
 {
     [Fact]
     public void CreateSolid_preserves_dimensions_and_pixel_color()

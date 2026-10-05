@@ -4,7 +4,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class SamplerTests
+public class SamplerTests : TestBase
 {
     [Fact]
     public void Defaults_are_valid_renderer_sampler_values()

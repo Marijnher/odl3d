@@ -5,7 +5,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class ObjLoaderTests
+public class ObjLoaderTests : TestBase
 {
     [Fact]
     public void Load_triangulates_negative_indices_independent_of_current_culture()

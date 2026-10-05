@@ -4,7 +4,7 @@ using Xunit;
 namespace odl3d.Tests;
 
 [Trait("Tier", "T0")]
-public class UtilityTests
+public class UtilityTests : TestBase
 {
     [Fact]
     public void Color_constants_and_vector_conversion_preserve_rgba()
