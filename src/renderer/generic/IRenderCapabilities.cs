@@ -3,7 +3,7 @@ using System;
 namespace odl3d.Renderer;
 
 /// <summary>
-/// Represents the rendering capabilities of the GPU, indicating which features are supported and the maximum limits for various resources.
+/// Reports backend feature support and the resource limits accepted by the renderer.
 /// </summary>
 public interface IRenderCapabilities
 {
@@ -48,12 +48,12 @@ public interface IRenderCapabilities
     int MaxAnisotropy { get; }
 
     /// <summary>
-    /// Gets the maximum number of vertex buffer slots supported by the GPU.
+    /// Gets the maximum number of vertex buffer slots accepted by the renderer.
     /// </summary>
     int MaxVertexBufferSlots { get; }
 
     /// <summary>
-    /// Gets the maximum number of texture slots supported by the GPU.
+    /// Gets the maximum number of fragment texture slots accepted by the renderer.
     /// </summary>
     int MaxTextureSlots { get; }
 }

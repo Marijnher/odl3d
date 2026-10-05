@@ -22,7 +22,8 @@ public interface IRenderFrame : IDisposable
     IRenderPass CreateRenderPass(RenderPassDescription renderPassDescription);
     
     /// <summary>
-    /// Presents the frame, making it visible on the screen.
+    /// Presents the frame and releases frame-scoped resources. After this call, the frame cannot be used again.
+    /// Dispose releases an unpresented frame without presenting it.
     /// </summary>
     void Present();
 }

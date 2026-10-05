@@ -55,9 +55,4 @@ public sealed record RenderPipelineDescription
     /// The blend state description used by the render pipeline.
     /// </summary>
     public BlendDescription Blend { get; init; } = new BlendDescription();
-
-    /// <summary>
-    /// The depth-stencil state description used by the render pipeline.
-    /// </summary>
-    public DepthStencilDescription DepthStencil { get; init; } = new DepthStencilDescription();
 }

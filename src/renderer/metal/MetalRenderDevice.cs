@@ -25,7 +25,7 @@ internal class MetalRenderDevice : IRenderDevice
     /// <summary>
     /// Gets the rendering capabilities of the device.
     /// </summary>
-    public IRenderCapabilities Capabilities => new MetalRenderCapabilities();
+    public IRenderCapabilities Capabilities { get; }
 
     /// <summary>
     /// Gets a value indicating whether the device has been disposed.
@@ -39,6 +39,7 @@ internal class MetalRenderDevice : IRenderDevice
     {
         Metal.Load();
         Device = Metal.Device.Default;
+        Capabilities = new MetalRenderCapabilities(Device);
     }
 
     /// <summary>

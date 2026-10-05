@@ -91,7 +91,8 @@ public interface IRenderPass : IDisposable
     void DrawIndexed();
 
     /// <summary>
-    /// Ends the render pass and commits this render pass to the render frame.
+    /// Ends encoding and releases pass-scoped resources. After this call, the pass cannot be used again.
+    /// Dispose performs the same cleanup if End was not called.
     /// </summary>
     void End();
 }

@@ -69,6 +69,7 @@ internal class OpenGLRenderSurface : IRenderSurface
         WindowHandle = windowHandle;
         GLFW.glfwMakeContextCurrent(WindowHandle);
         GL.Load();
+        Device.InitializeCapabilities();
         GLFW.glfwGetFramebufferSize(WindowHandle, out int fbWidth, out int fbHeight);
         Width = (uint) fbWidth;
         Height = (uint) fbHeight;

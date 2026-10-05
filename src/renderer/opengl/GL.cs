@@ -108,6 +108,13 @@ internal static class GL
     public const uint GL_FILL = 0x1B02;
     public const uint GL_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
     public const uint GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
+    public const uint GL_VERSION = 0x1F02;
+    public const uint GL_EXTENSIONS = 0x1F03;
+    public const uint GL_NUM_EXTENSIONS = 0x821D;
+    public const uint GL_MAJOR_VERSION = 0x821B;
+    public const uint GL_MINOR_VERSION = 0x821C;
+    public const uint GL_MAX_TEXTURE_SIZE = 0x0D33;
+    public const uint GL_MAX_TEXTURE_IMAGE_UNITS = 0x8872;
     public const uint GL_TEXTURE_COMPARE_FUNC = 0x884D;
     public const uint GL_UNIFORM_BUFFER = 0x8A11;
     public const uint GL_INVALID_INDEX = 0xFFFFFFFF;
@@ -120,6 +127,9 @@ internal static class GL
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glEnable(uint cap);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glDisable(uint cap);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGetFloatv(uint pname, out float data);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glGetIntegerv(uint pname, out int data);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate IntPtr d_glGetString(uint name);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate IntPtr d_glGetStringi(uint name, uint index);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate uint d_glCreateShader(uint type);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void d_glShaderSource(uint shader, int count, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] strings, int[] length);
@@ -186,6 +196,9 @@ internal static class GL
     public static d_glEnable glEnable;
     public static d_glDisable glDisable;
     public static d_glGetFloatv glGetFloatv;
+    public static d_glGetIntegerv glGetIntegerv;
+    public static d_glGetString glGetString;
+    public static d_glGetStringi glGetStringi;
 
     public static d_glCreateShader glCreateShader;
     public static d_glShaderSource glShaderSource;
@@ -244,8 +257,6 @@ internal static class GL
     public static d_glBlendEquationSeparate glBlendEquationSeparate;
 #pragma warning restore CS8618
 
-    public static float MaxAnisotropy { get; private set; }
-
     public static bool Loaded { get; private set; }
 
     public static void Load()
@@ -260,6 +271,9 @@ internal static class GL
         glEnable = Get<d_glEnable>("glEnable");
         glDisable = Get<d_glDisable>("glDisable");
         glGetFloatv = Get<d_glGetFloatv>("glGetFloatv");
+        glGetIntegerv = Get<d_glGetIntegerv>("glGetIntegerv");
+        glGetString = Get<d_glGetString>("glGetString");
+        glGetStringi = Get<d_glGetStringi>("glGetStringi");
 
         glCreateShader = Get<d_glCreateShader>("glCreateShader");
         glShaderSource = Get<d_glShaderSource>("glShaderSource");
@@ -316,9 +330,6 @@ internal static class GL
         glDepthFunc = Get<d_glDepthFunc>("glDepthFunc");
         glBlendFuncSeparate = Get<d_glBlendFuncSeparate>("glBlendFuncSeparate");
         glBlendEquationSeparate = Get<d_glBlendEquationSeparate>("glBlendEquationSeparate");
-
-        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, out float maxAnisotropy);
-        MaxAnisotropy = maxAnisotropy;
 
         Loaded = true;
     }

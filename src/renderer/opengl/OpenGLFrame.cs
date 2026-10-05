@@ -48,14 +48,24 @@ internal class OpenGLFrame : IRenderFrame
     /// <param name="renderPassDescription">The description of the render pass to create.</param>
     /// <returns>The newly created render pass.</returns>
     public IRenderPass CreateRenderPass(RenderPassDescription renderPassDescription) =>
-        new OpenGLRenderPass(RenderSurface, Device.VertexArrayCache, renderPassDescription);
+        Disposed
+            ? throw new ObjectDisposedException(nameof(OpenGLFrame))
+            : new OpenGLRenderPass(RenderSurface, Device.VertexArrayCache, renderPassDescription);
     
     /// <summary>
     /// Presents the frame by swapping the front and back buffers.
     /// </summary>
     public void Present()
     {
-        GLFW.glfwSwapBuffers(WindowHandle);
+        ObjectDisposedException.ThrowIf(Disposed, this);
+        try
+        {
+            GLFW.glfwSwapBuffers(WindowHandle);
+        }
+        finally
+        {
+            Dispose();
+        }
     }
 
     /// <summary>

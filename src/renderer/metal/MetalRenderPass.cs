@@ -224,15 +224,22 @@ internal class MetalRenderPass : IRenderPass
     /// <summary>
     /// Ends the current render pass by ending the encoding of commands.
     /// </summary>
-    public void End() => Encoder.EndEncoding();
+    public void End()
+    {
+        if (Disposed) return;
+        try
+        {
+            Encoder.EndEncoding();
+        }
+        finally
+        {
+            Encoder.Dispose();
+            Disposed = true;
+        }
+    }
 
     /// <summary>
     /// Disposes of the render pass and releases any associated resources.
     /// </summary>
-    public void Dispose() 
-    {
-        if (Disposed) return;
-        Encoder.Dispose();
-        Disposed = true;
-    }
+    public void Dispose() => End();
 }

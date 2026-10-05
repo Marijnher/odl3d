@@ -43,6 +43,8 @@ internal static partial class Metal
         /// </summary>
         public string Description => GetString("description");
 
+        public uint MaxTextureDimension2D => GetUInt32("maxTextureDimension2D");
+
         /// <summary>
         /// Gets the registry ID of the Metal device.
         /// </summary>

@@ -46,15 +46,25 @@ internal class MetalRenderFrame : IRenderFrame
     /// <param name="renderPassDescription">The description of the render pass to create.</param>
     /// <returns>The created render pass.</returns>
     public IRenderPass CreateRenderPass(RenderPassDescription renderPassDescription) =>
-        new MetalRenderPass(Device, RenderSurface, CommandQueue, Drawable, CommandBuffer, renderPassDescription);
+        Disposed
+            ? throw new ObjectDisposedException(nameof(MetalRenderFrame))
+            : new MetalRenderPass(Device, RenderSurface, CommandQueue, Drawable, CommandBuffer, renderPassDescription);
     
     /// <summary>
     /// Presents the render frame to the display.
     /// </summary>
     public void Present()
     {
-        CommandBuffer.Present(Drawable);
-        CommandBuffer.Commit();
+        ObjectDisposedException.ThrowIf(Disposed, this);
+        try
+        {
+            CommandBuffer.Present(Drawable);
+            CommandBuffer.Commit();
+        }
+        finally
+        {
+            Dispose();
+        }
     }
 
     /// <summary>

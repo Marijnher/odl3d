@@ -246,13 +246,21 @@ internal class OpenGLRenderPass : IRenderPass
     /// </summary>
     public void End()
     {
-        GL.glDisable(GL.GL_BLEND);
-        GL.glBindTexture(GL.GL_TEXTURE_2D, 0);
-        GL.glBindSampler(0, 0);
-        GL.glBindBuffer(GL.GL_UNIFORM_BUFFER, 0);
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0);
-        GL.glBindVertexArray(0);
-        GL.glUseProgram(0);
+        if (Disposed) return;
+        try
+        {
+            GL.glDisable(GL.GL_BLEND);
+            GL.glBindTexture(GL.GL_TEXTURE_2D, 0);
+            GL.glBindSampler(0, 0);
+            GL.glBindBuffer(GL.GL_UNIFORM_BUFFER, 0);
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0);
+            GL.glBindVertexArray(0);
+            GL.glUseProgram(0);
+        }
+        finally
+        {
+            Disposed = true;
+        }
     }
 
     /// <summary>
@@ -260,8 +268,7 @@ internal class OpenGLRenderPass : IRenderPass
     /// </summary>
     public void Dispose()
     {
-        if (Disposed) return;
-        Disposed = true;
+        End();
     }
 
     private uint GetPrimitiveType(PrimitiveType primitiveType) => primitiveType switch

@@ -280,9 +280,8 @@ public class Window : InputHost
     /// </summary>
     public void Render()
     {
-        IRenderFrame? frame = RenderSurface.AcquireFrame();
-        if (frame == null) throw new RenderException("Failed to acquire frame.");
-        IRenderPass pass = frame.CreateRenderPass(new RenderPassDescription
+        using IRenderFrame frame = RenderSurface.AcquireFrame() ?? throw new RenderException("Failed to acquire frame.");
+        using IRenderPass pass = frame.CreateRenderPass(new RenderPassDescription
         {
             Color = new ColorAttachmentDescription { ClearColor = BackgroundColor, LoadAction = LoadAction.Clear },
             Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear }
