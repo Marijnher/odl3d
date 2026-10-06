@@ -10,23 +10,17 @@ odl3d is a C# graphics library designed to simplify 3D game development and grap
 
 Applications create a graphics application and window, construct drawables independently, explicitly add them to 2D or 3D scenes, and render those scenes through the application's renderer.
 
-```csharp
-using var app = new GraphicsApplication(RenderTarget.OpenGL);
-using var window = app.CreateWindow(800, 600, "My application");
-var scene = window.CreateScene3D();
+![odl3d Architecture](docs/architecture.png)
 
-var texture = TextureBuilder.CreateCheckerboard(64, 64, Color.Magenta, new Color(0, 255, 255));
-var sprite = new Sprite3D(texture);
-scene.Add(sprite);
+Source: [docs/architecture.puml](docs/architecture.puml).
 
-while (!window.ShouldClose)
-{
-   window.Update(0);
-   window.Render();
-}
-```
+### Renderer API
 
-![architecture.png](architecture.png)
+The renderer API provides a backend-independent device, frame lifecycle, and GPU resource contracts for OpenGL and Metal.
+
+![Renderer Architecture](docs/renderer-api.png)
+
+Source: [docs/renderer-api.puml](docs/renderer-api.puml).
 
 ## Dependencies
 
@@ -65,11 +59,23 @@ dotnet run --project demo/odl3d.Demo.csproj
 
 For T0/T1 test commands, native prerequisites, and readable line/branch coverage reports, see [TESTING.md](TESTING.md).
 
-## License
+## Example usage
 
-MIT License - See [LICENSE](LICENSE) file for details.
+```csharp
+using var app = new GraphicsApplication(RenderTarget.OpenGL);
+using var window = app.CreateWindow(800, 600, "My application");
+var scene = window.CreateScene3D();
 
-Copyright © 2026 Marijn Herrebout
+var texture = TextureBuilder.CreateCheckerboard(64, 64, Color.Magenta, new Color(0, 255, 255));
+var sprite = new Sprite3D(texture);
+scene.Add(sprite);
+
+while (!window.ShouldClose)
+{
+   window.Update(0);
+   window.Render();
+}
+```
 
 ## Getting Started
 
@@ -85,4 +91,10 @@ Copyright © 2026 Marijn Herrebout
 
 ## Documentation
 
-For detailed usage information, refer to the source files in the `src/` directory.
+For detailed usage information, refer to the source files in the `src/` directory and additional documentation files in the `docs/` directory.
+
+## License
+
+MIT License - See [LICENSE](LICENSE) file for details.
+
+Copyright © 2026 Marijn Herrebout

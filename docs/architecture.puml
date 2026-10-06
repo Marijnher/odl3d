@@ -1,0 +1,51 @@
+@startuml architecture
+title odl3d architecture
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #4A5568
+skinparam package {
+  BackgroundColor #F7FAFC
+  BorderColor #718096
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #2D3748
+}
+
+package "Application" {
+  component "GraphicsApplication\ninitializes renderer" as app
+  component "Window\nGLFW window/input\ndefault shader pipelines" as window
+}
+
+package "Scene graph" {
+  component "Scene2D / Scene3D\nCamera" as scene
+  component "Object3D drawables\nModel, sprites, text" as drawables
+}
+
+package "Content" {
+  component "Model loaders\nOBJ / DAE / MTL" as loaders
+  component "Shared resources\nMesh, Texture, Sampler, Font" as resources
+}
+
+package "Renderer API" {
+  component "Renderer\nRenderFactory, IRenderDevice\nsurfaces, passes, pipelines" as renderer
+  component "ShaderPipeline" as shaderpipeline
+}
+
+package "Backends" {
+  component "OpenGL / Metal" as backends
+}
+
+app --> window : owns
+window --> scene : manages
+scene --> drawables : contains
+loaders --> resources : build
+drawables --> resources : use
+scene --> shaderpipeline : draws with
+shaderpipeline --> renderer : uses device
+backends --> renderer : implement
+
+@enduml

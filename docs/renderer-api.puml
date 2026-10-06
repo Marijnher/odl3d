@@ -1,0 +1,57 @@
+@startuml renderer-api
+title odl3d renderer API
+
+top to bottom direction
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowColor #4A5568
+skinparam package {
+  BackgroundColor #F7FAFC
+  BorderColor #718096
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #2D3748
+}
+
+package "Application" {
+  component "GraphicsApplication / Window" as client
+}
+
+package "Device selection" {
+  component "RenderFactory" as factory
+  component "IRenderDevice" as device
+}
+
+package "Frame lifecycle" {
+  component "IRenderSurface" as surface
+  component "IRenderFrame" as frame
+  component "IRenderPass" as pass
+}
+
+package "GPU resource contracts" {
+  component "IGPUResource" as gpuResource
+  component "IBuffer<T>\nITexture / ISampler\nIDepthStencilState" as boundResources
+  component "IShaderModule\nIRenderPipeline" as shaderResources
+}
+
+package "Backends" {
+  component "OpenGLRenderDevice" as opengl
+  component "MetalRenderDevice" as metal
+}
+
+client --> factory : initializes
+factory --> device : selects backend
+client --> device : uses
+device --> surface : creates
+surface --> frame : acquires
+frame --> pass : creates
+device --> gpuResource : creates GPU resources
+pass --> gpuResource : binds resources
+gpuResource <|-- boundResources
+gpuResource <|-- shaderResources
+device <|.. opengl
+device <|.. metal
+
+@enduml
