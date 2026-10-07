@@ -35,13 +35,13 @@ class DemoScene : Scene3D
         Texture grassTexture = new Texture("assets/grass.png");
         Object3D ground = new Object3D(groundMesh, grassTexture)
         {
-            Position = new Vector3(-10, -1.5f, -10)
+            Position = new Vector3(-10, -1.5f, -10),
         };
-        Add(ground);
         ground.Sampler.WrapU = TextureWrap.Mirror;
         ground.Sampler.WrapV = TextureWrap.Mirror;
+        Add(ground);
 
-        Text3D helloWorld = new Text3D(Font.Get("arial", 96))
+        Text3D helloWorld = new Text3D("arial", 96)
         {
             Position = new Vector3(0, 2, -2),
             Color = Color.Red,
@@ -50,7 +50,7 @@ class DemoScene : Scene3D
         };
         Add(helloWorld);
 
-        TextBillboard billboard = new TextBillboard(Font.Get("arial", 48))
+        TextBillboard billboard = new TextBillboard("arial", 48)
         {
             Position = new Vector3(-1.5f, 3f, -2),
             Content = "Billboard"

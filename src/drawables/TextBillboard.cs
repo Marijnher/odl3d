@@ -54,8 +54,8 @@ public class TextBillboard : RasterizedText
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
     /// <param name="pixelsPerWorldUnit">How many rasterized font pixels map to one world unit.</param>
     /// <param name="atlas">An optional custom GlyphAtlas; defaults to the shared process-wide atlas.</param>
-    public TextBillboard(Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float pixelsPerWorldUnit = 256f, GlyphAtlas? atlas = null)
-        : base(font, content, style, align, atlas)
+    public TextBillboard(Font font, FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float pixelsPerWorldUnit = 256f, GlyphAtlas? atlas = null)
+        : base(font, style, align, atlas)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(pixelsPerWorldUnit, 0f);
         _pixelsPerWorldUnit = pixelsPerWorldUnit;
@@ -65,6 +65,18 @@ public class TextBillboard : RasterizedText
         Sampler.WrapU = TextureWrap.Clamp;
         Sampler.WrapV = TextureWrap.Clamp;
     }
+
+    /// <summary>
+    /// Creates world-space quad text in the given scene using a font specified by its name and size.
+    /// </summary>
+    /// <param name="fontName">The name of the font to use.</param>
+    /// <param name="fontSize">The size of the font to use.</param>
+    /// <param name="style">The initial Bold/Italic style.</param>
+    /// <param name="align">Horizontal alignment of each line within the text block.</param>
+    /// <param name="pixelsPerWorldUnit">How many rasterized font pixels map to one world unit.</param>
+    /// <param name="atlas">An optional custom GlyphAtlas; defaults to the shared process-wide atlas.</param>
+    public TextBillboard(string fontName, int fontSize, FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float pixelsPerWorldUnit = 256f, GlyphAtlas? atlas = null)
+        : this(Font.Get(fontName, fontSize), style, align, pixelsPerWorldUnit, atlas) { }
 
     /// <summary>
     /// Gets the model matrix for this text, which transforms its local coordinates to world coordinates. The model matrix is computed based on the text's position, rotation, scale, and the scene's position, and is used for rendering the text in the correct location and orientation within the scene.

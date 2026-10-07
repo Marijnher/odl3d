@@ -90,8 +90,8 @@ public class Text3D : Text
     /// <param name="depth">Extrusion thickness along Z, in world units.</param>
     /// <param name="pixelsPerWorldUnit">How many font pixels map to one world unit.</param>
     /// <param name="smoothingAngle">Angle threshold in degrees for smoothing the side-wall normals.</param>
-    public Text3D(Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float depth = 0.05f, float pixelsPerWorldUnit = 256f, float smoothingAngle = 40f)
-        : base(font, content, style, align)
+    public Text3D(Font font, FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float depth = 0.05f, float pixelsPerWorldUnit = 256f, float smoothingAngle = 40f)
+        : base(font, style, align)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(depth);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(pixelsPerWorldUnit, 0f);
@@ -101,6 +101,19 @@ public class Text3D : Text
         Color = Color.White;
         Rebuild();
     }
+
+    /// <summary>
+    /// Creates extruded 3D text in the given scene using a font specified by its name and size.
+    /// </summary>
+    /// <param name="fontName">The name of the font to use.</param>
+    /// <param name="fontSize">The size of the font to use.</param>
+    /// <param name="style">The initial Bold/Italic style.</param>
+    /// <param name="align">Horizontal alignment of each line within the text block.</param>
+    /// <param name="depth">Extrusion thickness along Z, in world units.</param>
+    /// <param name="pixelsPerWorldUnit">How many font pixels map to one world unit.</param>
+    /// <param name="smoothingAngle">Angle threshold in degrees for smoothing the side-wall normals.</param>
+    public Text3D(string fontName, int fontSize, FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, float depth = 0.05f, float pixelsPerWorldUnit = 256f, float smoothingAngle = 40f)
+        : this(Font.Get(fontName, fontSize), style, align, depth, pixelsPerWorldUnit, smoothingAngle) { }
 
     /// <summary>
     /// Gets the model matrix for this text, which transforms its local coordinates to world coordinates. The model matrix is computed based on the text's position, rotation, scale, and the scene's position, and is used for rendering the text in the correct location and orientation within the scene.

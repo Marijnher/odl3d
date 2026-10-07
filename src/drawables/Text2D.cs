@@ -18,13 +18,24 @@ public class Text2D : RasterizedText
     /// <param name="style">The initial Bold/Italic style.</param>
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
     /// <param name="atlas">An optional custom GlyphAtlas; defaults to the shared process-wide atlas.</param>
-    public Text2D(Font font, string content = "", FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, GlyphAtlas? atlas = null)
-        : base(font, content, style, align, atlas)
+    public Text2D(Font font, FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, GlyphAtlas? atlas = null)
+        : base(font, style, align, atlas)
     {
         Mesh = MeshBuilder.CreateQuad();
         AutoDisposeMesh = false;
         Rebuild();
     }
+
+    /// <summary>
+    /// Creates screen-space text in the given 2D scene using a font specified by its name and size.
+    /// </summary>
+    /// <param name="fontName">The name of the font to use.</param>
+    /// <param name="fontSize">The size of the font to use.</param>
+    /// <param name="style">The initial Bold/Italic style.</param>
+    /// <param name="align">Horizontal alignment of each line within the text block.</param>
+    /// <param name="atlas">An optional custom GlyphAtlas; defaults to the shared process-wide atlas.</param>
+    public Text2D(string fontName, int fontSize, FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, GlyphAtlas? atlas = null)
+        : this(Font.Get(fontName, fontSize), style, align, atlas) { }
 
     /// <summary>
     /// Gets the model matrix for the 2D text, which defines its position, rotation, and scale in screen space.

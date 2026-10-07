@@ -83,11 +83,11 @@ public abstract class Text : Object3D
     /// <param name="content">The initial text to display. May contain line breaks.</param>
     /// <param name="style">The initial Bold/Italic style.</param>
     /// <param name="align">Horizontal alignment of each line within the text block.</param>
-    protected Text(Font font, string content, FontStyle style, TextAlign align)
+    protected Text(Font font, FontStyle style, TextAlign align)
         : base()
     {
         _font = font;
-        _content = content;
+        _content = string.Empty;
         _style = style;
         _align = align;
     }
