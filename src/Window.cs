@@ -82,11 +82,7 @@ public class Window : InputHost
     public bool Wireframe
     {
         get => ShaderPipeline.Wireframe;
-        set 
-        {
-            ShaderPipeline.Wireframe = value;
-            ShaderPipelineWithNormals.Wireframe = value;
-        }
+        set => ShaderPipeline.Wireframe = value;
     }
 
     /// <summary>
@@ -98,11 +94,6 @@ public class Window : InputHost
     /// The shader pipeline used for rendering 3D objects without normals. This pipeline is created with default settings and can be customized as needed.
     /// </summary>
     public ShaderPipeline ShaderPipeline { get; set; }
-
-    /// <summary>
-    /// The shader pipeline used for rendering 3D objects with normals. This pipeline is created with default settings and can be customized as needed.
-    /// </summary>
-    public ShaderPipeline ShaderPipelineWithNormals { get; set; }
 
     private IDepthStencilState Stencil3DOpaque;
     private IDepthStencilState Stencil3DTransparent;
@@ -147,8 +138,7 @@ public class Window : InputHost
             DepthWriteEnabled = false
         });
 
-        ShaderPipeline = ShaderPipeline.CreateDefault(Renderer, hasNormals: false);
-        ShaderPipelineWithNormals = ShaderPipeline.CreateDefault(Renderer, hasNormals: true);
+        ShaderPipeline = ShaderPipeline.CreateDefault(Renderer);
 
         // Default non-moveable camera
         Camera = new Camera(this);
@@ -377,7 +367,6 @@ public class Window : InputHost
         Stencil3DTransparent.Dispose();
         Stencil2D.Dispose();
         ShaderPipeline.Dispose();
-        ShaderPipelineWithNormals.Dispose();
         RenderSurface.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         Application.RemoveWindow(this);

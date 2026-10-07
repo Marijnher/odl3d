@@ -24,7 +24,7 @@ public static class DaeLoader
     /// </summary>
     public static TextureWrap DefaultTextureWrapT { get; set; } = TextureWrap.Mirror;
 
-    private readonly record struct VertexKey(int Position, int TexCoord);
+    private readonly record struct VertexKey(int Position, int TexCoord, int Normal);
 
     private sealed class SourceData
     {
@@ -36,6 +36,7 @@ public static class DaeLoader
     {
         public string? PositionSource;
         public string? TexCoordSource;
+        public string? NormalSource;
     }
 
     private sealed class InputData
@@ -152,12 +153,12 @@ public static class DaeLoader
                 : materialSymbol;
             materials.TryGetValue(materialId, out MaterialData? material);
 
-            (float[] meshVertices, uint[] indices) = BuildPrimitive(primitive, sources, vertices, scale);
+            (Vertex[] meshVertices, uint[] indices, bool hasNormals) = BuildPrimitive(primitive, sources, vertices, scale);
 
             (Texture? texture, Sampler? sampler) = material?.TexturePath == null ? (null, null) : LoadTexture(textureFolder, material);
             yield return new LoadedPart
             {
-                Mesh = new Mesh(meshVertices, indices),
+                Mesh = new Mesh(meshVertices, indices, hasNormals),
                 Texture = texture,
                 Sampler = sampler,
                 Transparent = material?.Transparent ?? false,
@@ -166,7 +167,7 @@ public static class DaeLoader
         }
     }
 
-    private static (float[] Vertices, uint[] Indices) BuildPrimitive(
+    private static (Vertex[] Vertices, uint[] Indices, bool HasNormals) BuildPrimitive(
         XElement primitive,
         Dictionary<string, SourceData> sources,
         Dictionary<string, VerticesData> vertices,
@@ -189,6 +190,9 @@ public static class DaeLoader
         InputData? texCoordInput = inputs.FirstOrDefault(input => input.Semantic == "TEXCOORD");
         string? texCoordSource = texCoordInput?.Source ?? vertexSources.TexCoordSource;
         int texCoordOffset = texCoordInput?.Offset ?? vertexInput.Offset;
+        InputData? normalInput = inputs.FirstOrDefault(input => input.Semantic == "NORMAL");
+        string? normalSource = normalInput?.Source ?? vertexSources.NormalSource;
+        int normalOffset = normalInput?.Offset ?? vertexInput.Offset;
 
         if (texCoordSource == null)
         {
@@ -200,7 +204,7 @@ public static class DaeLoader
         int[] cornerData = ReadCornerData(primitive);
         List<int[]> polygons = ReadPolygons(primitive, cornerData, stride);
         Dictionary<VertexKey, uint> vertexLookup = [];
-        List<float> meshVertices = [];
+        List<Vertex> meshVertices = [];
         List<uint> indices = [];
 
         foreach (int[] polygon in polygons)
@@ -213,13 +217,14 @@ public static class DaeLoader
             }
         }
 
-        return (meshVertices.ToArray(), indices.ToArray());
+        return (meshVertices.ToArray(), indices.ToArray(), normalSource != null);
 
         void AddCorner(int cornerOffset)
         {
             int positionIndex = cornerData[cornerOffset + vertexInput.Offset];
             int texCoordIndex = cornerData[cornerOffset + texCoordOffset];
-            VertexKey key = new(positionIndex, texCoordIndex);
+            int normalIndex = normalSource == null ? -1 : cornerData[cornerOffset + normalOffset];
+            VertexKey key = new(positionIndex, texCoordIndex, normalIndex);
 
             if (!vertexLookup.TryGetValue(key, out uint index))
             {
@@ -229,11 +234,25 @@ public static class DaeLoader
                 int positionOffset = positionIndex * positions.Stride;
                 int texCoordDataOffset = texCoordIndex * texCoords.Stride;
 
-                meshVertices.Add(positions.Values[positionOffset] / 50f * scale);
-                meshVertices.Add(positions.Values[positionOffset + 1] / 50f * scale);
-                meshVertices.Add(positions.Values[positionOffset + 2] / 50f * scale);
-                meshVertices.Add(texCoords.Values[texCoordDataOffset]);
-                meshVertices.Add(1f - texCoords.Values[texCoordDataOffset + 1]);
+                Vector3 position = new(
+                    positions.Values[positionOffset] / 50f * scale,
+                    positions.Values[positionOffset + 1] / 50f * scale,
+                    positions.Values[positionOffset + 2] / 50f * scale);
+                Vector3 normal = Vector3.Zero;
+                if (normalSource != null)
+                {
+                    SourceData normalData = sources[normalSource];
+                    int normalDataOffset = normalIndex * normalData.Stride;
+                    normal = new Vector3(
+                        normalData.Values[normalDataOffset],
+                        normalData.Values[normalDataOffset + 1],
+                        normalData.Values[normalDataOffset + 2]);
+                }
+                meshVertices.Add(new Vertex(
+                    position,
+                    normal,
+                    texCoords.Values[texCoordDataOffset],
+                    1f - texCoords.Values[texCoordDataOffset + 1]));
             }
 
             indices.Add(index);
@@ -549,6 +568,10 @@ public static class DaeLoader
             else if (semantic == "TEXCOORD")
             {
                 result.TexCoordSource = source;
+            }
+            else if (semantic == "NORMAL")
+            {
+                result.NormalSource = source;
             }
         }
 

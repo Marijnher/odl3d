@@ -36,12 +36,17 @@ public class MeshBuilder
     /// <param name="v3">The third vertex of the triangular face.</param>
     public void AddFace(Vertex v1, Vertex v2, Vertex v3)
     {
-        if (!Vertices.Contains(v1)) AddVertex(v1);
-        if (!Vertices.Contains(v2)) AddVertex(v2);
-        if (!Vertices.Contains(v3)) AddVertex(v3);
-        Indices.Add((uint) Vertices.IndexOf(v1));
-        Indices.Add((uint) Vertices.IndexOf(v2));
-        Indices.Add((uint) Vertices.IndexOf(v3));
+        Indices.Add(FindOrAddVertex(v1));
+        Indices.Add(FindOrAddVertex(v2));
+        Indices.Add(FindOrAddVertex(v3));
+    }
+
+    private uint FindOrAddVertex(Vertex vertex)
+    {
+        int index = Vertices.IndexOf(vertex);
+        if (index >= 0) return (uint)index;
+        Vertices.Add(vertex);
+        return (uint)(Vertices.Count - 1);
     }
 
     /// <summary>
@@ -68,40 +73,22 @@ public class MeshBuilder
     /// <param name="v">The vertical texture coordinate scale for the quad.</param>
     public void AddQuad(Vertex s1, Vertex s2, Vertex s3, Vertex s4, float u = 1, float v = 1)
     {
-        var v1 = new Vertex(s1.Position, 0, 0);
-        var v2 = new Vertex(s2.Position, u, 0);
-        var v3 = new Vertex(s3.Position, v, v);
-        var v4 = new Vertex(s4.Position, 0, v);
+        var v1 = new Vertex(s1.Position, s1.Normal, 0, 0);
+        var v2 = new Vertex(s2.Position, s2.Normal, u, 0);
+        var v3 = new Vertex(s3.Position, s3.Normal, v, v);
+        var v4 = new Vertex(s4.Position, s4.Normal, 0, v);
         AddFace(v1, v2, v3);
         AddFace(v1, v3, v4);
     }
 
     /// <summary>
-    /// Builds and returns a Mesh object based on the current state of the mesh builder. The mesh will include vertex normals if specified by the hasNormals parameter.
+    /// Builds and returns a Mesh object based on the current state of the mesh builder. Every vertex includes a normal, which is zero when not supplied.
     /// </summary>
-    /// <param name="hasNormals">True if the mesh should include vertex normals.</param>
+    /// <param name="hasNormals">True when the vertices contain meaningful normals.</param>
     /// <returns>The constructed Mesh object.</returns>
     public Mesh Build(bool hasNormals = false)
     {
-        int floatsPerVertex = hasNormals ? 8 : 5;
-        float[] vertices = new float[Vertices.Count * floatsPerVertex];
-        for (int i = 0; i < Vertices.Count; i++)
-        {
-            Vertex v = Vertices[i];
-            int offset = i * floatsPerVertex;
-            vertices[offset] = v.Position.X;
-            vertices[offset + 1] = v.Position.Y;
-            vertices[offset + 2] = v.Position.Z;
-            vertices[offset + 3] = v.TexCoord.X;
-            vertices[offset + 4] = v.TexCoord.Y;
-            if (hasNormals)
-            {
-                vertices[offset + 5] = v.Normal.X;
-                vertices[offset + 6] = v.Normal.Y;
-                vertices[offset + 7] = v.Normal.Z;
-            }
-        }
-        return new Mesh(vertices, Indices.ToArray(), hasNormals);
+        return new Mesh(Vertices.ToArray(), Indices.ToArray(), hasNormals);
     }
 
     /// <summary>

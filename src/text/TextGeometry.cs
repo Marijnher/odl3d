@@ -13,11 +13,6 @@ namespace odl3d;
 /// </summary>
 internal static class TextGeometry
 {
-    /// <summary>
-    /// Number of floats per vertex: position (3), texture coordinate (2), normal (3).
-    /// </summary>
-    public const int FloatsPerVertex = 8;
-
     private readonly record struct Shape(List<Vector2> Outer, List<List<Vector2>> Holes);
 
     /// <summary>
@@ -25,7 +20,7 @@ internal static class TextGeometry
     /// </summary>
     internal sealed class Result
     {
-        public required float[] Vertices { get; init; }
+        public required Vertex[] Vertices { get; init; }
         public required uint[] Indices { get; init; }
         public float Width { get; init; }
         public float Height { get; init; }
@@ -146,7 +141,7 @@ internal static class TextGeometry
     {
         private const float MinimumContourArea = 1e-8f;
 
-        private readonly List<float> _vertices = new();
+        private readonly List<Vertex> _vertices = new();
         private readonly List<uint> _indices = new();
         private readonly float _halfDepth;
         private readonly float _blockWidth;
@@ -165,7 +160,7 @@ internal static class TextGeometry
             _extruded = depth > 0f;
         }
 
-        public float[] BuildVertices() => _vertices.ToArray();
+        public Vertex[] BuildVertices() => _vertices.ToArray();
 
         public uint[] BuildIndices() => _indices.ToArray();
 
@@ -247,7 +242,7 @@ internal static class TextGeometry
         {
             float z = front ? _halfDepth : -_halfDepth;
             Vector3 normal = new Vector3(0f, 0f, front ? 1f : -1f);
-            uint start = (uint)(_vertices.Count / FloatsPerVertex);
+            uint start = (uint)_vertices.Count;
 
             foreach (Vector2 point in polygon) AddVertex(new Vector3(point.X, point.Y, z), point, normal);
 
@@ -301,7 +296,7 @@ internal static class TextGeometry
                 // The end of this edge uses the next vertex's blended normal only if that blend includes this edge.
                 Vector3 normalB = new Vector3(Vector2.Dot(edgeNormals[i], edgeNormals[next]) >= _cosSmoothingAngle ? vertexNormals[next] : edgeNormals[i], 0f);
 
-                uint start = (uint)(_vertices.Count / FloatsPerVertex);
+                uint start = (uint)_vertices.Count;
                 AddVertex(new Vector3(a.X, a.Y, _halfDepth), a, normalA);
                 AddVertex(new Vector3(a.X, a.Y, -_halfDepth), a, normalA);
                 AddVertex(new Vector3(b.X, b.Y, -_halfDepth), b, normalB);
@@ -317,15 +312,10 @@ internal static class TextGeometry
 
         private void AddVertex(Vector3 position, Vector2 planarPoint, Vector3 normal)
         {
-            _vertices.Add(position.X);
-            _vertices.Add(position.Y);
-            _vertices.Add(position.Z);
             // Planar mapping over the whole text block, so a texture wraps continuously across caps and walls.
-            _vertices.Add((planarPoint.X * _pixelsPerWorldUnit + _blockWidth / 2f) / _blockWidth);
-            _vertices.Add((_blockHeight / 2f - planarPoint.Y * _pixelsPerWorldUnit) / _blockHeight);
-            _vertices.Add(normal.X);
-            _vertices.Add(normal.Y);
-            _vertices.Add(normal.Z);
+            float u = (planarPoint.X * _pixelsPerWorldUnit + _blockWidth / 2f) / _blockWidth;
+            float v = (_blockHeight / 2f - planarPoint.Y * _pixelsPerWorldUnit) / _blockHeight;
+            _vertices.Add(new Vertex(position, normal, u, v));
         }
     }
 }

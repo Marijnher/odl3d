@@ -157,8 +157,7 @@ public class Object3D : Drawable
         if (passType == RenderPass.Transparent != IsTransparent) return;
 
         Scene<Object3D> scene = Scene ?? throw new InvalidOperationException("Attach the object to a scene before drawing it.");
-        ShaderPipeline pipeline = Mesh.HasNormals ? scene.Window.ShaderPipelineWithNormals : scene.Window.ShaderPipeline;
-        pass.SetRenderPipeline(pipeline.Pipeline);
+        pass.SetRenderPipeline(scene.Window.ShaderPipeline.Pipeline);
 
         Mesh.EnsureUploaded(Renderer);
         pass.SetVertexBuffer(Mesh.Vertices);

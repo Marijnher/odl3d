@@ -35,4 +35,33 @@ public class ObjLoaderTests
             File.Delete(path);
         }
     }
+
+    [Fact]
+    public void Load_preserves_normals_and_splits_vertices_with_different_normals()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"odl3d-{Guid.NewGuid():N}.obj");
+        File.WriteAllText(path, """
+            v 0 0 0
+            v 1 0 0
+            v 0 1 0
+            vt 0 0
+            vn 0 0 1
+            vn 0 1 0
+            f 1/1/1 2/1/1 3/1/1
+            f 1/1/2 3/1/1 2/1/1
+            """);
+
+        try
+        {
+            ObjFile obj = ObjLoader.Load(path);
+            using Mesh mesh = obj.Meshes["default"].Mesh;
+
+            Assert.True(mesh.HasNormals);
+            Assert.Equal(4, mesh.VertexCount);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 }

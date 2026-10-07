@@ -82,24 +82,27 @@ public static class ObjLoader
     {
         List<Vector3> positions = new();
         List<Vector2> texCoords = new();
+        List<Vector3> normals = new();
 
         ObjFile objFile = new ObjFile(new Dictionary<string, ObjGroup>(), null);
 
         string? currentName = "default";
         string? mtlName = null;
 
-        List<float> vertices = new();
+        List<Vertex> vertices = new();
         List<uint> indices = new();
         Dictionary<string, uint> vertexLookup = new();
+        bool hasNormals = false;
 
         void FinishCurrentMesh()
         {
             if (indices.Count == 0)
                 return;
-            objFile.Meshes[currentName] = new ObjGroup(currentName, mtlName, new Mesh(vertices.ToArray(), indices.ToArray()));
+            objFile.Meshes[currentName] = new ObjGroup(currentName, mtlName, new Mesh(vertices.ToArray(), indices.ToArray(), hasNormals));
             vertices.Clear();
             indices.Clear();
             vertexLookup.Clear();
+            hasNormals = false;
             mtlName = null;
         }
 
@@ -127,6 +130,13 @@ public static class ObjLoader
                         float.Parse(parts[2], CultureInfo.InvariantCulture)));
                     break;
 
+                case "vn":
+                    normals.Add(new Vector3(
+                        float.Parse(parts[1], CultureInfo.InvariantCulture),
+                        float.Parse(parts[2], CultureInfo.InvariantCulture),
+                        float.Parse(parts[3], CultureInfo.InvariantCulture)));
+                    break;
+
                 case "o":
                     FinishCurrentMesh();
                     currentName = string.Join(" ", parts.Skip(1));
@@ -144,13 +154,16 @@ public static class ObjLoader
 
                     for (int i = 1; i < parts.Length; i++)
                     {
-                        faceIndices.Add(
-                            ResolveVertex(
-                                parts[i],
-                                positions,
-                                texCoords,
-                                vertices,
-                                vertexLookup));
+                        uint resolvedIndex = ResolveVertex(
+                            parts[i],
+                            positions,
+                            texCoords,
+                            normals,
+                            vertices,
+                            vertexLookup,
+                            out bool hasNormal);
+                        faceIndices.Add(resolvedIndex);
+                        hasNormals |= hasNormal;
                     }
 
                     for (int i = 1; i < faceIndices.Count - 1; i++)
@@ -187,29 +200,33 @@ public static class ObjLoader
     /// <param name="vertices">The list of vertex data to be populated for the Mesh.</param>
     /// <param name="vertexLookup">A dictionary mapping vertex tokens to their corresponding indices in the vertices list.</param>
     /// <returns>The index of the resolved vertex in the vertices list.</returns>
-    private static uint ResolveVertex(string token, List<Vector3> positions, List<Vector2> texCoords, List<float> vertices, Dictionary<string, uint> vertexLookup)
+    private static uint ResolveVertex(string token, List<Vector3> positions, List<Vector2> texCoords, List<Vector3> normals, List<Vertex> vertices, Dictionary<string, uint> vertexLookup, out bool hasNormal)
     {
+        string[] parts = token.Split('/');
+        hasNormal = parts.Length > 2 && parts[2].Length > 0;
         if (vertexLookup.TryGetValue(token, out uint existingIndex)) return existingIndex;
 
-        string[] parts = token.Split('/');
         int positionIndex = int.Parse(parts[0], CultureInfo.InvariantCulture);
         positionIndex = positionIndex > 0 ? positionIndex - 1 : positions.Count + positionIndex;
         Vector3 position = positions[positionIndex];
 
         Vector2 texCoord = Vector2.Zero;
+        Vector3 normal = Vector3.Zero;
         if (parts.Length > 1 && parts[1].Length > 0)
         {
             int texCoordIndex = int.Parse(parts[1], CultureInfo.InvariantCulture);
             texCoordIndex = texCoordIndex > 0 ? texCoordIndex - 1 : texCoords.Count + texCoordIndex;
             texCoord = texCoords[texCoordIndex];
         }
+        if (hasNormal)
+        {
+            int normalIndex = int.Parse(parts[2], CultureInfo.InvariantCulture);
+            normalIndex = normalIndex > 0 ? normalIndex - 1 : normals.Count + normalIndex;
+            normal = normals[normalIndex];
+        }
 
-        uint newIndex = (uint) (vertices.Count / 5);
-        vertices.Add(position.X);
-        vertices.Add(position.Y);
-        vertices.Add(position.Z);
-        vertices.Add(texCoord.X);
-        vertices.Add(1f - texCoord.Y); // OBJ texcoords are bottom-up; flip to match our top-left convention
+        uint newIndex = (uint)vertices.Count;
+        vertices.Add(new Vertex(position, normal, texCoord.X, 1f - texCoord.Y)); // OBJ texcoords are bottom-up; flip to match our top-left convention
         vertexLookup[token] = newIndex;
         return newIndex;
     }

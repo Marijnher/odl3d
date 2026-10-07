@@ -116,6 +116,8 @@ internal class OpenGLRenderPass : IRenderPass
     /// <param name="offset">The offset within the vertex buffer.</param>
     public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
+        if (buffer.Usage != BufferUsage.Vertex)
+            throw new RenderException("The provided buffer is not a vertex buffer.");
         var b = (OpenGLBuffer<T>) buffer;
         _vbSlots[slot] = new VertexSlot(b.Handle, offset);
         _vertexStateDirty = true;
@@ -129,8 +131,9 @@ internal class OpenGLRenderPass : IRenderPass
     /// <exception cref="RenderException">Thrown if the buffer is not an index buffer or if the type is unsupported.</exception>
     public unsafe void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged
     {
+        if (buffer.Usage != BufferUsage.Index)
+            throw new RenderException($"Buffer is not an index buffer.");
         var b = (OpenGLBuffer<T>) buffer;
-        if (b.Usage != BufferUsage.Index) throw new RenderException($"Buffer is not an index buffer.");
 
         _indexBufferHandle = b.Handle;
         _indexType = typeof(T) switch
@@ -155,16 +158,15 @@ internal class OpenGLRenderPass : IRenderPass
     /// <exception cref="RenderException">Thrown if the buffer is not a uniform buffer or if the offset is invalid.</exception>
     public unsafe void SetUniformBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
+        if (buffer.Usage != BufferUsage.Uniform)
+            throw new RenderException("Buffer is not a uniform buffer.");
         if ((uint) slot >= BufferSlots.MaxUniformBuffers)
             throw new RenderException($"Uniform slot must be 0..{BufferSlots.MaxUniformBuffers - 1}.");
-
-        var b = (OpenGLBuffer<T>) buffer;
-        if (b.Usage != BufferUsage.Uniform)
-            throw new RenderException("Buffer is not a uniform buffer.");
         if (offset % BufferSlots.UniformOffsetAlignment != 0)
-            throw new RenderException(
+            throw new RenderException(  
                 $"Uniform buffer offset {offset} must be a multiple of {BufferSlots.UniformOffsetAlignment}.");
 
+        var b = (OpenGLBuffer<T>) buffer;
         nint totalBytes = b.Size * sizeof(T);
         nint size = Math.Min(sizeof(T), totalBytes - (nint) offset);
         GL.glBindBufferRange(GL.GL_UNIFORM_BUFFER, (uint) slot, b.Handle, (nint) offset, size);

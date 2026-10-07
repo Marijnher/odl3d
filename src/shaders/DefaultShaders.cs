@@ -21,6 +21,7 @@ internal static class DefaultShaders
 
         layout(location = 0) in vec3 position;
         layout(location = 1) in vec2 texCoord;
+        layout(location = 2) in vec3 normal;
 
         layout(std140, binding = 0) uniform ObjectData
         {
@@ -90,6 +91,7 @@ internal static class DefaultShaders
         {
             float3 position [[attribute(0)]];
             float2 texCoord [[attribute(1)]];
+            float3 normal [[attribute(2)]];
         };
 
         struct SceneData

@@ -114,13 +114,13 @@ Initial implementation in `tests/unit` covers color/rectangle/matrix/timer behav
   - **Winding:** geometric face normal agrees with the declared `FrontFace` and with the vertex normals (dot > 0) - wrong winding only shows up as missing faces when culling.
   - Normals unit length; UVs in [0,1]; closed meshes are watertight (each edge shared by exactly 2 triangles).
   - Bounding box matches the requested size.
-- `Build(hasNormals)`: stride is 5 floats without normals and 8 with; `HasNormals` reported correctly.
+- `Build(hasNormals)`: every vertex contains position, UV, and normal fields; unspecified normals are zero and `HasNormals` reports whether meaningful normals were supplied.
 - `Mesh.QuadFlippedV` vs `Mesh.Quad`: only V differs (`v' = 1 - v`), positions/indices identical (regression).
 - `Mesh`: `Dispose` idempotent; `EnsureUploaded` after dispose throws.
 
 ### 5.4 Vertex and shader-data layout (high value)
 GPU layout mismatches fail silently (garbage rendering), so lock them down on the CPU:
-- `Vertex` is a managed class, not an interop struct. Verify `MeshBuilder.Build` serializes position/UV/(optional normal) floats in the 5-/8-float stride expected by the `VertexAttributeDescription.Offset`s used by `ShaderPipeline.CreateDefault`.
+- `Vertex` is a sequential unmanaged struct with a 32-byte position/UV/normal layout. Verify its field offsets match the fixed vertex stride and the `VertexAttributeDescription.Offset`s used by `ShaderPipeline.CreateDefault`.
 - `ObjectShaderData` == 256 bytes, `SceneShaderData` == 128 bytes; every field offset matches the **std140** block in the GLSL default shader and the struct in the MSL default shader.
 - 256 bytes is also the uniform-offset alignment needed by GL (`GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT`) and Metal (constant-buffer offsets on macOS); assert size % 256 == 0.
 - `VertexLayoutDescription` checks: attributes do not overlap, fit within the stride, have unique indices, and `VertexFormat` byte sizes are correct.

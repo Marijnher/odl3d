@@ -105,6 +105,8 @@ internal class MetalRenderPass : IRenderPass
     /// <param name="offset">The offset within the vertex buffer.</param>
     public void SetVertexBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
+        if (buffer.Usage != BufferUsage.Vertex)
+            throw new RenderException("The provided buffer is not a vertex buffer.");
         VertexBuffer = (MetalBuffer<T>) buffer;
         Encoder.SetVertexBuffer(VertexBuffer.Buffer, GetVertexSlot(slot), offset);
     }
@@ -121,6 +123,8 @@ internal class MetalRenderPass : IRenderPass
     /// <param name="buffer">The index buffer to set.</param>
     public void SetIndexBuffer<T>(IBuffer<T> buffer) where T : unmanaged
     {
+        if (buffer.Usage != BufferUsage.Index)
+            throw new RenderException("The provided buffer is not an index buffer.");
         IndexBuffer = (MetalBuffer<T>) buffer;
     }
 
@@ -133,6 +137,8 @@ internal class MetalRenderPass : IRenderPass
     /// <param name="offset">The offset within the uniform buffer.</param>
     public void SetUniformBuffer<T>(IBuffer<T> buffer, int slot = 0, uint offset = 0) where T : unmanaged
     {
+        if (buffer.Usage != BufferUsage.Uniform)
+            throw new RenderException("The provided buffer is not a uniform buffer.");
         var buf = (MetalBuffer<T>) buffer;
         Encoder.SetVertexBuffer(buf.Buffer, (nuint) slot, offset);
         Encoder.SetFragmentBuffer(buf.Buffer, (nuint) slot, offset);

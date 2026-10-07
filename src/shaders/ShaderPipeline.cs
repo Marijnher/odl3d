@@ -84,9 +84,8 @@ public class ShaderPipeline : IDisposable
     /// <summary>
     /// Creates a default shader pipeline with optional normal attributes. The default vertex and fragment shaders are used, and the vertex layout is configured based on whether normals are included.
     /// </summary>
-    /// <param name="hasNormals">Indicates whether the vertex layout should include normal attributes.</param>
     /// <returns>A new instance of ShaderPipeline configured with the default shaders and the specified vertex layout.</returns>
-    public static ShaderPipeline CreateDefault(IRenderDevice renderer, bool hasNormals = false)
+    public static ShaderPipeline CreateDefault(IRenderDevice renderer)
     {
         string vertexSource = DefaultShaders.Vertex(renderer.RenderTarget);
         string fragmentSource = DefaultShaders.Fragment(renderer.RenderTarget);
@@ -109,20 +108,15 @@ public class ShaderPipeline : IDisposable
                 Format = VertexFormat.Float2,
                 Offset = 3 * sizeof(float),
                 BufferSlot = 0
-            }
-        };
-        int strideFloats = 5;
-        if (hasNormals)
-        {
-            attributes.Add(new VertexAttributeDescription // Attribute 2 (normal, float3)
+            },
+            new VertexAttributeDescription // Attribute 2 (normal, float3)
             {
                 AttributeIndex = 2,
                 Format = VertexFormat.Float3,
                 Offset = 5 * sizeof(float),
                 BufferSlot = 0
-            });
-            strideFloats = 8;
-        }
+            }
+        };
 
         var vertexLayout = new VertexLayoutDescription
         {
@@ -130,7 +124,7 @@ public class ShaderPipeline : IDisposable
                 new VertexBufferLayoutDescription // Buffer 0
                 {
                     BufferIndex = 0,
-                    Stride = (uint) (strideFloats * sizeof(float)),
+                    Stride = 8 * sizeof(float),
                     StepFunction = StepMode.PerVertex
                 }
             ],
