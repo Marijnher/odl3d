@@ -24,10 +24,14 @@ public abstract class InputHost : IDisposable
     public event Action? OnDisposed;
 
     /// <summary>
-    /// Enables or disables input handling for the object. When enabled, the object will create a concrete AbstractInputManager to handle input events. When disabled, the AbstractInputManager will be disposed and input events will no longer be processed for this object. This method allows the user to control whether the object should respond to user input.
+    /// Enables input handling for the object. When called, the object will create a concrete AbstractInputManager to handle input events, allowing it to respond to user input.
     /// </summary>
-    /// <param name="enable">True to enable input handling; false to disable it.</param>
-    public abstract void SetEnableInput(bool enable);
+    public abstract void EnableInput();
+
+    /// <summary>
+    /// Disables input handling for the object. When called, the associated AbstractInputManager will be disposed, and the object will no longer process input events.
+    /// </summary>
+    public abstract void DisableInput();
 
     /// <summary>
     /// Checks if a specific key is currently being held down. This method queries the state of the key from the associated input manager, allowing the object to respond to continuous key presses during its update cycle.
@@ -37,7 +41,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException">Thrown if input handling is not enabled for this object.</exception>
     public bool IsKeyDown(Key key)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         return InputManager!.IsKeyDown(key);
     }
 
@@ -49,7 +53,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException">Thrown if input handling is not enabled for this object.</exception>
     public bool IsMouseDown(Mouse button)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         return InputManager!.IsMouseDown(button);
     }
 
@@ -63,7 +67,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterKeyPress(Key key, Action onPress)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterKeyPress(key, onPress);
     }
 
@@ -75,7 +79,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterKeyDown(Key key, Action onDown)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterKeyDown(key, onDown);
     }
 
@@ -87,7 +91,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterKeyRepeated(Key key, Action onRepeat)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterKeyRepeated(key, onRepeat);
     }
 
@@ -99,7 +103,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterKeyReleased(Key key, Action onRelease)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterKeyReleased(key, onRelease);
     }
 
@@ -111,7 +115,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterMousePress(Mouse mouse, Action<Vector2> onPress)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterMousePress(mouse, onPress);
     }
 
@@ -123,7 +127,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterMouseDown(Mouse mouse, Action<Vector2> onDown)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterMouseDown(mouse, onDown);
     }
 
@@ -135,7 +139,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterMouseRepeated(Mouse mouse, Action<Vector2> onRepeat)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterMouseRepeated(mouse, onRepeat);
     }
 
@@ -147,7 +151,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterMouseRelease(Mouse mouse, Action<Vector2> onRelease)
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterMouseRelease(mouse, onRelease);
     }
 
@@ -158,7 +162,7 @@ public abstract class InputHost : IDisposable
     /// <exception cref="InputException"></exception>
     public void RegisterMouseMoved(Action<Vector2, Vector2> onMoved) 
     {
-        if (InputManager == null) SetEnableInput(true);
+        if (InputManager == null) EnableInput();
         InputManager!.RegisterMouseMoved(onMoved);
     }
 

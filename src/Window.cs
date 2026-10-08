@@ -151,20 +151,26 @@ public class Window : InputHost
     }
 
     /// <summary>
-    /// Enables or disables input handling for the window. When enabled, the window will create an input manager to handle keyboard and mouse events. When disabled, the input manager will be disposed and input handling will be turned off.
+    /// Enables input handling for the window. If input handling is already enabled, an InvalidOperationException will be thrown.
     /// </summary>
-    /// <param name="enable">True to enable input handling, false to disable it.</param>
-    public override void SetEnableInput(bool enable)
+    /// <exception cref="InvalidOperationException">Thrown if input handling is already enabled for this window.</exception>
+    public override void EnableInput()
     {
-        if (enable && InputManager == null)
-        {
-            InputManager = new WindowInputManager(this);
-        }
-        else if (!enable && InputManager != null)
-        {
-            InputManager.Dispose();
-            InputManager = null;
-        }
+        if (InputManager != null)
+            throw new InvalidOperationException("Input handling is already enabled for this window.");
+        InputManager = new WindowInputManager(this);
+    }
+
+    /// <summary>
+    /// Disables input handling for the window. If input handling is not currently enabled, an InvalidOperationException will be thrown.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if input handling is not currently enabled for this window.</exception>
+    public override void DisableInput()
+    {
+        if (InputManager == null)
+            throw new InvalidOperationException("Input handling is not enabled for this window.");
+        InputManager.Dispose();
+        InputManager = null;
     }
 
     /// <summary>

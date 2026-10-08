@@ -13,13 +13,19 @@ public sealed class GraphicsApplication : IDisposable
     private readonly List<Window> _windows = new();
     private bool _disposed;
 
-    /// <summary>The renderer shared by windows created by this application.</summary>
+    /// <summary>
+    /// Gets the renderer shared by windows created by this application.
+    /// </summary>
     public IRenderDevice Renderer { get; }
 
-    /// <summary>Indicates whether this application and its renderer have been disposed.</summary>
+    /// <summary>
+    /// Indicates whether this application and its renderer have been disposed.
+    /// </summary>
     public bool Disposed => _disposed;
 
-    /// <summary>Creates an application and initializes its renderer backend.</summary>
+    /// <summary>
+    /// Creates an application and initializes its renderer backend.
+    /// </summary>
     /// <param name="renderTarget">The renderer backend to use, or null for the platform default.</param>
     public GraphicsApplication(RenderTarget? renderTarget = null)
     {
@@ -35,7 +41,9 @@ public sealed class GraphicsApplication : IDisposable
         }
     }
 
-    /// <summary>Creates a window and render surface owned by this application.</summary>
+    /// <summary>
+    /// Creates a window and render surface owned by this application.
+    /// </summary>
     /// <exception cref="NotSupportedException">The OpenGL backend currently supports only one window per application.</exception>
     public Window CreateWindow(int width, int height, string title)
     {
@@ -45,14 +53,25 @@ public sealed class GraphicsApplication : IDisposable
         return new Window(this, width, height, title);
     }
 
+    /// <summary>
+    /// Registers a window with this application.
+    /// </summary>
+    /// <param name="window">The window to register with this application.</param>
     internal void RegisterWindow(Window window)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         _windows.Add(window);
     }
 
+    /// <summary>
+    /// Removes a window from this application.
+    /// </summary>
+    /// <param name="window">The window to remove from this application.</param>
     internal void RemoveWindow(Window window) => _windows.Remove(window);
 
+    /// <summary>
+    /// Disposes the application, its renderer, and all owned windows.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;

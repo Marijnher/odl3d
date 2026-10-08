@@ -83,20 +83,26 @@ public abstract class Scene<T> : Drawable where T : Object3D
     }
 
     /// <summary>
-    /// Enables or disables input handling for the scene. When enabled, the scene will create a ProxyInputManager to handle input events. When disabled, the ProxyInputManager will be disposed and input events will no longer be processed for this scene. This method allows the user to control whether the scene should respond to user input.
+    /// Enables input handling for this scene. If input handling is already enabled, an InvalidOperationException will be thrown.
     /// </summary>
-    /// <param name="enable">True to enable input handling; false to disable it.</param>
-    public override void SetEnableInput(bool enable)
+    /// <exception cref="InvalidOperationException">Thrown if input handling is already enabled for this scene.</exception>
+    public override void EnableInput()
     {
-        if (enable && InputManager == null)
-        {
-            InputManager = new ProxyInputManager(Window);
-        }
-        else if (!enable && InputManager != null)
-        {
-            InputManager.Dispose();
-            InputManager = null;
-        }
+        if (InputManager != null)
+            throw new InvalidOperationException("Input handling is already enabled for this scene.");
+        InputManager = new ProxyInputManager(Window);
+    }
+
+    /// <summary>
+    /// Disables input handling for this scene. If input handling is not currently enabled, an InvalidOperationException will be thrown.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if input handling is not currently enabled for this scene.</exception>
+    public override void DisableInput()
+    {
+        if (InputManager == null)
+            throw new InvalidOperationException("Input handling is not enabled for this scene.");
+        InputManager.Dispose();
+        InputManager = null;
     }
 
     /// <summary>

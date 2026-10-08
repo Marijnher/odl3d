@@ -78,6 +78,12 @@ public class Object3D : Drawable
         Sampler = new Sampler();
     }
 
+    /// <summary>
+    /// Attaches this object to the specified scene. This method should be called when adding the object to a scene.
+    /// </summary>
+    /// <param name="scene">The scene to attach this object to.</param>
+    /// <exception cref="ObjectDisposedException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
     internal virtual void Attach(Scene<Object3D> scene)
     {
         if (Disposed) throw new ObjectDisposedException(nameof(Object3D));
@@ -85,6 +91,10 @@ public class Object3D : Drawable
         Scene = scene;
     }
 
+    /// <summary>
+    /// Detaches this object from the specified scene. This method should be called when removing the object from a scene.
+    /// </summary>
+    /// <param name="scene">The scene to detach this object from.</param>
     internal virtual void Detach(Scene<Object3D>? scene)
     {
         if (ReferenceEquals(Scene, scene)) Scene = null;
@@ -96,20 +106,28 @@ public class Object3D : Drawable
     }
 
     /// <summary>
-    /// Enables or disables input handling for this object. When enabled, the object will create a ProxyInputManager to handle input events. When disabled, the ProxyInputManager will be disposed and input events will no longer be processed for this object. This method allows the user to control whether the object should respond to user input.
+    /// Enables input handling for this object. If input handling is already enabled, an InvalidOperationException will be thrown.
     /// </summary>
-    /// <param name="enable">True to enable input handling; false to disable it.</param>
-    public override void SetEnableInput(bool enable)
+    /// <exception cref="InvalidOperationException">Thrown if input handling is already enabled for this object or if the object is not attached to a scene.</exception>
+    public override void EnableInput()
     {
-        if (enable && InputManager == null)
-        {
-            InputManager = new ProxyInputManager((Scene ?? throw new InvalidOperationException("Attach the object to a scene before enabling input.")).Window);
-        }
-        else if (!enable && InputManager != null)
-        {
-            InputManager.Dispose();
-            InputManager = null;
-        }
+        if (InputManager != null)
+            throw new InvalidOperationException("Input handling is already enabled for this object.");
+        if (Scene == null)
+            throw new InvalidOperationException("Attach the object to a scene before enabling input.");
+        InputManager = new ProxyInputManager(Scene.Window);
+    }
+
+    /// <summary>
+    /// Disables input handling for this object. If input handling is not currently enabled, an InvalidOperationException will be thrown.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if input handling is not currently enabled for this object.</exception>
+    public override void DisableInput()
+    {
+        if (InputManager == null)
+            throw new InvalidOperationException("Input handling is not enabled for this object.");
+        InputManager.Dispose();
+        InputManager = null;
     }
 
     /// <summary>
