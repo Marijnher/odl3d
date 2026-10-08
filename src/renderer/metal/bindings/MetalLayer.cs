@@ -10,6 +10,8 @@ internal static partial class Metal
     /// </summary>
     public sealed class MetalLayer : ObjCObject
     {
+        private ContentView? AttachedView;
+
         /// <summary>
         /// Gets the Objective-C class pointer for the CAMetalLayer class.
         /// </summary>
@@ -121,28 +123,38 @@ internal static partial class Metal
             CocoaWindow cocoaWindow = new CocoaWindow(handle);
             
             MetalLayer metalLayer = Create();
-            metalLayer.Device = device;
-            metalLayer.PixelFormat = GetPixelFormat(TextureFormat.BGRA8Unorm);
-            metalLayer.PresentsWithTransaction = false;
+            try
+            {
+                metalLayer.Device = device;
+                metalLayer.PixelFormat = GetPixelFormat(TextureFormat.BGRA8Unorm);
+                metalLayer.PresentsWithTransaction = false;
 
-            ContentView contentView = cocoaWindow.ContentView;
-            contentView.WantsLayer = true;
-            contentView.Layer = metalLayer;
+                ContentView contentView = cocoaWindow.ContentView;
+                contentView.WantsLayer = true;
+                contentView.Layer = metalLayer;
+                metalLayer.AttachedView = contentView;
 
-            NSRect bounds = contentView.Bounds;
-            double contentScale = contentView.BackingScaleFactor;
-            double windowScale = cocoaWindow.BackingScaleFactor;
-            if (contentScale != windowScale)
-                Console.WriteLine($"WARNING: content scale ({contentScale}) and window scale ({windowScale}) are not equal.");
+                NSRect bounds = contentView.Bounds;
+                double contentScale = contentView.BackingScaleFactor;
+                double windowScale = cocoaWindow.BackingScaleFactor;
+                if (contentScale != windowScale)
+                    Console.WriteLine($"WARNING: content scale ({contentScale}) and window scale ({windowScale}) are not equal.");
 
-            metalLayer.Frame = bounds;
-            metalLayer.Bounds = bounds;
-            metalLayer.ContentsScale = contentScale;
-            metalLayer.DrawableSize = new CGSize {
-                Width = bounds.Size.Width * contentScale,
-                Height = bounds.Size.Height * contentScale
-            };
-            return metalLayer;
+                metalLayer.Frame = bounds;
+                metalLayer.Bounds = bounds;
+                metalLayer.ContentsScale = contentScale;
+                metalLayer.DrawableSize = new CGSize {
+                    Width = bounds.Size.Width * contentScale,
+                    Height = bounds.Size.Height * contentScale
+                };
+                return metalLayer;
+            }
+            catch
+            {
+                metalLayer.DetachFromWindow();
+                metalLayer.Dispose();
+                throw;
+            }
         }
 
         /// <summary>
@@ -150,5 +162,11 @@ internal static partial class Metal
         /// </summary>
         /// <returns>The next <see cref="Drawable"/> from the Metal layer.</returns>
         public Drawable NextDrawable() => Get<Drawable>("nextDrawable");
+
+        public void DetachFromWindow()
+        {
+            AttachedView?.ClearLayerIfCurrent(this);
+            AttachedView = null;
+        }
     }
 }

@@ -30,7 +30,7 @@ internal static partial class Metal
         /// Initializes a new instance of the <see cref="VertexDescriptor"/> class with the specified handle.
         /// </summary>
         /// <param name="handle">The handle to the native Metal vertex descriptor object.</param>
-        public VertexDescriptor(IntPtr handle) : base(handle) { }
+        public VertexDescriptor(IntPtr handle) : base(handle, true) { }
 
         /// <summary>
         /// Creates a new instance of the <see cref="VertexDescriptor"/> class.

@@ -48,7 +48,7 @@ internal class MetalRenderPipeline : IRenderPipeline
         Device = device;
         Wireframe = description.Wireframe;
         Rasterizer = description.Rasterizer;
-        var vertexDescriptor = Metal.VertexDescriptor.Create();
+        using var vertexDescriptor = Metal.VertexDescriptor.Create();
         var attribs = vertexDescriptor.Attributes;
         for (int i = 0; i < description.VertexLayout.Attributes.Length; i++)
         {

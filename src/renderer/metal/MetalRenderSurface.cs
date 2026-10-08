@@ -49,8 +49,23 @@ internal class MetalRenderSurface : IRenderSurface
     {
         Device = device;
         MetalLayer = Metal.MetalLayer.AttachToWindow(Device, windowHandle);
-        CommandQueue = Device.NewCommandQueue();
-        DepthTexture = Device.CreateTexture(Width, Height, TextureFormat.Depth32Float);
+        Metal.CommandQueue? commandQueue = null;
+        Metal.Texture? depthTexture = null;
+        try
+        {
+            commandQueue = Device.NewCommandQueue();
+            depthTexture = Device.CreateTexture(Width, Height, TextureFormat.Depth32Float);
+        }
+        catch
+        {
+            depthTexture?.Dispose();
+            commandQueue?.Dispose();
+            MetalLayer.DetachFromWindow();
+            MetalLayer.Dispose();
+            throw;
+        }
+        CommandQueue = commandQueue;
+        DepthTexture = depthTexture;
     }
 
     /// <summary>
@@ -92,6 +107,7 @@ internal class MetalRenderSurface : IRenderSurface
         if (Disposed) return;
         CommandQueue.Dispose();
         DepthTexture.Dispose();
+        MetalLayer.DetachFromWindow();
         MetalLayer.Dispose();
         Disposed = true;
     }

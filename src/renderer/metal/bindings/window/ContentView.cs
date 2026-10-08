@@ -38,6 +38,12 @@ internal static partial class Metal
             set => Send("setLayer:", value);
         }
 
+        public void ClearLayerIfCurrent(MetalLayer expectedLayer)
+        {
+            if (GetRaw("layer") == expectedLayer.Handle)
+                Send("setLayer:", IntPtr.Zero);
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ContentView"/> class with the specified handle.
         /// </summary>
