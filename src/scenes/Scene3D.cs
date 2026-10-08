@@ -26,12 +26,42 @@ public class Scene3D : Scene<Object3D>
     public unsafe override void Draw(IRenderPass pass, RenderPass passType = RenderPass.Opaque)
     {
         if (!Visible || Disposed) return;
+
+        if (passType == RenderPass.Transparent)
+        {
+            List<(int Index, float Depth)> transparentObjects = new(GetTransparentObjects());
+            transparentObjects.Sort((left, right) => right.Depth.CompareTo(left.Depth));
+            foreach ((int index, _) in transparentObjects)
+                DrawObject(pass, index, passType);
+            return;
+        }
+
         UpdateSceneShaderData(pass);
         for (int i = 0; i < Objects.Count; i++)
         {
             pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
             Objects[i].Draw(pass, passType);
         }
+    }
+
+    internal IEnumerable<(int Index, float Depth)> GetTransparentObjects()
+    {
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            Object3D obj = Objects[i];
+            if (!obj.Visible || obj.Disposed || !obj.HasTransparentContent) continue;
+            Vector3 worldPosition = Vector3.Transform(Vector3.Zero, obj.GetModelMatrix());
+            float depth = Vector3.Dot(worldPosition - Camera.Position, Camera.Front);
+            yield return (i, depth);
+        }
+    }
+
+    internal unsafe void DrawObject(IRenderPass pass, int index, RenderPass passType)
+    {
+        if (!Visible || Disposed) return;
+        UpdateSceneShaderData(pass);
+        pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint)(index * sizeof(ObjectShaderData)));
+        Objects[index].Draw(pass, passType);
     }
 
     /// <summary>

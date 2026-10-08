@@ -292,10 +292,20 @@ public class Window : InputHost
         }
         // Draw transparent objects after opaque ones without writing to the depth buffer.
         pass.SetDepthStencilState(Stencil3DTransparent);
+        List<(Scene3D Scene, int Index, float Depth, int Order)> transparentObjects = new();
+        int order = 0;
         foreach (Scene3D scene in Scenes3D)
         {
-            scene.Draw(pass, RenderPass.Transparent);
+            foreach ((int index, float depth) in scene.GetTransparentObjects())
+                transparentObjects.Add((scene, index, depth, order++));
         }
+        transparentObjects.Sort((left, right) =>
+        {
+            int depthOrder = right.Depth.CompareTo(left.Depth);
+            return depthOrder != 0 ? depthOrder : left.Order.CompareTo(right.Order);
+        });
+        foreach ((Scene3D scene, int index, _, _) in transparentObjects)
+            scene.DrawObject(pass, index, RenderPass.Transparent);
         // Draw 2D scenes on top of the 3D scenes without considering the depth buffer.
         pass.SetDepthStencilState(Stencil2D);
         foreach (Scene2D scene in Scenes2D)

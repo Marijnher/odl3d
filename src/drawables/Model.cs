@@ -80,6 +80,8 @@ public class Model : Object3D
         }
     }
 
+    internal override bool HasTransparentContent => IsTransparent || Objects.Any(obj => obj.IsTransparent);
+
     /// <summary>
     /// Initializes a new instance of the Model class with the specified scene, meshes, and textures.
     /// </summary>

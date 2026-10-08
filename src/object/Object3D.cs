@@ -163,6 +163,8 @@ public class Object3D : Drawable
     /// </summary>
     public virtual bool IsTransparent => (Texture != null && Texture.HasPartialAlpha) || (Texture == null && Color.A != 0 && Color.A != 255);
 
+    internal virtual bool HasTransparentContent => IsTransparent;
+
     /// <summary>
     /// Draws this object using the specified shader and the given view-projection matrix. The view-projection matrix is typically obtained from the camera and represents the combined view and projection transformations. This method sets up the necessary shader uniforms, binds the texture if available, and then draws the mesh associated with this object. Only objects matching the requested render pass (opaque or transparent) are drawn; the other pass is skipped so callers can render opaque geometry before transparent geometry.
     /// </summary>
