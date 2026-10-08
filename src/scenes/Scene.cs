@@ -36,7 +36,7 @@ public abstract class Scene<T> : Drawable where T : Object3D
     public IReadOnlyList<T> Objects => _readOnlyObjects;
 
     /// <summary>
-    /// The maximum number of objects that the scene can contain. This value is used to allocate the object shader data array and GPU buffer, and it can be configured in the constructor.
+    /// The current capacity of the object shader data array and GPU buffer.
     /// </summary>
     protected int MaxObjects;
 
@@ -61,13 +61,14 @@ public abstract class Scene<T> : Drawable where T : Object3D
     /// <param name="window">The window associated with the scene, used to determine the rendering context and other properties.</param>
     protected Scene(Window window, int maxObjects = 100)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(maxObjects);
         Window = window;
         _readOnlyObjects = _objects.AsReadOnly();
-        MaxObjects = maxObjects;
-        ObjectShaderDataArray = new ObjectShaderData[maxObjects];
+        MaxObjects = Math.Max(maxObjects, 1);
+        ObjectShaderDataArray = new ObjectShaderData[MaxObjects];
         ObjectShaderDataBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
         {
-            Size = maxObjects,
+            Size = MaxObjects,
             Usage = BufferUsage.Uniform
         });
         SceneShaderDataBuffer = Renderer.CreateBuffer<SceneShaderData>(new BufferDescription
@@ -114,12 +115,34 @@ public abstract class Scene<T> : Drawable where T : Object3D
         ArgumentNullException.ThrowIfNull(sceneObject);
         if (sceneObject.Scene != null)
             throw new InvalidOperationException("The object already belongs to a scene. Remove it before adding it elsewhere.");
-        if (_objects.Count >= MaxObjects)
-            throw new RenderException($"Cannot add more than {MaxObjects} objects to the scene.");
         if (this is not Scene<Object3D> objectScene)
             throw new InvalidOperationException("Only scenes containing Object3D instances can accept drawable objects.");
+        EnsureObjectCapacity(_objects.Count + 1);
         sceneObject.Attach(objectScene);
         _objects.Add(sceneObject);
+    }
+
+    private void EnsureObjectCapacity(int requiredCapacity)
+    {
+        if (requiredCapacity <= MaxObjects) return;
+
+        int newCapacity = MaxObjects;
+        while (newCapacity < requiredCapacity)
+            newCapacity = newCapacity <= int.MaxValue / 2 ? newCapacity * 2 : requiredCapacity;
+
+        ObjectShaderData[] expandedData = new ObjectShaderData[newCapacity];
+        Array.Copy(ObjectShaderDataArray, expandedData, _objects.Count);
+        IBuffer<ObjectShaderData> expandedBuffer = Renderer.CreateBuffer<ObjectShaderData>(new BufferDescription
+        {
+            Size = newCapacity,
+            Usage = BufferUsage.Uniform
+        });
+
+        IBuffer<ObjectShaderData> previousBuffer = ObjectShaderDataBuffer;
+        ObjectShaderDataArray = expandedData;
+        ObjectShaderDataBuffer = expandedBuffer;
+        MaxObjects = newCapacity;
+        previousBuffer.Dispose();
     }
 
     /// <summary>
