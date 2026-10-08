@@ -14,6 +14,10 @@ public readonly struct BoundingFrustum3D
     private readonly Vector4 _near;
     private readonly Vector4 _far;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BoundingFrustum3D"/> struct with the specified view-projection matrix.
+    /// </summary>
+    /// <param name="viewProjection">The row-vector view-projection matrix using a zero-to-one depth range.</param>
     public BoundingFrustum3D(Matrix4x4 viewProjection)
     {
         _left = Normalize(new Vector4(
@@ -48,6 +52,11 @@ public readonly struct BoundingFrustum3D
             viewProjection.M44 - viewProjection.M43));
     }
 
+    /// <summary>
+    /// Determines whether the bounding frustum intersects with the specified bounding box.
+    /// </summary>
+    /// <param name="bounds">The bounding box to test for intersection with the frustum.</param>
+    /// <returns><c>true</c> if the bounding frustum intersects with the specified bounding box; otherwise, <c>false</c>.</returns>
     public bool Intersects(BoundingBox3D bounds) => bounds.IsEmpty ||
         !Outside(bounds, _left) &&
         !Outside(bounds, _right) &&
@@ -56,12 +65,23 @@ public readonly struct BoundingFrustum3D
         !Outside(bounds, _near) &&
         !Outside(bounds, _far);
 
+    /// <summary>
+    /// Normalizes the specified plane equation so that the normal vector has a length of 1.
+    /// </summary>
+    /// <param name="plane">The plane equation to normalize.</param>
+    /// <returns>The normalized plane equation.</returns>
     private static Vector4 Normalize(Vector4 plane)
     {
         float length = new Vector3(plane.X, plane.Y, plane.Z).Length();
         return length > 0 ? plane / length : plane;
     }
 
+    /// <summary>
+    /// Determines whether the specified bounding box is outside the given plane of the frustum.
+    /// </summary>
+    /// <param name="bounds">The bounding box to test.</param>
+    /// <param name="plane">The plane equation to test against.</param>
+    /// <returns><c>true</c> if the bounding box is outside the plane; otherwise, <c>false</c>.</returns>
     private static bool Outside(BoundingBox3D bounds, Vector4 plane)
     {
         Vector3 positiveVertex = new(
