@@ -36,20 +36,24 @@ public class Scene3D : Scene<Object3D>
             return;
         }
 
+        BoundingFrustum3D frustum = CreateFrustum();
         UpdateSceneShaderData(pass);
         for (int i = 0; i < Objects.Count; i++)
         {
+            Object3D obj = Objects[i];
+            if (!obj.Visible || obj.Disposed || !frustum.Intersects(obj.GetWorldBounds())) continue;
             pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint) (i * sizeof(ObjectShaderData)));
-            Objects[i].Draw(pass, passType);
+            obj.Draw(pass, passType);
         }
     }
 
     internal IEnumerable<(int Index, float Depth)> GetTransparentObjects()
     {
+        BoundingFrustum3D frustum = CreateFrustum();
         for (int i = 0; i < Objects.Count; i++)
         {
             Object3D obj = Objects[i];
-            if (!obj.Visible || obj.Disposed || !obj.HasTransparentContent) continue;
+            if (!obj.Visible || obj.Disposed || !obj.HasTransparentContent || !frustum.Intersects(obj.GetWorldBounds())) continue;
             Vector3 worldPosition = Vector3.Transform(Vector3.Zero, obj.GetModelMatrix());
             float depth = Vector3.Dot(worldPosition - Camera.Position, Camera.Front);
             yield return (i, depth);
@@ -63,6 +67,8 @@ public class Scene3D : Scene<Object3D>
         pass.SetUniformBuffer(ObjectShaderDataBuffer, 0, (uint)(index * sizeof(ObjectShaderData)));
         Objects[index].Draw(pass, passType);
     }
+
+    internal BoundingFrustum3D CreateFrustum() => new(Camera.GetViewMatrix() * Camera.GetProjectionMatrix());
 
     /// <summary>
     /// Gets the view matrix for the 3D scene, which is obtained from the camera.

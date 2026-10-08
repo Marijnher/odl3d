@@ -48,6 +48,50 @@ public class UtilityTests
     }
 
     [Fact]
+    public void Bounding_box_transforms_all_corners_including_negative_scale()
+    {
+        BoundingBox3D bounds = new(new Vector3(-1, -2, -3), new Vector3(1, 2, 3));
+        Matrix4x4 transform = Matrix4x4.CreateScale(-2, 3, 1) * Matrix4x4.CreateTranslation(4, 5, 6);
+
+        BoundingBox3D transformed = bounds.Transform(transform);
+
+        Assert.Equal(new Vector3(2, -1, 3), transformed.Min);
+        Assert.Equal(new Vector3(6, 11, 9), transformed.Max);
+    }
+
+    [Fact]
+    public void Frustum_intersection_keeps_visible_bounds_and_rejects_bounds_outside_each_plane()
+    {
+        Camera camera = new(null!, 1f);
+        BoundingFrustum3D frustum = new(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+
+        Assert.True(frustum.Intersects(new BoundingBox3D(new Vector3(-0.25f, -0.25f, -5.25f), new Vector3(0.25f, 0.25f, -4.75f))));
+        Assert.True(frustum.Intersects(new BoundingBox3D(new Vector3(2.5f, -0.25f, -5.25f), new Vector3(3f, 0.25f, -4.75f))));
+        Assert.True(frustum.Intersects(BoundingBox3D.Empty));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(-101, -1, -6), new Vector3(-100, 1, -5))));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(100, -1, -6), new Vector3(101, 1, -5))));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(-1, 100, -6), new Vector3(1, 101, -5))));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(-1, -101, -6), new Vector3(1, -100, -5))));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(-1, -1, 4), new Vector3(1, 1, 5))));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(-0.01f, -0.01f, -0.05f), new Vector3(0.01f, 0.01f, -0.02f))));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(-1, -1, -102), new Vector3(1, 1, -101))));
+    }
+
+    [Fact]
+    public void Frustum_uses_translated_and_rotated_camera_view()
+    {
+        Camera camera = new(null!, 1f)
+        {
+            Position = new Vector3(10, 2, 3),
+            Yaw = 0
+        };
+        BoundingFrustum3D frustum = new(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+
+        Assert.True(frustum.Intersects(new BoundingBox3D(new Vector3(14, 1.5f, 2.5f), new Vector3(15, 2.5f, 3.5f))));
+        Assert.False(frustum.Intersects(new BoundingBox3D(new Vector3(4, 1.5f, 2.5f), new Vector3(5, 2.5f, 3.5f))));
+    }
+
+    [Fact]
     public void Matrix_to_array_is_row_major()
     {
         Matrix4x4 matrix = new(

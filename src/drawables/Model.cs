@@ -80,6 +80,14 @@ public class Model : Object3D
         }
     }
 
+    public override BoundingBox3D GetWorldBounds()
+    {
+        BoundingBox3D bounds = BoundingBox3D.Empty;
+        foreach (Object3D part in Objects)
+            bounds = bounds.Union(part.GetWorldBounds());
+        return bounds;
+    }
+
     internal override bool HasTransparentContent => IsTransparent || Objects.Any(obj => obj.IsTransparent);
 
     /// <summary>
@@ -206,9 +214,12 @@ public class Model : Object3D
             obj.TextureColor = TextureColor;
         }
         UpdateObjectShaderData();
+        BoundingFrustum3D? frustum = Scene is Scene3D scene3D ? scene3D.CreateFrustum() : null;
         for (int i = 0; i < Objects.Count; i++)
         {
             var obj = Objects[i];
+            if (frustum is BoundingFrustum3D modelFrustum && !modelFrustum.Intersects(obj.GetWorldBounds()))
+                continue;
             pass.SetUniformBuffer(ObjectShaderDataBuffer!, 0, (uint) (i * sizeof(ObjectShaderData)));
             obj.Draw(pass, passType);
         }

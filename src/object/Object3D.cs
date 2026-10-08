@@ -142,6 +142,12 @@ public class Object3D : Drawable
         Matrix4x4.CreateTranslation(Position + (Scene?.Position ?? Vector3.Zero));
 
     /// <summary>
+    /// Gets this object's axis-aligned bounds in world space. Custom drawables can override this when their geometry is not represented by <see cref="Mesh"/>.
+    /// </summary>
+    public override BoundingBox3D GetWorldBounds() =>
+        Mesh?.Bounds.Transform(GetModelMatrix()) ?? BoundingBox3D.Empty;
+
+    /// <summary>
     /// Returns the shader data for this object, which includes the model matrix, texture usage, colors, and normal information.
     /// </summary>
     /// <returns>An ObjectShaderData instance containing the relevant shader information for this object.</returns>

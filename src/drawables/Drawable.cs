@@ -22,4 +22,9 @@ public abstract class Drawable : InputHost
     /// Indicates whether this drawable object is visible. If set to false, the object will not be rendered.
     /// </summary>
     public bool Visible = true;
+
+    /// <summary>
+    /// Gets this drawable's axis-aligned bounds in world space. Return <see cref="BoundingBox3D.Empty"/> when the drawable has no known bounds.
+    /// </summary>
+    public virtual BoundingBox3D GetWorldBounds() => BoundingBox3D.Empty;
 }

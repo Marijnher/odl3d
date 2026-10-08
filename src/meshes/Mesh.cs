@@ -36,6 +36,11 @@ public partial class Mesh : IDisposable
     public int VertexCount { get; private set; }
 
     /// <summary>
+    /// Gets the axis-aligned bounds of the mesh in its local coordinate space.
+    /// </summary>
+    public BoundingBox3D Bounds { get; }
+
+    /// <summary>
     /// Indicates whether this mesh has been disposed and its resources released. After disposing, the mesh should not be used again.
     /// </summary>
     public bool Disposed { get; private set; }
@@ -57,6 +62,10 @@ public partial class Mesh : IDisposable
         _indexData = indices;
         HasNormals = hasNormals;
         VertexCount = vertices.Length;
+        BoundingBox3D bounds = BoundingBox3D.Empty;
+        foreach (Vertex vertex in vertices)
+            bounds = bounds.Include(vertex.Position);
+        Bounds = bounds;
     }
 
     internal void EnsureUploaded(IRenderDevice device)

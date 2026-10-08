@@ -21,6 +21,53 @@ public class Object3DTests
     }
 
     [Fact]
+    public void World_bounds_transform_mesh_bounds()
+    {
+        using Mesh mesh = new(
+        [
+            new Vertex(new Vector3(-1, -2, -3), 0, 0),
+            new Vertex(new Vector3(1, 2, 3), 1, 1),
+            new Vertex(new Vector3(-1, 2, 3), 0, 1),
+            new Vertex(new Vector3(1, -2, -3), 1, 0)
+        ],
+        [0, 1, 2]);
+        using Object3D obj = new(mesh)
+        {
+            AutoDisposeMesh = false,
+            Position = new Vector3(4, 5, 6),
+            Scale = new Vector3(-2, 3, 1)
+        };
+
+        BoundingBox3D bounds = obj.GetWorldBounds();
+
+        Assert.Equal(new Vector3(2, -1, 3), bounds.Min);
+        Assert.Equal(new Vector3(6, 11, 9), bounds.Max);
+    }
+
+    [Fact]
+    public void Model_world_bounds_union_transformed_parts()
+    {
+        Mesh firstMesh = MeshBuilder.CreatePlane(2, 2, 2);
+        Mesh secondMesh = MeshBuilder.CreatePlane(2, 2, 2);
+        using Model model = new(
+            [firstMesh, secondMesh],
+            [null, null],
+            localTransforms:
+            [
+                Matrix4x4.CreateTranslation(-4, 0, 0),
+                Matrix4x4.CreateTranslation(3, 0, 0)
+            ])
+        {
+            Position = new Vector3(2, 0, 0)
+        };
+
+        BoundingBox3D bounds = model.GetWorldBounds();
+
+        Assert.Equal(new Vector3(-2, 0, 0), bounds.Min);
+        Assert.Equal(new Vector3(7, 2, 2), bounds.Max);
+    }
+
+    [Fact]
     public void Dispose_respects_resource_ownership_flags()
     {
         using Mesh sharedMesh = MeshBuilder.CreateQuad();
