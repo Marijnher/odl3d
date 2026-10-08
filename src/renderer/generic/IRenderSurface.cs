@@ -23,16 +23,6 @@ public interface IRenderSurface : IGPUResource
     bool VSync { get; set; }
 
     /// <summary>
-    /// Gets the depth format of the render surface, if available.
-    /// </summary>
-    TextureFormat? DepthFormat { get; }
-
-    /// <summary>
-    /// Gets the sample count of the render surface.
-    /// </summary>
-    int SampleCount { get; }
-
-    /// <summary>
     /// Resizes the render surface to the specified width and height.
     /// </summary>
     /// <param name="width">The new width of the render surface.</param>

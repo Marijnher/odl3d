@@ -37,21 +37,6 @@ internal class OpenGLRenderSurface : IRenderSurface
             GLFW.glfwSwapInterval(value ? 1 : 0);
         }
     }
-    
-    /// <summary>
-    /// Gets the color format of the render surface.
-    /// </summary>
-    public TextureFormat ColorFormat => throw new NotImplementedException();
-
-    /// <summary>
-    /// Gets the depth format of the render surface, if any.
-    /// </summary>
-    public TextureFormat? DepthFormat => throw new NotImplementedException();
-
-    /// <summary>
-    /// Gets the sample count (number of multisample anti-aliasing samples) of the render surface.
-    /// </summary>
-    public int SampleCount => throw new NotImplementedException();
 
     /// <summary>
     /// Gets a value indicating whether the render surface has been disposed.

@@ -34,21 +34,6 @@ internal class MetalRenderSurface : IRenderSurface
     /// Gets a value indicating whether the render surface has been disposed.
     /// </summary>
     public bool Disposed { get; private set; }
-    
-    /// <summary>
-    /// Gets the color format of the render surface.
-    /// </summary>
-    public TextureFormat ColorFormat => throw new NotImplementedException();
-
-    /// <summary>
-    /// Gets the depth format of the render surface, if any.
-    /// </summary>
-    public TextureFormat? DepthFormat => throw new NotImplementedException();
-
-    /// <summary>
-    /// Gets the number of samples used for multisampling, if any.
-    /// </summary>
-    public int SampleCount => throw new NotImplementedException();
 
     /// <summary>
     /// Gets the depth texture associated with the render surface.
