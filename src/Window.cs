@@ -138,7 +138,7 @@ public class Window : InputHost
             DepthWriteEnabled = false
         });
 
-        ShaderPipeline = ShaderPipeline.CreateDefault(Renderer);
+        ShaderPipeline = DefaultShaders.CreatePipeline(Renderer);
 
         // Default non-moveable camera
         Camera = new Camera(this);
