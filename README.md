@@ -64,6 +64,7 @@ For T0/T1 test commands, native prerequisites, and readable line/branch coverage
 ```csharp
 using var app = new GraphicsApplication(RenderTarget.OpenGL);
 using var window = app.CreateWindow(800, 600, "My application");
+window.Camera = new MoveableCamera(window) { Position = new Vector3(1, 0.5f, 2) };
 var scene = window.CreateScene3D();
 
 var texture = TextureBuilder.CreateCheckerboard(64, 64, Color.Magenta, new Color(0, 255, 255));
