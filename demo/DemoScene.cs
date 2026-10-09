@@ -7,7 +7,7 @@ namespace odl3d.Demo;
 
 class DemoScene : Scene3D
 {
-    public DemoScene(Window window) : base(window)
+    public DemoScene(Window window, Light sun) : base(window)
     {
         Texture texture = TextureBuilder.CreateCheckerboard(64, 64, new Color(255, 0, 255), new Color(0, 255, 255), 8);
         Sprite3D sprite = new Sprite3D(texture)
@@ -63,5 +63,40 @@ class DemoScene : Scene3D
             Position = new Vector3(-0.2f, -1f, 0.2f)
         };
         Add(sphere);
+
+        // Lighting: an orbiting point light with a glowing marker, plus a rectangular area light with an emissive panel.
+        AmbientColor = new Color(60, 60, 60);
+        AddLight(sun);
+        _orbitLight = new PointLight(new Vector3(0, 0.5f, -1.5f), new Color(255, 200, 150), intensity: 6f, range: 8f);
+        AddLight(_orbitLight);
+        _orbitMarker = new Object3D(MeshBuilder.CreateSphere(0.08f, 12))
+        {
+            Color = Color.Black,
+            Emissive = new Color(255, 200, 150),
+            Lit = true
+        };
+        Add(_orbitMarker);
+
+        const float panelWidth = 2f, panelHeight = 1f;
+        Vector3 panelCenter = new(0f, 0.5f, -5f);
+        AddLight(new AreaLight(panelCenter, panelWidth, panelHeight, new Color(150, 200, 255), intensity: 4f) { Range = 10f });
+        Add(new Object3D(MeshBuilder.CreateQuad())
+        {
+            Position = panelCenter - new Vector3(panelWidth / 2f, panelHeight / 2f, 0f),
+            Scale = new Vector3(panelWidth, panelHeight, 1f),
+            Color = Color.Black,
+            Emissive = new Color(150, 200, 255)
+        });
+    }
+
+    private readonly PointLight _orbitLight;
+    private readonly Object3D _orbitMarker;
+
+    public override void Update(float deltaTime)
+    {
+        base.Update(deltaTime);
+        float angle = (float) Window.GetTime();
+        _orbitLight.Position = new Vector3(MathF.Cos(angle) * 2.5f, 0.5f + MathF.Sin(angle * 0.7f), -2f + MathF.Sin(angle) * 1.5f);
+        _orbitMarker.Position = _orbitLight.Position;
     }
 }

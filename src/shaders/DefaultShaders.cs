@@ -42,7 +42,8 @@ internal static partial class DefaultShaders
     public static ShaderPipeline CreatePipeline(IRenderDevice renderer)
     {
         string vertexSource = Vertex(renderer.RenderTarget);
-        string fragmentSource = Fragment(renderer.RenderTarget);
+        string fragmentSource = Fragment(renderer.RenderTarget)
+            .Replace("__MAX_LIGHTS__", SceneLighting.GetMaxLights(renderer).ToString(System.Globalization.CultureInfo.InvariantCulture));
         ShaderLanguage language = renderer.RenderTarget == RenderTarget.OpenGL ? ShaderLanguage.GLSL : ShaderLanguage.MSL;
         using var defaultVertex = new Shader(renderer, vertexSource, ShaderStage.Vertex, "vertex_main", language, false);
         using var defaultFragment = new Shader(renderer, fragmentSource, ShaderStage.Fragment, "fragment_main", language, false);

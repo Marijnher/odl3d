@@ -34,6 +34,7 @@ public sealed class GraphicsApplication : IDisposable
         {
             Renderer = RenderFactory.Create(renderTarget);
             Console.WriteLine($"Renderer: {Renderer.RenderTarget}");
+            Console.WriteLine($"Max texture size: {Renderer.Capabilities.MaxTextureSize}");
         }
         catch
         {

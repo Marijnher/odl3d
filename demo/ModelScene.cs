@@ -6,8 +6,12 @@ namespace odl3d.Demo;
 
 public class ModelScene : Scene3D
 {
-    public ModelScene(Window window) : base(window)
+    public ModelScene(Window window, Light sun) : base(window)
     {
+        // Lights are per scene, so the models need their own. Lights defined inside a model file are added automatically.
+        AmbientColor = new Color(90, 90, 90);
+        AddLight(sun);
+
         Model center = Model.LoadDAE("assets/center/center.dae");
         center.Position = new Vector3(1, -1.25f, -1.75f);
         Add(center);

@@ -32,6 +32,11 @@ public class Material
     public float[] Ks { get; set; } = { 0, 0, 0 };
 
     /// <summary>
+    /// The emissive color of the material, represented as an array of three floats [r, g, b].
+    /// </summary>
+    public float[] Ke { get; set; } = { 0, 0, 0 };
+
+    /// <summary>
     /// The shininess of the material.
     /// </summary>
     public float Ns { get; set; }
@@ -101,6 +106,10 @@ public static class MtlLoader
 
                 case "Ks":
                     current!.Ks = ParseVec3(parts);
+                    break;
+
+                case "Ke":
+                    current!.Ke = ParseVec3(parts);
                     break;
 
                 case "Ns":

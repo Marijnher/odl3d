@@ -7,6 +7,8 @@ internal sealed class MetalRenderCapabilities : IRenderCapabilities
 {
     private const int MetalMaxAnisotropy = 16;
     private const int MetalMaxTextureSlots = 128;
+    // Metal has no hard block limit; match the common OpenGL limit so both backends behave alike.
+    private const int MetalMaxUniformBlockSize = 65536;
 
     public bool SupportsWireframe => true;
     public bool SupportsComputeShaders => true;
@@ -18,6 +20,7 @@ internal sealed class MetalRenderCapabilities : IRenderCapabilities
     public int MaxAnisotropy => MetalMaxAnisotropy;
     public int MaxVertexBufferSlots => BufferSlots.MaxVertexBuffers;
     public int MaxTextureSlots => MetalMaxTextureSlots;
+    public int MaxUniformBlockSize => MetalMaxUniformBlockSize;
 
     public MetalRenderCapabilities(Metal.Device device)
     {

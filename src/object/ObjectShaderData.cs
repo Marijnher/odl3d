@@ -34,4 +34,30 @@ public struct ObjectShaderData
     /// Indicates whether the object has normals (1 for true, 0 for false).
     /// </summary>
     public bool HasNormals { get => _hasNormals == 1; set => _hasNormals = value ? 1u : 0u; }
+
+    private uint _lit;
+    /// <summary>
+    /// Indicates whether scene lights affect this object (1 for true, 0 for false).
+    /// </summary>
+    public bool Lit { get => _lit == 1; set => _lit = value ? 1u : 0u; }
+
+    /// <summary>
+    /// The specular exponent; higher values give smaller, sharper highlights.
+    /// </summary>
+    public float Shininess;
+
+    /// <summary>
+    /// The light emitted by the surface itself (RGB). It is added after lighting and does not illuminate other objects.
+    /// </summary>
+    public Vector4 Emissive;
+
+    /// <summary>
+    /// The color of specular highlights (RGB).
+    /// </summary>
+    public Vector4 Specular;
+
+    /// <summary>
+    /// The inverse transpose of the model matrix, used to transform normals to world space.
+    /// </summary>
+    public Matrix4x4 NormalMatrix;
 }

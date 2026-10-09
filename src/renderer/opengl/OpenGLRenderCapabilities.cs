@@ -19,6 +19,7 @@ internal sealed class OpenGLRenderCapabilities : IRenderCapabilities
     public int MaxAnisotropy { get; }
     public int MaxVertexBufferSlots => GLVertexLayout.MaxSlots;
     public int MaxTextureSlots { get; }
+    public int MaxUniformBlockSize { get; }
 
     public OpenGLRenderCapabilities()
     {
@@ -49,6 +50,8 @@ internal sealed class OpenGLRenderCapabilities : IRenderCapabilities
         GL.glGetIntegerv(GL.GL_MAX_TEXTURE_IMAGE_UNITS, out int maxTextureSlots);
         MaxTextureSize = maxTextureSize;
         MaxTextureSlots = maxTextureSlots;
+        GL.glGetIntegerv(GL.GL_MAX_UNIFORM_BLOCK_SIZE, out int maxUniformBlockSize);
+        MaxUniformBlockSize = maxUniformBlockSize;
 
         if (SupportsAnisotropicFiltering)
         {

@@ -15,7 +15,11 @@ public class Sprite3D : Object3D
     /// </summary>
     /// <param name="scene">The scene to which this sprite belongs.</param>
     /// <param name="texture">The texture to use for the sprite.</param>
-    public Sprite3D(Texture? texture = null) : base(MeshBuilder.CreateQuad(), texture) { }
+    public Sprite3D(Texture? texture = null) : base(MeshBuilder.CreateQuad(), texture)
+    {
+        // Sprites are flat artwork, so they are not shaded by scene lights unless asked to.
+        Lit = false;
+    }
 
     /// <summary>
     /// Gets the model matrix for the sprite, which defines its position, rotation, and scale in the 3D world.

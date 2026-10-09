@@ -68,7 +68,6 @@ internal class OpenGLOffscreenSurface : IRenderSurface
         try
         {
             GL.Load();
-            _device.InitializeCapabilities();
             CreateAttachments(width, height);
         }
         catch

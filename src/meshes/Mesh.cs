@@ -25,10 +25,14 @@ public partial class Mesh : IDisposable
     public IBuffer<uint> Indices => _indices ?? throw new InvalidOperationException("The mesh has not been uploaded to a renderer.");
 
     /// <summary>
-    /// True if this mesh supplies meaningful per-vertex normals. The vertex layout always includes the normal
-    /// field; meshes without source normals store zero vectors there.
+    /// True when every vertex has a usable normal. This is always the case: normals missing from the source are generated as flat normals, see <see cref="HasGeneratedNormals"/>.
     /// </summary>
-    public bool HasNormals { get; }
+    public bool HasNormals => true;
+
+    /// <summary>
+    /// True when flat normals were generated because the source geometry lacked normals. Generating them separates vertices that are shared between faces with different normals, so <see cref="VertexCount"/> can be higher than the vertex count passed in.
+    /// </summary>
+    public bool HasGeneratedNormals { get; }
 
     /// <summary>
     /// Gets the number of vertices in this mesh.
@@ -51,21 +55,24 @@ public partial class Mesh : IDisposable
     public event Action? OnDisposed;
 
     /// <summary>
-    /// Creates a new Mesh with the given vertex and index data. Each vertex contains a position, texture coordinate, and normal; normals may be zero when unavailable.
+    /// Creates a new Mesh with the given vertex and index data. Each vertex contains a position, texture coordinate, and normal; flat normals are generated when the source has none.
     /// </summary>
     /// <param name="vertices">The vertex data for the mesh.</param>
     /// <param name="indices">The index data defining the triangles to draw using the vertices.</param>
-    /// <param name="hasNormals">True when the vertices contain meaningful source normals.</param>
+    /// <param name="hasNormals">True when the vertices contain meaningful source normals; otherwise (or for vertices with a zero normal) flat normals are generated per triangle.</param>
     public Mesh(Vertex[] vertices, uint[] indices, bool hasNormals = false)
     {
-        _vertexData = vertices;
-        _indexData = indices;
-        HasNormals = hasNormals;
-        VertexCount = vertices.Length;
+        // Bounds come from the source vertices, so they do not change when normal generation drops unreferenced ones.
         BoundingBox3D bounds = BoundingBox3D.Empty;
         foreach (Vertex vertex in vertices)
             bounds = bounds.Include(vertex.Position);
         Bounds = bounds;
+
+        (vertices, indices, bool generated) = FlatNormals.Apply(vertices, indices, hasNormals);
+        _vertexData = vertices;
+        _indexData = indices;
+        HasGeneratedNormals = generated;
+        VertexCount = vertices.Length;
     }
 
     internal void EnsureUploaded(IRenderDevice device)

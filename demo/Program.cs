@@ -20,8 +20,10 @@ public static class Program
         window.RegisterKeyPress(Key.M, () => window.Wireframe = !window.Wireframe);
 
         using UIScene uiScene = new UIScene(window);
-        using DemoScene demoScene = new DemoScene(window);
-        using ModelScene modelScene = new ModelScene(window);
+        // One sun shared by both scenes: changing it here changes it everywhere.
+        DirectionalLight sun = new DirectionalLight(new Vector3(-0.4f, -1f, -0.3f), new Color(255, 244, 224), intensity: 0.9f);
+        using DemoScene demoScene = new DemoScene(window, sun);
+        using ModelScene modelScene = new ModelScene(window, sun);
         
         while (!window.ShouldClose)
         {

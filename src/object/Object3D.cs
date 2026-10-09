@@ -41,6 +41,26 @@ public class Object3D : Drawable
     public Color Color = Color.Gray;
 
     /// <summary>
+    /// Whether the lights of a <see cref="Scene3D"/> affect this object. Unlit objects always show their flat color. Has no effect while the scene has no active lights.
+    /// </summary>
+    public bool Lit = true;
+
+    /// <summary>
+    /// The light this object gives off by itself, added on top of lighting. Defaults to black (nothing). This makes the surface look like it glows but does not illuminate other objects; place an <see cref="AreaLight"/> or <see cref="PointLight"/> at the same spot for that.
+    /// </summary>
+    public Color Emissive = Color.Black;
+
+    /// <summary>
+    /// The color of specular highlights from lights. Black disables highlights.
+    /// </summary>
+    public Color Specular = new(64, 64, 64);
+
+    /// <summary>
+    /// The specular exponent; higher values give smaller, sharper highlights.
+    /// </summary>
+    public float Shininess = 32f;
+
+    /// <summary>
     /// The mesh to use when drawing this object.
     /// </summary>
     public Mesh? Mesh;
@@ -153,17 +173,26 @@ public class Object3D : Drawable
     /// <returns>An ObjectShaderData instance containing the relevant shader information for this object.</returns>
     public virtual ObjectShaderData GetShaderData()
     {
+        Matrix4x4 model = GetModelMatrix();
         var shaderData = new ObjectShaderData
         {
-            Model = GetModelMatrix(),
+            Model = model,
             UseTexture = Texture != null && !Texture.Disposed,
             TexColor = TextureColor.ToVector4(),
             ObjColor = Color.ToVector4(),
-            HasNormals = Mesh?.HasNormals ?? false
+            HasNormals = Mesh?.HasNormals ?? false,
+            Lit = Lit && (Mesh?.HasNormals ?? false) && Scene is Scene3D { HasActiveLights: true },
+            Shininess = MathF.Max(Shininess, 1f),
+            Emissive = Emissive.ToVector4(),
+            Specular = Specular.ToVector4(),
+            NormalMatrix = GetNormalMatrix(model)
         };
         return shaderData;
     }
     
+    private static Matrix4x4 GetNormalMatrix(Matrix4x4 model) =>
+        Matrix4x4.Invert(model, out Matrix4x4 inverse) ? Matrix4x4.Transpose(inverse) : Matrix4x4.Identity;
+
     /// <summary>
     /// True if this object must be alpha-blended against whatever has already been drawn behind it (e.g. a soft shadow decal), as opposed to being fully opaque or a hard 0/255 alpha cutout. Transparent objects are rendered in a second pass, after all opaque objects, without writing to the depth buffer, so they blend correctly regardless of scene/model ordering.
     /// </summary>

@@ -121,6 +121,7 @@ internal static class GL
     public const uint GL_MINOR_VERSION = 0x821C;
     public const uint GL_MAX_TEXTURE_SIZE = 0x0D33;
     public const uint GL_MAX_TEXTURE_IMAGE_UNITS = 0x8872;
+    public const uint GL_MAX_UNIFORM_BLOCK_SIZE = 0x8A30;
     public const uint GL_TEXTURE_COMPARE_FUNC = 0x884D;
     public const uint GL_UNIFORM_BUFFER = 0x8A11;
     public const uint GL_INVALID_INDEX = 0xFFFFFFFF;

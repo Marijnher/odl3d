@@ -17,6 +17,11 @@ layout(std140, binding = 0) uniform ObjectData
     vec4 objColor;
     uint useTexture;
     uint hasNormals;
+    uint lit;
+    float shininess;
+    vec4 emissive;
+    vec4 specular;
+    mat4 normalMatrix;
 } object;
 
 layout(std140, binding = 1) uniform SceneData
@@ -26,6 +31,8 @@ layout(std140, binding = 1) uniform SceneData
 } scene;
 
 out vec2 vTexCoord;
+out vec3 vWorldPos;
+out vec3 vWorldNormal;
 
 void main()
 {
@@ -33,6 +40,8 @@ void main()
     gl_Position = mvp * vec4(position, 1.0);
     gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;
     vTexCoord = texCoord;
+    vWorldPos = (object.model * vec4(position, 1.0)).xyz;
+    vWorldNormal = (object.normalMatrix * vec4(normal, 0.0)).xyz;
 }
 
 """;

@@ -168,7 +168,8 @@ internal class OpenGLRenderPass : IRenderPass
 
         var b = (OpenGLBuffer<T>) buffer;
         nint totalBytes = b.Size * sizeof(T);
-        nint size = Math.Min(sizeof(T), totalBytes - (nint) offset);
+        // Bind everything from the offset so a block may address an array of T; blocks that read less simply ignore the rest.
+        nint size = totalBytes - (nint) offset;
         GL.glBindBufferRange(GL.GL_UNIFORM_BUFFER, (uint) slot, b.Handle, (nint) offset, size);
     }
 

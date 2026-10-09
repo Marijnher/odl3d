@@ -95,6 +95,11 @@ public class Window : InputHost
     /// </summary>
     public ShaderPipeline ShaderPipeline { get; set; }
 
+    /// <summary>
+    /// Empty lighting data bound at the start of every frame so the lighting slots are always valid, even when a scene has no lights.
+    /// </summary>
+    private readonly SceneLighting EmptyLighting;
+
     private IDepthStencilState Stencil3DOpaque;
     private IDepthStencilState Stencil3DTransparent;
     private IDepthStencilState Stencil2D;
@@ -139,6 +144,7 @@ public class Window : InputHost
         });
 
         ShaderPipeline = DefaultShaders.CreatePipeline(Renderer);
+        EmptyLighting = new SceneLighting(Renderer);
 
         // Default non-moveable camera
         Camera = new Camera(this);
@@ -283,6 +289,7 @@ public class Window : InputHost
             Depth = new DepthAttachmentDescription { ClearDepth = 1.0f, LoadAction = LoadAction.Clear }
         });
         pass.SetViewport(new Rect(0, 0, RenderSurface.Width, RenderSurface.Height));
+        EmptyLighting.Bind(pass, Array.Empty<Light>(), Vector3.Zero, Vector3.Zero, Vector3.Zero);
         // Draw opaque objects and remember their depth for subsequent transparent objects.
         pass.SetDepthStencilState(Stencil3DOpaque);
         foreach (Scene3D scene in Scenes3D)
@@ -383,6 +390,7 @@ public class Window : InputHost
         Stencil3DTransparent.Dispose();
         Stencil2D.Dispose();
         ShaderPipeline.Dispose();
+        EmptyLighting.Dispose();
         RenderSurface.Dispose();
         GLFW.glfwDestroyWindow(Handle);
         Application.RemoveWindow(this);

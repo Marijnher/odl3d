@@ -88,6 +88,25 @@ public class Model : Object3D
         return bounds;
     }
 
+    /// <summary>
+    /// Per-part lighting properties from the model file, index-aligned with the parts. Null when the file provided none.
+    /// </summary>
+    private readonly SourceMaterial?[]? _sourceMaterials;
+
+    private readonly SourceLight[] _sourceLights;
+
+    private readonly List<(SourceLight Source, Light Light)> _sceneLights = new();
+
+    /// <summary>
+    /// When true, <see cref="Emissive"/>, <see cref="Object3D.Specular"/> and <see cref="Object3D.Shininess"/> replace the material properties read from the model file. By default the file's values are used and <see cref="Emissive"/> is added on top of them.
+    /// </summary>
+    public bool OverrideSourceMaterials;
+
+    /// <summary>
+    /// The lights that were created from light definitions in the model file while the model belongs to a <see cref="Scene3D"/>. They follow the model's transform.
+    /// </summary>
+    public IEnumerable<Light> SourceLights => _sceneLights.Select(entry => entry.Light);
+
     internal override bool HasTransparentContent => IsTransparent || Objects.Any(obj => obj.IsTransparent);
 
     /// <summary>
@@ -96,8 +115,12 @@ public class Model : Object3D
     /// <param name="scene">The scene to which this model belongs.</param>
     /// <param name="meshes">An array of meshes that make up the model.</param>
     /// <param name="textures">An array of textures corresponding to the meshes.</param>
-    public Model(Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null) : base()
+    /// <param name="materials">Optional per-mesh lighting properties read from the model file.</param>
+    /// <param name="lights">Optional lights defined in the model file. They are added to the scene together with the model.</param>
+    public Model(Mesh[] meshes, Texture?[] textures, Sampler?[]? samplers = null, Matrix4x4[]? localTransforms = null, SourceMaterial?[]? materials = null, IEnumerable<SourceLight>? lights = null) : base()
     {
+        _sourceMaterials = materials;
+        _sourceLights = lights?.ToArray() ?? [];
         for (int i = 0; i < meshes.Length; i++)
         {
             Matrix4x4 localTransform = localTransforms != null && i < localTransforms.Length
@@ -114,10 +137,30 @@ public class Model : Object3D
         base.Attach(scene);
         foreach (Object3D part in Objects)
             part.Attach(scene);
+        if (scene is Scene3D scene3D)
+        {
+            foreach (SourceLight source in _sourceLights)
+            {
+                Light light = source.CreateLight(GetModelMatrix(), scene3D.Position);
+                scene3D.AddLight(light);
+                _sceneLights.Add((source, light));
+            }
+        }
+    }
+
+    private void RemoveSceneLights()
+    {
+        foreach ((_, Light light) in _sceneLights)
+        {
+            foreach (Scene3D scene in light.Scenes.ToArray())
+                scene.RemoveLight(light);
+        }
+        _sceneLights.Clear();
     }
 
     internal override void Detach(Scene<Object3D>? scene)
     {
+        RemoveSceneLights();
         foreach (Object3D part in Objects)
             part.Detach(scene);
         base.Detach(scene);
@@ -134,8 +177,8 @@ public class Model : Object3D
     {
         string? daeFolder = System.IO.Path.GetDirectoryName(filename);
         if (daeFolder == null) throw new ArgumentException("Invalid filename: " + filename);
-        (Mesh[] meshes, Texture?[] textures, Sampler?[] samplers, Matrix4x4[] localTransforms) = DaeLoader.Load(filename, daeFolder);
-        return new Model(meshes, textures, samplers, localTransforms);
+        DaeLoader.DaeModelData data = DaeLoader.LoadModelData(filename, daeFolder);
+        return new Model(data.Meshes, data.Textures, data.Samplers, data.LocalTransforms, data.Materials, data.Lights);
     }
 
     /// <summary>
@@ -157,6 +200,7 @@ public class Model : Object3D
         }
         Mesh[] meshes = new Mesh[objFile.Meshes.Count];
         Texture?[] textures = new Texture?[objFile.Meshes.Count];
+        SourceMaterial?[] sourceMaterials = new SourceMaterial?[objFile.Meshes.Count];
         int idx = 0;
         foreach (var kvp in objFile.Meshes)
         {
@@ -169,12 +213,16 @@ public class Model : Object3D
             {
                 Material mat = materials[mtlName];
                 tex = new Texture(objFolder + "/" + mat.Name + ".png");
+                sourceMaterials[idx] = new SourceMaterial(
+                    SourceMaterial.ToColor(mat.Ke[0], mat.Ke[1], mat.Ke[2]),
+                    SourceMaterial.ToColor(mat.Ks[0], mat.Ks[1], mat.Ks[2]),
+                    MathF.Max(mat.Ns, 1f));
             }
             meshes[idx] = groupMesh;
             textures[idx] = tex;
             idx++;
         }
-        return new Model(meshes, textures);
+        return new Model(meshes, textures, materials: sourceMaterials);
     }
 
     /// <summary>
@@ -212,6 +260,22 @@ public class Model : Object3D
             if (Texture != null) obj.Texture = Texture;
             obj.Color = Color;
             obj.TextureColor = TextureColor;
+            obj.Lit = Lit;
+            SourceMaterial? source = OverrideSourceMaterials ? null : _sourceMaterials?[i];
+            if (source == null)
+            {
+                obj.Emissive = Emissive;
+                obj.Specular = Specular;
+                obj.Shininess = Shininess;
+            }
+            else
+            {
+                obj.Emissive = AddColors(source.Emissive, Emissive);
+                obj.Specular = source.Specular;
+                obj.Shininess = source.Shininess;
+                if (source.Diffuse is Color diffuse && obj.Texture == null)
+                    obj.Color = MultiplyColors(Color, diffuse);
+            }
         }
         UpdateObjectShaderData();
         BoundingFrustum3D? frustum = Scene is Scene3D scene3D ? scene3D.CreateFrustum() : null;
@@ -225,6 +289,12 @@ public class Model : Object3D
         }
     }
 
+    private static Color MultiplyColors(Color a, Color b) =>
+        new((byte) (a.R * b.R / 255), (byte) (a.G * b.G / 255), (byte) (a.B * b.B / 255), a.A);
+
+    private static Color AddColors(Color a, Color b) =>
+        new((byte) Math.Min(a.R + b.R, 255), (byte) Math.Min(a.G + b.G, 255), (byte) Math.Min(a.B + b.B, 255));
+
     /// <summary>
     /// Updates the model and all its constituent objects based on the elapsed time.
     /// </summary>
@@ -232,6 +302,12 @@ public class Model : Object3D
     public override void Update(float deltaTime)
     {
         base.Update(deltaTime);
+        if (_sceneLights.Count > 0 && Scene is Scene3D scene3D)
+        {
+            Matrix4x4 model = GetModelMatrix();
+            foreach ((SourceLight source, Light light) in _sceneLights)
+                source.Update(light, model, scene3D.Position);
+        }
         Objects.ForEach(obj => obj.Update(deltaTime));
     }
 
@@ -241,6 +317,7 @@ public class Model : Object3D
     public override void Dispose()
     {
         if (Disposed) return;
+        RemoveSceneLights();
         base.Dispose();
         ObjectShaderDataBuffer?.Dispose();
         foreach (var obj in Objects)

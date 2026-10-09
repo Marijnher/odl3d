@@ -21,6 +21,25 @@ public class Object3DTests
     }
 
     [Fact]
+    public void Shader_data_carries_inverse_transpose_normal_matrix_and_material()
+    {
+        Object3D obj = new()
+        {
+            Scale = new Vector3(2, 1, 1),
+            Emissive = new Color(255, 0, 0),
+            Shininess = 0f
+        };
+
+        ObjectShaderData data = obj.GetShaderData();
+
+        Vector3 normal = Vector3.TransformNormal(new Vector3(1, 1, 0), data.NormalMatrix);
+        Assert.Equal(new Vector3(0.5f, 1, 0), normal);
+        Assert.Equal(new Vector4(1, 0, 0, 1), data.Emissive);
+        Assert.Equal(1f, data.Shininess);
+        Assert.False(data.Lit);
+    }
+
+    [Fact]
     public void World_bounds_transform_mesh_bounds()
     {
         using Mesh mesh = new(

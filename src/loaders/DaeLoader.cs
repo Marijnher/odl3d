@@ -52,6 +52,7 @@ public static class DaeLoader
         public TextureWrap WrapS = DefaultTextureWrapS;
         public TextureWrap WrapT = DefaultTextureWrapT;
         public bool Transparent;
+        public SourceMaterial Lighting = new(Color.Black, Color.Black, 32f);
     }
 
     private sealed class LoadedPart
@@ -60,6 +61,7 @@ public static class DaeLoader
         public Texture? Texture;
         public Sampler? Sampler;
         public bool Transparent;
+        public SourceMaterial Lighting = new(Color.Black, Color.Black, 32f);
         public Matrix4x4 LocalTransform = Matrix4x4.Identity;
     }
 
@@ -81,6 +83,15 @@ public static class DaeLoader
     /// </remarks>
     /// <returns>A tuple containing an array of loaded meshes and an array of corresponding textures.</returns>
     public static (Mesh[] Meshes, Texture?[] Textures, Sampler?[] samplers, Matrix4x4[] LocalTransforms) Load(string filename, string? textureFolder = null, float scale = 1f)
+    {
+        DaeModelData data = LoadModelData(filename, textureFolder, scale);
+        return (data.Meshes, data.Textures, data.Samplers, data.LocalTransforms);
+    }
+
+    /// <summary>
+    /// Loads a DAE file like <see cref="Load"/>, additionally returning the per-part lighting properties and the lights defined in the file.
+    /// </summary>
+    public static DaeModelData LoadModelData(string filename, string? textureFolder = null, float scale = 1f)
     {
         XDocument document = XDocument.Load(filename);
         string baseFolder = textureFolder ?? Path.GetDirectoryName(filename) ?? ".";
@@ -120,13 +131,68 @@ public static class DaeLoader
             .OrderBy(part => part.Transparent ? 1 : 0)
             .ToArray();
 
-        return
-        (
+        return new DaeModelData(
             orderedParts.Select(part => part.Mesh).ToArray(),
             orderedParts.Select(part => part.Texture).ToArray(),
             orderedParts.Select(part => part.Sampler).ToArray(),
-            orderedParts.Select(part => part.LocalTransform).ToArray()
-        );
+            orderedParts.Select(part => part.LocalTransform).ToArray(),
+            orderedParts.Select(part => part.Lighting).ToArray(),
+            ReadLights(document, scale).ToArray());
+    }
+
+    /// <summary>
+    /// The result of loading a DAE file with <see cref="LoadModelData"/>. The part arrays are index-aligned and ordered with opaque parts first.
+    /// </summary>
+    public sealed record DaeModelData(Mesh[] Meshes, Texture?[] Textures, Sampler?[] Samplers, Matrix4x4[] LocalTransforms, SourceMaterial[] Materials, SourceLight[] Lights);
+
+    private static List<SourceLight> ReadLights(XDocument document, float scale)
+    {
+        List<SourceLight> result = [];
+        Dictionary<string, XElement> definitions = document.Descendants()
+            .Where(x => x.Name.LocalName == "light" && x.Attribute("id") != null && x.Parent?.Name.LocalName == "library_lights")
+            .ToDictionary(x => RequiredAttribute(x, "id"), x => x);
+        XElement? visualScene = document.Descendants().FirstOrDefault(x => x.Name.LocalName == "visual_scene");
+        if (definitions.Count == 0 || visualScene == null) return result;
+
+        foreach (XElement node in visualScene.Elements().Where(x => x.Name.LocalName == "node"))
+            Visit(node, Matrix4x4.Identity);
+        return result;
+
+        void Visit(XElement node, Matrix4x4 parentTransform)
+        {
+            Matrix4x4 transform = ReadNodeTransform(node, scale) * parentTransform;
+            foreach (XElement instance in node.Elements().Where(x => x.Name.LocalName == "instance_light"))
+            {
+                string? id = ((string?)instance.Attribute("url"))?.TrimStart('#');
+                if (id != null && definitions.TryGetValue(id, out XElement? definition) && ReadLight(definition, transform) is SourceLight light)
+                    result.Add(light);
+            }
+            foreach (XElement child in node.Elements().Where(x => x.Name.LocalName == "node"))
+                Visit(child, transform);
+        }
+    }
+
+    private static SourceLight? ReadLight(XElement definition, Matrix4x4 transform)
+    {
+        XElement? technique = definition.Descendants().FirstOrDefault(x => x.Name.LocalName == "technique_common");
+        XElement? kind = technique?.Elements().FirstOrDefault();
+        if (kind == null) return null;
+
+        SourceLightKind? lightKind = kind.Name.LocalName switch
+        {
+            "point" => SourceLightKind.Point,
+            "directional" => SourceLightKind.Directional,
+            "spot" => SourceLightKind.Spot,
+            _ => null
+        };
+        float[]? rgb = kind.Elements().FirstOrDefault(x => x.Name.LocalName == "color") is XElement color ? ParseFloats(color.Value) : null;
+        if (lightKind == null || rgb == null || rgb.Length < 3) return null;
+
+        float outerAngle = 45f;
+        if (kind.Elements().FirstOrDefault(x => x.Name.LocalName == "falloff_angle") is XElement angle && ParseFloats(angle.Value) is { Length: > 0 } angleValues)
+            outerAngle = Math.Clamp(angleValues[0] / 2f, 1f, 89f);
+
+        return new SourceLight(lightKind.Value, SourceMaterial.ToColor(rgb[0], rgb[1], rgb[2]), transform, outerAngle);
     }
 
     private static IEnumerable<LoadedPart> ReadMesh(
@@ -162,6 +228,7 @@ public static class DaeLoader
                 Texture = texture,
                 Sampler = sampler,
                 Transparent = material?.Transparent ?? false,
+                Lighting = material?.Lighting ?? new(Color.Black, Color.Black, 32f),
                 LocalTransform = localTransform
             };
         }
@@ -352,8 +419,19 @@ public static class DaeLoader
 
         MaterialData result = new()
         {
-            Transparent = effect.Descendants().Any(x => x.Name.LocalName == "transparent")
+            Transparent = effect.Descendants().Any(x => x.Name.LocalName == "transparent"),
+            Lighting = ReadEffectLighting(effect)
         };
+        bool hasDiffuseTexture = samplerSid != null;
+        if (hasDiffuseTexture)
+        {
+            // Exporters commonly write a white emission next to a diffuse texture, which would wash the texture out.
+            result.Lighting = result.Lighting with { Emissive = Color.Black };
+        }
+        else
+        {
+            result.Lighting = result.Lighting with { Diffuse = ReadEffectColor(effect, "diffuse") };
+        }
 
         if (samplerSid == null || !parameters.TryGetValue(samplerSid, out XElement? samplerParameter))
         {
@@ -377,6 +455,25 @@ public static class DaeLoader
         result.WrapS = ParseWrap(sampler.Elements().FirstOrDefault(x => x.Name.LocalName == "wrap_s")?.Value, DefaultTextureWrapS);
         result.WrapT = ParseWrap(sampler.Elements().FirstOrDefault(x => x.Name.LocalName == "wrap_t")?.Value, DefaultTextureWrapT);
         return result;
+    }
+
+    private static SourceMaterial ReadEffectLighting(XElement effect)
+    {
+        Color emissive = ReadEffectColor(effect, "emission") ?? Color.Black;
+        Color specular = ReadEffectColor(effect, "specular") ?? Color.Black;
+        float shininess = 32f;
+        XElement? shininessElement = effect.Descendants().FirstOrDefault(x => x.Name.LocalName == "shininess");
+        if (shininessElement?.Descendants().FirstOrDefault(x => x.Name.LocalName == "float") is XElement value && ParseFloats(value.Value) is { Length: > 0 } values)
+            shininess = MathF.Max(values[0], 1f);
+        return new SourceMaterial(emissive, specular, shininess);
+    }
+
+    private static Color? ReadEffectColor(XElement effect, string property)
+    {
+        XElement? color = effect.Descendants().FirstOrDefault(x => x.Name.LocalName == property)?
+            .Elements().FirstOrDefault(x => x.Name.LocalName == "color");
+        if (color == null || ParseFloats(color.Value) is not { Length: >= 3 } rgb) return null;
+        return SourceMaterial.ToColor(rgb[0], rgb[1], rgb[2]);
     }
 
     private static Dictionary<string, string> ReadControllerGeometryIds(XDocument document)

@@ -18,10 +18,9 @@ internal class OpenGLRenderDevice : IRenderDevice
     public string Name => "OpenGL";
 
     /// <summary>
-    /// Gets the rendering capabilities queried after the first OpenGL surface is created.
+    /// Gets the rendering capabilities of the OpenGL render device.
     /// </summary>
-    private IRenderCapabilities? _capabilities;
-    public IRenderCapabilities Capabilities => _capabilities ?? throw new RenderException("OpenGL capabilities are available after creating a render surface.");
+    public IRenderCapabilities Capabilities { get; } = new OpenGLRenderCapabilities();
 
     /// <summary>
     /// Gets a value indicating whether the OpenGL render device has been disposed.
@@ -29,8 +28,6 @@ internal class OpenGLRenderDevice : IRenderDevice
     public bool Disposed { get; private set; }
 
     public GLVertexArrayCache VertexArrayCache { get; } = new();
-
-    internal void InitializeCapabilities() => _capabilities ??= new OpenGLRenderCapabilities();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenGLRenderDevice"/> class.

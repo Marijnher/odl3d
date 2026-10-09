@@ -56,4 +56,9 @@ public interface IRenderCapabilities
     /// Gets the maximum number of fragment texture slots accepted by the renderer.
     /// </summary>
     int MaxTextureSlots { get; }
+
+    /// <summary>
+    /// Gets the maximum size in bytes of a single uniform block declared by a shader.
+    /// </summary>
+    int MaxUniformBlockSize { get; }
 }

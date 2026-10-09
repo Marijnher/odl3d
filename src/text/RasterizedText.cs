@@ -49,6 +49,8 @@ public abstract class RasterizedText : Text
         : base(font, style, align)
     {
         _atlas = atlas ?? GlyphAtlas.Shared;
+        // Rasterized text is flat artwork, so scene lights do not shade it unless asked to.
+        Lit = false;
     }
 
     /// <summary>

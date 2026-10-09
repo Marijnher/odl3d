@@ -23,7 +23,8 @@ public class MeshBuilderTests
         using Mesh mesh = MeshBuilder.CreateQuad();
 
         Assert.Equal(4, mesh.VertexCount);
-        Assert.False(mesh.HasNormals);
+        Assert.True(mesh.HasNormals);
+        Assert.True(mesh.HasGeneratedNormals);
     }
 
     [Fact]
@@ -47,8 +48,9 @@ public class MeshBuilderTests
         Assert.Equal(3, builder.Vertices.Count);
         Assert.Equal(new uint[] { 0, 1, 2, 0, 2, 1 }, builder.Indices);
         using Mesh mesh = builder.Build();
-        Assert.Equal(3, mesh.VertexCount);
-        Assert.False(mesh.HasNormals);
+        // The two faces wind oppositely, so their generated flat normals differ and the vertices are separated.
+        Assert.Equal(6, mesh.VertexCount);
+        Assert.True(mesh.HasGeneratedNormals);
     }
 
     [Fact]

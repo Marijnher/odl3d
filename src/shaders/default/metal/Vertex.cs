@@ -27,12 +27,19 @@ struct ObjectData
     float4 objColor;
     uint useTexture;
     uint hasNormals;
+    uint lit;
+    float shininess;
+    float4 emissive;
+    float4 specular;
+    float4x4 normalMatrix;
 };
 
 struct VertexOut
 {
     float4 position [[position]];
     float2 texCoord;
+    float3 worldPosition;
+    float3 worldNormal;
 };
 
 vertex VertexOut vertex_main(
@@ -45,6 +52,8 @@ vertex VertexOut vertex_main(
     VertexOut out;
     out.position = mvp * float4(in.position, 1.0);
     out.texCoord = in.texCoord;
+    out.worldPosition = (object.model * float4(in.position, 1.0)).xyz;
+    out.worldNormal = (object.normalMatrix * float4(in.normal, 0.0)).xyz;
     return out;
 }
 
