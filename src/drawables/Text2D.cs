@@ -37,14 +37,20 @@ public class Text2D : RasterizedText
     public Text2D(string fontName, int fontSize, FontStyle style = FontStyle.Regular, TextAlign align = TextAlign.Left, GlyphAtlas? atlas = null)
         : this(Font.Get(fontName, fontSize), style, align, atlas) { }
 
+    internal override void Attach(Scene<Object3D> scene)
+    {
+        base.Attach(scene);
+        RasterScale = (float) scene.Window.RenderSurface.Width / scene.Window.Width;
+    }
+
     /// <summary>
     /// Gets the model matrix for the 2D text, which defines its position, rotation, and scale in screen space.
     /// </summary>
     /// <returns>The model matrix representing the text's transformation in screen space.</returns>
     public override Matrix4x4 GetModelMatrix()
     {
-        float width = Texture?.Width ?? 0f;
-        float height = Texture?.Height ?? 0f;
+        float width = (Texture?.Width ?? 0f) / RasterScale;
+        float height = (Texture?.Height ?? 0f) / RasterScale;
 
         return Matrix4x4.CreateScale(width * Scale.X, height * Scale.Y, 1f) *
             Matrix4x4.CreateRotationX(MathF.PI / 180 * Rotation.X) *

@@ -105,6 +105,16 @@ public sealed unsafe class Font : IDisposable
     }
 
     /// <summary>
+    /// Returns the same faces at a different pixel size (loaded through the shared cache).
+    /// </summary>
+    /// <param name="pixelSize">The pixel size of the returned font.</param>
+    public Font WithPixelSize(int pixelSize)
+    {
+        if (pixelSize == PixelSize) return this;
+        return Get(_key.Regular, pixelSize, _key.Bold, _key.Italic, _key.BoldItalic);
+    }
+
+    /// <summary>
     /// Disposes every cached font. Any Text still referencing one of them must be rebuilt afterwards.
     /// </summary>
     public static void ClearCache()

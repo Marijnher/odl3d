@@ -24,6 +24,17 @@ public abstract class RasterizedText : Text
 
     private readonly GlyphAtlas _atlas;
 
+    private float _rasterScale = 1f;
+    /// <summary>
+    /// Ratio of rasterized glyph pixels to the font's nominal pixel size. Raised on high-DPI displays so the
+    /// composed texture maps 1:1 onto physical pixels instead of being upscaled. Rebuilds when changed.
+    /// </summary>
+    protected float RasterScale
+    {
+        get => _rasterScale;
+        set { if (_rasterScale == value) return; _rasterScale = value; Rebuild(); }
+    }
+
     /// <summary>
     /// Creates a new bitmap-composed text drawable, using the shared process-wide glyph atlas unless a custom
     /// one is supplied.
@@ -46,25 +57,26 @@ public abstract class RasterizedText : Text
     protected override void Rebuild()
     {
         Texture? old = Texture;
+        Font font = RasterScale == 1f ? Font : Font.WithPixelSize(Math.Max(1, (int) MathF.Round(Font.PixelSize * RasterScale)));
 
         string[] lines = Font.SplitLines(Content);
         float[] lineWidths = new float[lines.Length];
         float widest = 0f;
         for (int i = 0; i < lines.Length; i++)
         {
-            lineWidths[i] = Font.MeasureLine(lines[i], Style);
+            lineWidths[i] = font.MeasureLine(lines[i], Style);
             widest = MathF.Max(widest, lineWidths[i]);
         }
 
         uint width = Math.Max(1, (uint)MathF.Ceiling(widest));
-        uint height = Math.Max(1, (uint)MathF.Ceiling(Font.LineHeight * lines.Length));
-        int barThickness = Math.Max(1, (int)MathF.Ceiling(Font.UnderlineThickness));
+        uint height = Math.Max(1, (uint)MathF.Ceiling(font.LineHeight * lines.Length));
+        int barThickness = Math.Max(1, (int)MathF.Ceiling(font.UnderlineThickness));
 
         Texture composed = new Texture(width, height);
 
         for (int i = 0; i < lines.Length; i++)
         {
-            int baselineY = (int)MathF.Round(Font.Ascender + Font.LineHeight * i);
+            int baselineY = (int)MathF.Round(font.Ascender + font.LineHeight * i);
             float startX = Align switch
             {
                 TextAlign.Center => (width - lineWidths[i]) / 2f,
@@ -76,9 +88,9 @@ public abstract class RasterizedText : Text
             int previousCodepoint = -1;
             foreach (Rune rune in lines[i].EnumerateRunes())
             {
-                if (previousCodepoint >= 0) penX += Font.GetKerning(previousCodepoint, rune.Value, Style);
+                if (previousCodepoint >= 0) penX += font.GetKerning(previousCodepoint, rune.Value, Style);
 
-                AtlasGlyph glyph = _atlas.GetOrAdd(Font, Style, rune.Value);
+                AtlasGlyph glyph = _atlas.GetOrAdd(font, Style, rune.Value);
                 if (glyph.Width > 0 && glyph.Height > 0)
                 {
                     int destX = (int)MathF.Round(penX) + glyph.BearingX;
@@ -93,9 +105,9 @@ public abstract class RasterizedText : Text
             int barX0 = (int)MathF.Round(startX);
             int barX1 = (int)MathF.Round(penX);
             if (Underline)
-                FillBar(composed, (int)MathF.Round(baselineY + Font.UnderlinePosition), barThickness, barX0, barX1);
+                FillBar(composed, (int)MathF.Round(baselineY + font.UnderlinePosition), barThickness, barX0, barX1);
             if (Strikethrough)
-                FillBar(composed, (int)MathF.Round(baselineY - Font.Ascender * 0.35f), barThickness, barX0, barX1);
+                FillBar(composed, (int)MathF.Round(baselineY - font.Ascender * 0.35f), barThickness, barX0, barX1);
         }
 
         Sampler.MinFilter = TextureFilter.Linear;

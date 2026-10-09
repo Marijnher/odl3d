@@ -33,6 +33,7 @@ public sealed class GraphicsApplication : IDisposable
         try
         {
             Renderer = RenderFactory.Create(renderTarget);
+            Console.WriteLine($"Renderer: {Renderer.RenderTarget}");
         }
         catch
         {

@@ -43,7 +43,25 @@ internal static partial class Metal
         /// </summary>
         public string Description => GetString("description");
 
-        public uint MaxTextureDimension2D => GetUInt32("maxTextureDimension2D");
+        /// <summary>
+        /// Gets the maximum 2D texture dimension, derived from the GPU family (MTLDevice exposes no such property).
+        /// </summary>
+        public uint MaxTextureDimension2D
+        {
+            get
+            {
+                // MTLGPUFamilyApple1/2 (A7/A8) are limited to 8192; Apple3+ and Mac GPUs support 16384.
+                const nuint Apple1 = 1001, Apple2 = 1002, Apple3 = 1003, Mac2 = 2002, Common1 = 3001, Common2 = 3002;
+                if (SupportsFamily(Apple3) || SupportsFamily(Mac2))
+                    return 16384;
+                if (SupportsFamily(Apple1) || SupportsFamily(Apple2) || SupportsFamily(Common1) || SupportsFamily(Common2))
+                    return 8192;
+                return 16384;
+            }
+        }
+
+        private bool SupportsFamily(nuint family) =>
+            ((nuint) Send("supportsFamily:", family) & 0xFF) != 0;
 
         /// <summary>
         /// Gets the registry ID of the Metal device.
